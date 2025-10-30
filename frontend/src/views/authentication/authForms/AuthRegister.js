@@ -16,7 +16,9 @@ import { Link } from 'react-router';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
 import AuthSocialButtons from './AuthSocialButtons';
-import { BACKEND_URL } from 'src/config/constants';
+
+// ✅ Import dari env
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const allCategories = [
   'F&B',
@@ -34,39 +36,85 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
   const [password, setPassword] = useState('');
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // ✅ Tambah loading state
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
+
     try {
       const params = new URLSearchParams(window.location.search);
       const role = params.get('role') || 'TENANT';
 
       const payload = { name, email, password, role };
+      
+      // ✅ Validasi categories untuk EO
       if (role === 'EO') {
+        if (categories.length === 0) {
+          setError('Please select at least 1 category');
+          setLoading(false);
+          return;
+        }
+        if (categories.length > 3) {
+          setError('Maximum 3 categories allowed');
+          setLoading(false);
+          return;
+        }
         payload.categories = categories;
       }
 
-      const res = await fetch(BACKEND_URL + '/api/register', {
+      // ✅ Tambah Accept header
+      const res = await fetch(`${BACKEND_URL}/api/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', // ✅ Penting untuk Laravel
+        },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
 
+      // ✅ Cek HTTP status code
+      if (!res.ok) {
+        // Handle validation errors
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat().join(', ');
+          setError(errorMessages);
+        } else {
+          setError(data.message || 'Registration failed');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Success case
       if (data && data.token) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user)); // ✅ Simpan full user object
         localStorage.setItem('role', data.user?.role);
+
         const r = data.user?.role || 'TENANT';
-        if (r === 'EO') window.location.href = '/eo/dashboard';
-        else if (r === 'ADMIN') window.location.href = '/admin/dashboard';
-        else if (r === 'INSURER') window.location.href = '/insurer/dashboard';
-        else window.location.href = '/tenant/dashboard';
+        
+        // ✅ Redirect berdasarkan role
+        if (r === 'EO') {
+          window.location.href = '/eo/dashboard';
+        } else if (r === 'ADMIN') {
+          window.location.href = '/admin/dashboard';
+        } else if (r === 'INSURER') {
+          window.location.href = '/insurer/dashboard';
+        } else {
+          window.location.href = '/tenant/dashboard';
+        }
       } else {
-        setError(data?.message || 'Register gagal');
+        setError(data?.message || 'Registration failed');
+        setLoading(false);
       }
     } catch (err) {
-      setError('Register gagal');
+      console.error('Register error:', err);
+      setError('Network error. Please check your connection.');
+      setLoading(false);
     }
   };
 
@@ -108,15 +156,18 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
           />
 
           <CustomFormLabel htmlFor="email">Email Address</CustomFormLabel>
           <CustomTextField
             id="email"
+            type="email"
             variant="outlined"
             fullWidth
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
@@ -127,12 +178,16 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
             fullWidth
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            inputProps={{ minLength: 6 }}
           />
 
           {/* Dropdown categories muncul kalau role EO */}
           {role === 'EO' && (
             <>
-              <CustomFormLabel htmlFor="categories">Categories (1–3)</CustomFormLabel>
+              <CustomFormLabel htmlFor="categories">
+                Categories (1–3) <span style={{ color: 'red' }}>*</span>
+              </CustomFormLabel>
               <FormControl fullWidth>
                 <InputLabel id="categories-label">Select categories</InputLabel>
                 <Select
@@ -167,13 +222,33 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
           )}
         </Stack>
 
-        <Button color="primary" variant="contained" size="large" fullWidth type="submit">
-          Sign Up
+        {/* ✅ Tambah loading state */}
+        <Button 
+          color="primary" 
+          variant="contained" 
+          size="large" 
+          fullWidth 
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Signing Up...' : 'Sign Up'}
         </Button>
+
+        {/* ✅ Better error display */}
         {error && (
-          <Typography color="error" mt={2}>
-            {error}
-          </Typography>
+          <Box 
+            mt={2} 
+            p={2} 
+            sx={{ 
+              backgroundColor: '#ffebee', 
+              borderRadius: 1,
+              border: '1px solid #ef5350'
+            }}
+          >
+            <Typography color="error" variant="body2">
+              {error}
+            </Typography>
+          </Box>
         )}
       </Box>
 
