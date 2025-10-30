@@ -41,12 +41,12 @@ export const EOMenuItems = [
     icon: IconFileDescription,
     href: '/eo/events/create',
   },
-  {
-    id: uniqueId(),
-    title: 'Event Rules',
-    icon: IconChecklist,
-    href: '/eo/events/rules',
-  },
+  // {
+  //   id: uniqueId(),
+  //   title: 'Event Rules',
+  //   icon: IconChecklist,
+  //   href: '/eo/events/rules',
+  // },
   {
     navlabel: true,
     subheader: 'Finance',
