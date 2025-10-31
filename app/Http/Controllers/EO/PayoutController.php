@@ -15,43 +15,47 @@ class PayoutController extends Controller
     {
         try {
             $eoId = Auth::user()->id;
-            
+
             // Get all successful payments for this EO's events
-            $payments = Payment::whereHas('registration.event', function($query) use ($eoId) {
+            $payments = Payment::whereHas('registration.event', function ($query) use ($eoId) {
                 $query->where('eo_id', $eoId);
             })
-            ->where('status', 'SUCCESS')
-            ->with(['registration.event', 'registration.tenant'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-            
-            // Group by event and calculate totals
-            $payouts = $payments->groupBy('registration.event_id')->map(function($eventPayments) {
+                ->where('status', 'SUCCESS')
+                ->with(['registration.event', 'registration.tenant'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Group by event and calculate totals, with H+1 expected settlement
+            $payouts = $payments->groupBy('registration.event_id')->map(function ($eventPayments) {
                 $event = $eventPayments->first()->registration->event;
                 $totalAmount = $eventPayments->sum('amount');
                 $platformFee = $eventPayments->count() * 5000; // Rp 5,000 per registration
                 $netAmount = $totalAmount - $platformFee;
-                
+                $latestPaymentAt = $eventPayments->max('created_at');
+                $expectedPayoutDate = \Carbon\Carbon::parse($latestPaymentAt)->addDay()->toDateString();
+                $isCompleted = \Carbon\Carbon::now()->toDateString() >= $expectedPayoutDate;
+
                 return [
+                    'id' => $event->id, // use event id as stable key
                     'event_id' => $event->id,
                     'event_name' => $event->name,
                     'event_date' => $event->start_date,
                     'total_registrations' => $eventPayments->count(),
-                    'total_amount' => $totalAmount,
+                    'gross_amount' => $totalAmount,
                     'platform_fee' => $platformFee,
-                    'net_amount' => $netAmount,
-                    'status' => 'PENDING', // Default status
-                    'payout_date' => null,
-                    'reference' => null,
+                    'amount' => $netAmount, // net amount to be paid out
+                    'status' => $isCompleted ? 'COMPLETED' : 'PENDING',
+                    'payout_date' => $expectedPayoutDate,
+                    'reference' => $isCompleted ? 'AUTO-H+1' : null,
                 ];
             })->values();
-            
+
             return ApiResponse::success($payouts, "Payouts retrieved successfully");
         } catch (\Throwable $e) {
             return ApiResponse::error("Failed to load payouts", 500, $e->getMessage());
         }
     }
-    
+
     public function requestPayout(Request $request)
     {
         try {
@@ -59,18 +63,18 @@ class PayoutController extends Controller
                 'event_id' => 'required|exists:events,id',
                 'amount' => 'required|numeric|min:0',
             ]);
-            
+
             $eoId = Auth::user()->id;
-            
+
             // Verify the event belongs to this EO
             $event = \App\Models\Event::where('id', $validated['event_id'])
                 ->where('eo_id', $eoId)
                 ->first();
-                
+
             if (!$event) {
                 return ApiResponse::error("Event not found or unauthorized", 404);
             }
-            
+
             // Create payout request
             $payout = Payout::create([
                 'eo_id' => $eoId,
@@ -79,7 +83,7 @@ class PayoutController extends Controller
                 'status' => 'PENDING',
                 'requested_at' => now(),
             ]);
-            
+
             return ApiResponse::success($payout, "Payout request submitted successfully", 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error("Validation failed", 422, $e->errors());
