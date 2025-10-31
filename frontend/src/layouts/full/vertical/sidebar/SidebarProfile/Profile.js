@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Avatar, Typography, IconButton, Tooltip, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Avatar,
+  Typography,
+  IconButton,
+  Tooltip,
+  useMediaQuery,
+  Chip,
+} from '@mui/material';
 import { useSelector } from 'react-redux';
-import { IconPower } from '@tabler/icons';
-import { Link } from 'react-router';
+import { IconPower } from '@tabler/icons-react';
 import axios from 'axios';
 import img1 from 'src/assets/images/profile/user-1.jpg';
 
@@ -10,7 +17,7 @@ export const Profile = () => {
   const [user, setUser] = useState(null);
   const customizer = useSelector((state) => state.customizer);
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
-  const hideMenu = lgUp ? customizer.isCollapse && !customizer.isSidebarHover : '';
+  const hideMenu = lgUp ? customizer.isCollapse && !customizer.isSidebarHover : false;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -21,7 +28,7 @@ export const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        setUser(res.data); // backend return langsung object user
+        setUser(res.data);
       })
       .catch((err) => {
         console.error('Error fetching user:', err);
@@ -29,43 +36,53 @@ export const Profile = () => {
       });
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/auth/login';
+  };
+
   return (
     <Box
-      display={'flex'}
+      display="flex"
       alignItems="center"
       gap={2}
-      sx={{ m: 3, p: 2, bgcolor: 'secondary.light' }}
+      sx={{
+        position: 'relative',
+        top: '-12px', // 🔥 ini yang bikin dia naik dikit
+        m: 2,
+        p: 2,
+        bgcolor: 'secondary.light',
+        borderRadius: 2,
+      }}
     >
-      {!hideMenu ? (
+      {!hideMenu && (
         <>
           <Avatar alt="User" src={img1} />
-          <Box>
+          <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" color="textPrimary">
               {user ? user.name : 'Loading...'}
             </Typography>
-            <Typography variant="caption" color="textSecondary">
+            <Typography variant="caption" color="textSecondary" display="block">
               {user ? user.role : '-'}
             </Typography>
+            <Chip
+              size="small"
+              sx={{ mt: 0.5 }}
+              color={user && user.is_active ? 'success' : 'error'}
+              label={user && user.is_active ? 'Active' : 'Inactive'}
+            />
           </Box>
-          <Box sx={{ ml: 'auto' }}>
-            <Tooltip title="Logout" placement="top">
-              <IconButton
-                color="primary"
-                component={Link}
-                to="/auth/login"
-                aria-label="logout"
-                size="small"
-                onClick={() => {
-                  localStorage.removeItem('token');
-                }}
-              >
-                <IconPower size="20" />
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <Tooltip title="Logout" placement="top">
+            <IconButton
+              color="primary"
+              aria-label="logout"
+              size="small"
+              onClick={handleLogout}
+            >
+              <IconPower size="20" />
+            </IconButton>
+          </Tooltip>
         </>
-      ) : (
-        ''
       )}
     </Box>
   );

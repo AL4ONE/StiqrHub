@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NavLink } from 'react-router';
 // mui imports
 import {
   ListItemIcon,
@@ -20,6 +19,7 @@ const NavItem = ({ item, level, pathDirect, onClick, hideMenu }) => {
   const Icon = item.icon;
   const theme = useTheme();
   const { t } = useTranslation();
+
   const itemIcon =
     level > 1 ? <Icon stroke={1.5} size="1rem" /> : <Icon stroke={1.5} size="1.3rem" />;
 
@@ -30,7 +30,9 @@ const NavItem = ({ item, level, pathDirect, onClick, hideMenu }) => {
     borderRadius: `${customizer.borderRadius}px`,
     backgroundColor: level > 1 ? 'transparent !important' : 'inherit',
     color:
-      level > 1 && pathDirect === item.href ? `${theme.palette.primary.main}!important` : theme.palette.text.secondary,
+      level > 1 && pathDirect === item.href
+        ? `${theme.palette.primary.main}!important`
+        : theme.palette.text.secondary,
     paddingLeft: hideMenu ? '10px' : level > 2 ? `${level * 15}px` : '10px',
     '&:hover': {
       backgroundColor: theme.palette.primary.light,
@@ -46,17 +48,18 @@ const NavItem = ({ item, level, pathDirect, onClick, hideMenu }) => {
     },
   }));
 
+  // fungsi cek aktif manual biar tetep ada efek highlight
+  const isActive = window.location.pathname === item.href;
+
   return (
     <List component="li" disablePadding key={item.id}>
       <ListItemStyled
-        button="true"
-        component={item.external ? 'a' : NavLink}
-        to={item.href}
-        href={item.external ? item.href : ''}
-        disabled={item.disabled}
-        selected={pathDirect === item.href}
-        target={item.external ? '_blank' : ''}
+        component="a"
+        href={item.href}
         onClick={onClick}
+        target={item.external ? '_blank' : ''}
+        className={isActive ? 'active' : ''}
+        disabled={item.disabled}
       >
         <ListItemIcon
           sx={{
@@ -70,14 +73,12 @@ const NavItem = ({ item, level, pathDirect, onClick, hideMenu }) => {
         >
           {itemIcon}
         </ListItemIcon>
+
         <ListItemText>
-          {hideMenu ? '' : <>{t(`${item.title}`)}</>}
-          <br />
-          {item.subtitle ? (
-            <Typography variant="caption">{hideMenu ? '' : item.subtitle}</Typography>
-          ) : (
-            ''
-          )}
+          {hideMenu ? '' : <>{t(item.title)}</>}
+          {item.subtitle && !hideMenu ? (
+            <Typography variant="caption">{item.subtitle}</Typography>
+          ) : null}
         </ListItemText>
 
         {!item.chip || hideMenu ? null : (

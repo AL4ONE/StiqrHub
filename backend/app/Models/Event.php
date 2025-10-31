@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Event extends Model
 {
@@ -23,6 +24,8 @@ class Event extends Model
         'payment_method',
         'status',
     ];
+
+    protected $appends = ['banner_url'];
 
     public function eo()
     {
@@ -47,5 +50,13 @@ class Event extends Model
     public function insurancePolicies()
     {
         return $this->hasMany(InsurancePolicy::class);
+    }
+
+    public function getBannerUrlAttribute()
+    {
+        if (!$this->banner) {
+            return null;
+        }
+        return Storage::url($this->banner);
     }
 }

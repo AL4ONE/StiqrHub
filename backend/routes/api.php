@@ -48,6 +48,7 @@ Route::middleware('jwt.verify')->group(function () {
     // ================== TENANT ==================
     Route::prefix('tenant')->middleware('role:TENANT')->group(function () {
         Route::get('/dashboard/stats', [TenantDashboardController::class, 'stats']);
+        Route::get('/events/{id}', [TenantEventController::class, 'show']);
 
         Route::get('/events', [TenantEventController::class, 'index']);
         Route::post('/events/{id}/register', [TenantEventController::class, 'register']);
