@@ -15,10 +15,9 @@ import { apiGet, apiPost } from "src/utils/api";
 import { useParams } from "react-router-dom";
 
 export default function EventDetail() {
-  // Ambil ID dari URL path langsung sebagai fallback
   const params = useParams();
-  const id = params.id || window.location.pathname.split('/').pop();
-  
+  const id = params.id || window.location.pathname.split("/").pop();
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,32 +28,27 @@ export default function EventDetail() {
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      setError("");
       try {
-        console.log("Event ID from URL:", id); // debug log
-        
-        // ambil semua event
-        const data = await apiGet(BACKEND_URL + `/api/tenant/events`);
-        console.log("API Response:", data); // debug log
-        
-        const list = Array.isArray(data) ? data : data?.data || [];
-        console.log("Events list:", list); // debug log
-        
-        const ev = list.find((e) => String(e.id) === String(id)); // ubah jadi string comparison
-        console.log("Found event:", ev); // debug log
-        
-        setEvent(ev || null);
+        setLoading(true);
+        setError("");
+
+        console.log("Fetching event id:", id);
+        const data = await apiGet(`${BACKEND_URL}/api/tenant/events/${id}`);
+        const ev = data?.data || null;
+        setEvent(ev);
 
         if (ev) {
-          // ambil daftar event aktif tenant (yang udah register)
-          const active = await apiGet(BACKEND_URL + `/api/tenant/events/active`);
-          const activeList = Array.isArray(active) ? active : active?.data || [];
-          const isRegistered = activeList.some((e) => String(e.id) === String(id));
+          const active = await apiGet(`${BACKEND_URL}/api/tenant/events/active`);
+          const activeList = Array.isArray(active)
+            ? active
+            : active?.data || [];
+          const isRegistered = activeList.some(
+            (e) => String(e.id) === String(id)
+          );
           setHasRegistered(isRegistered);
         }
       } catch (e) {
-        console.error("Error loading event:", e); // debug log
+        console.error("Error loading event:", e);
         setError("Failed to load event");
       } finally {
         setLoading(false);
@@ -67,13 +61,17 @@ export default function EventDetail() {
 
   const register = async () => {
     if (!canRegister) return;
-    setRegistering(true);
-    setError("");
     try {
-      const body = isPerDay ? { start_date: startDate, end_date: endDate } : undefined;
-      const res = await apiPost(BACKEND_URL + `/api/tenant/events/${id}/register`, body);
+      setRegistering(true);
+      const body = isPerDay
+        ? { start_date: startDate, end_date: endDate }
+        : undefined;
+      const res = await apiPost(
+        `${BACKEND_URL}/api/tenant/events/${id}/register`,
+        body
+      );
       if (res?.status === "success") {
-        alert("Registered successfully. Payment created with PENDING status.");
+        alert("Registered successfully! Payment pending.");
         setHasRegistered(true);
       } else {
         alert(res?.message || "Failed to register");
@@ -86,13 +84,16 @@ export default function EventDetail() {
   };
 
   const handleClaim = () => {
-    // Ganti jadi window.location untuk navigasi manual
     window.location.href = `/tenant/events/${id}/claim`;
   };
 
   const StatusChip = ({ value }) => {
     const color =
-      value === "ACTIVE" ? "success" : value === "PUBLISHED" ? "primary" : "default";
+      value === "ACTIVE"
+        ? "success"
+        : value === "PUBLISHED"
+        ? "primary"
+        : "default";
     return <Chip label={value} color={color} />;
   };
 
@@ -119,15 +120,42 @@ export default function EventDetail() {
     <PageContainer title="Event Detail">
       <Card>
         <CardContent>
+          {(event?.banner_url || event?.banner) && (
+            <Box
+              mb={2}
+              sx={{
+                width: "100%",
+                height: 260,
+                overflow: "hidden",
+                borderRadius: 1,
+                backgroundColor: "#f5f5f5",
+              }}
+            >
+              <img
+                src={event.banner_url || `${BACKEND_URL}/storage/${event.banner}`}
+                alt={event.name}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </Box>
+          )}
+
           <Typography variant="h4" mb={2}>
             {event.name}
           </Typography>
           <Box display="flex" gap={1} mb={2} alignItems="center">
             <StatusChip value={event.status} />
             <Chip label={event.payment_method} variant="outlined" />
-            {event.insurance_active ? (
+            {event.insurance_active && (
               <Chip label="Insurance Active" color="info" />
-            ) : null}
+            )}
           </Box>
           <Typography variant="body1" color="textSecondary" mb={2}>
             {event.location}
@@ -138,6 +166,26 @@ export default function EventDetail() {
           <Typography variant="body2" mb={2}>
             Category: {event.category}
           </Typography>
+
+          <Box mt={2} mb={2}>
+            <Typography variant="subtitle1" mb={1}>
+              Event Rules
+            </Typography>
+            {Array.isArray(event.rules) && event.rules.length > 0 ? (
+              <Stack spacing={0.5}>
+                {event.rules.map((r, idx) => (
+                  <Typography key={idx} variant="body2">
+                    • {r.rule_name}
+                  </Typography>
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="textSecondary">
+                No rules for this event
+              </Typography>
+            )}
+          </Box>
+
           <Typography variant="body2" mb={2}>
             Booth Price: {event.booth_price || "Free"}
           </Typography>
@@ -166,7 +214,8 @@ export default function EventDetail() {
                 />
               </Stack>
               <Typography variant="caption" color="textSecondary">
-                Dates must be within event range: {event.start_date} to {event.end_date}
+                Dates must be within event range: {event.start_date} to{" "}
+                {event.end_date}
               </Typography>
             </Box>
           )}
@@ -181,11 +230,7 @@ export default function EventDetail() {
                 {registering ? "Registering..." : "Register"}
               </Button>
             ) : (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleClaim}
-              >
+              <Button variant="contained" color="success" onClick={handleClaim}>
                 Claim
               </Button>
             )}
