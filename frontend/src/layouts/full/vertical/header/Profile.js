@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import {
   Box,
@@ -9,21 +9,15 @@ import {
   Button,
   IconButton,
 } from '@mui/material';
-import * as dropdownData from './data';
 import { IconMail } from '@tabler/icons';
 import { Stack } from '@mui/system';
-import axios from 'axios';
 import Scrollbar from 'src/components/custom-scroll/Scrollbar';
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
-
-const handleLogout = () => {
-  localStorage.removeItem('token');
-  window.location.href = '/auth/login';
-};
+import { useAuth } from 'src/hooks/useAuth'; // 👈 Import custom hook
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
-  const [user, setUser] = useState(null);
+  const { user, loading, logout } = useAuth(); // 👈 Gunakan hook
 
   const handleClick2 = (event) => {
     setAnchorEl2(event.currentTarget);
@@ -32,23 +26,6 @@ const Profile = () => {
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    axios
-      .get('http://localhost:8000/api/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setUser(res.data); // pastikan backend balikin di { data: {...} }
-      })
-      .catch((err) => {
-        console.error('Error fetching user:', err);
-        setUser({ name: 'Unknown', email: '-', role: '-' });
-      });
-  }, []);
 
   return (
     <Box>
@@ -96,10 +73,10 @@ const Profile = () => {
               <Avatar src={ProfileImg} alt="User" sx={{ width: 95, height: 95 }} />
               <Box>
                 <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-                  {user ? user.name : 'Unknown'}
+                  {loading ? 'Loading...' : user?.name || 'Unknown'}
                 </Typography>
                 <Typography variant="subtitle2" color="textSecondary">
-                  {user ? user.role : '-'}
+                  {user?.role || '-'}
                 </Typography>
                 <Typography
                   variant="subtitle2"
@@ -109,67 +86,18 @@ const Profile = () => {
                   gap={1}
                 >
                   <IconMail width={15} height={15} />
-                  {user ? user.email : '-'}
+                  {user?.email || '-'}
                 </Typography>
               </Box>
             </Stack>
             <Divider />
-{/* 
-            {dropdownData.profile.map((profile) => (
-              <Box key={profile.title}>
-                <Box sx={{ py: 2, px: 0 }} className="hover-text-primary">
-                  <Link to={profile.href}>
-                    <Stack direction="row" spacing={2}>
-                      <Box
-                        width="45px"
-                        height="45px"
-                        bgcolor="primary.light"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Avatar
-                          src={profile.icon}
-                          alt={profile.icon}
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 0,
-                          }}
-                        />
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="subtitle2"
-                          fontWeight={600}
-                          color="textPrimary"
-                          className="text-hover"
-                          noWrap
-                          sx={{ width: '240px' }}
-                        >
-                          {profile.title}
-                        </Typography>
-                        <Typography
-                          color="textSecondary"
-                          variant="subtitle2"
-                          sx={{ width: '240px' }}
-                          noWrap
-                        >
-                          {profile.subtitle}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Link>
-                </Box>
-              </Box>
-            ))} */}
 
             <Box mt={2}>
               <Button
                 variant="outlined"
                 color="primary"
                 fullWidth
-                onClick={handleLogout}
+                onClick={logout}
               >
                 Logout
               </Button>

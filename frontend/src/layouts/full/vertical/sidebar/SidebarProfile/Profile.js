@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Box,
   Avatar,
@@ -10,36 +10,14 @@ import {
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { IconPower } from '@tabler/icons-react';
-import axios from 'axios';
+import { useAuth } from 'src/hooks/useAuth'; // 👈 Import custom hook
 import img1 from 'src/assets/images/profile/user-1.jpg';
 
 export const Profile = () => {
-  const [user, setUser] = useState(null);
+  const { user, loading, logout } = useAuth(); // 👈 Gunakan hook
   const customizer = useSelector((state) => state.customizer);
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
   const hideMenu = lgUp ? customizer.isCollapse && !customizer.isSidebarHover : false;
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    axios
-      .get('http://localhost:8000/api/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setUser(res.data);
-      })
-      .catch((err) => {
-        console.error('Error fetching user:', err);
-        setUser({ name: 'Unknown', role: '-' });
-      });
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/auth/login';
-  };
 
   return (
     <Box
@@ -48,7 +26,7 @@ export const Profile = () => {
       gap={2}
       sx={{
         position: 'relative',
-        top: '-12px', // 🔥 ini yang bikin dia naik dikit
+        top: '-12px',
         m: 2,
         p: 2,
         bgcolor: 'secondary.light',
@@ -60,16 +38,16 @@ export const Profile = () => {
           <Avatar alt="User" src={img1} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" color="textPrimary">
-              {user ? user.name : 'Loading...'}
+              {loading ? 'Loading...' : user?.name || 'Unknown'}
             </Typography>
             <Typography variant="caption" color="textSecondary" display="block">
-              {user ? user.role : '-'}
+              {user?.role || '-'}
             </Typography>
             <Chip
               size="small"
               sx={{ mt: 0.5 }}
-              color={user && user.is_active ? 'success' : 'error'}
-              label={user && user.is_active ? 'Active' : 'Inactive'}
+              color={user?.is_active ? 'success' : 'error'}
+              label={user?.is_active ? 'Active' : 'Inactive'}
             />
           </Box>
           <Tooltip title="Logout" placement="top">
@@ -77,7 +55,7 @@ export const Profile = () => {
               color="primary"
               aria-label="logout"
               size="small"
-              onClick={handleLogout}
+              onClick={logout}
             >
               <IconPower size="20" />
             </IconButton>
