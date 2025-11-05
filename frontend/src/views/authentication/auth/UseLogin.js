@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { BACKEND_URL, API_PREFIX } from 'src/config/constants';
 
-const useLogin = () => {
+export default function useLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -9,25 +9,31 @@ const useLogin = () => {
   const handleLogin = async (e, onSuccess) => {
     e.preventDefault();
     setError('');
-
     try {
-      const response = await axios.post('http://localhost:8000/api/login', {
-        email: username,
-        password: password,
+      const res = await fetch(BACKEND_URL + '/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username, password })
       });
-
-      // 🔥 Simpan HANYA token
-      localStorage.setItem('token', response.data.token);
-
-      // 🔥 Panggil callback untuk sync & redirect
-      if (onSuccess) {
-        await onSuccess();
+      const data = await res.json();
+      if (data.token) {
+        // Clear mock leftovers
+        localStorage.removeItem('username');
+        localStorage.removeItem('user');
+        // Persist session from backend
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('role', data.user.role);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        setError(data.message || 'Login gagal');
       }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(
-        err.response?.data?.message || 'Login gagal. Cek email dan password Anda.'
-      );
+    } catch {
+      setError('Login gagal');
     }
   };
 
@@ -39,6 +45,4 @@ const useLogin = () => {
     error,
     handleLogin,
   };
-};
-
-export default useLogin;
+}

@@ -8,13 +8,12 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Link } from 'react-router';
+import { Link } from 'react-router'; // gunakan react-router biasa
 
 import CustomCheckbox from '../../../components/forms/theme-elements/CustomCheckbox';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
 import useLogin from './UseLogin';
-import { useAuth } from '../../../hooks/useAuth'; // 👈 Import useAuth hook
 
 const AuthLogin = ({ title, subtitle, subtext }) => {
   const {
@@ -26,33 +25,14 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
     handleLogin,
   } = useLogin();
 
-  const { syncUserData } = useAuth(); // 👈 Ambil syncUserData function
-
-  // Navigasi manual: redirect by role setelah sync
-  const onLoginSuccess = async () => {
-    try {
-      // 🔥 Sync user data dari API setelah login
-      const userData = await syncUserData();
-
-      if (!userData) {
-        console.error('Failed to sync user data');
-        return;
-      }
-
-      // Redirect berdasarkan role DARI API (bukan localStorage)
-      const role = userData.role;
-
-      if (role === 'EO') return (window.location.href = '/eo/dashboard');
-      if (role === 'TENANT') return (window.location.href = '/tenant/dashboard');
-      if (role === 'ADMIN') return (window.location.href = '/admin/dashboard');
-      if (role === 'INSURER') return (window.location.href = '/insurer/dashboard');
-
-      // Default fallback
-      window.location.href = '/tenant/dashboard';
-    } catch (err) {
-      console.error('Error during login redirect:', err);
-      window.location.href = '/tenant/dashboard';
-    }
+  // Navigasi manual: redirect by role
+  const onLoginSuccess = () => {
+    const role = localStorage.getItem('role');
+    if (role === 'EO') return (window.location.href = '/eo/dashboard');
+    if (role === 'TENANT') return (window.location.href = '/tenant/dashboard');
+    if (role === 'ADMIN') return (window.location.href = '/admin/dashboard');
+    if (role === 'INSURER') return (window.location.href = '/insurer/dashboard');
+    window.location.href = '/tenant/dashboard';
   };
 
   return (
@@ -64,6 +44,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
       ) : null}
 
       {subtext}
+
 
       <form onSubmit={e => handleLogin(e, onLoginSuccess)}>
         <Stack>

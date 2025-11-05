@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BACKEND_URL, API_PREFIX } from 'src/config/constants';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = `${BACKEND_URL}${API_PREFIX}`;
 
 export const useAuth = () => {
     const [user, setUser] = useState(null);
@@ -18,7 +19,7 @@ export const useAuth = () => {
         try {
             setLoading(true);
             const response = await axios.get(`${API_URL}/me`, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
             });
 
             const userData = response.data;

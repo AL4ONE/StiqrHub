@@ -18,20 +18,6 @@ class EventController extends Controller
         return response()->json($events);
     }
 
-    public function show($id)
-    {
-        $event = Event::where('id', $id)
-            ->whereIn('status', ['ACTIVE', 'PUBLISHED'])
-            ->with('rules')
-            ->first();
-
-        if (!$event) {
-            return ApiResponse::error('Event not found', 404);
-        }
-
-        return ApiResponse::success($event, 'Event retrieved successfully');
-    }
-
     public function register($id)
     {
         $event = Event::findOrFail($id);
@@ -161,4 +147,5 @@ class EventController extends Controller
 
         return ApiResponse::success($events, "Your active events retrieved successfully");
     }
+
 }
