@@ -13,6 +13,7 @@ import * as dropdownData from './data';
 import { IconMail } from '@tabler/icons';
 import { Stack } from '@mui/system';
 import axios from 'axios';
+import { BACKEND_URL } from 'src/config/constants';
 import Scrollbar from 'src/components/custom-scroll/Scrollbar';
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
@@ -38,15 +39,18 @@ const Profile = () => {
     if (!token) return;
 
     axios
-      .get('http://localhost:8000/api/me', {
+      .get(BACKEND_URL + '/api/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        setUser(res.data); // pastikan backend balikin di { data: {...} }
+        const apiUser = res?.data?.data || res?.data || null;
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        setUser(apiUser || cached);
       })
       .catch((err) => {
         console.error('Error fetching user:', err);
-        setUser({ name: 'Unknown', email: '-', role: '-' });
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        setUser(cached || { name: 'Unknown', email: '-', role: '-' });
       });
   }, []);
 
