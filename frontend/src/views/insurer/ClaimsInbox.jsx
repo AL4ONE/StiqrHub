@@ -87,6 +87,28 @@ export default function ClaimsInbox() {
                     <Typography variant="body2" color="textSecondary" mb={1}>Tenant: {c?.tenant?.name || '-'}</Typography>
                     <Typography variant="body2" mb={1}>Amount: Rp {(c.claim_amount || 0).toLocaleString()}</Typography>
                     <Typography variant="body2" mb={1}>Description: {c.description}</Typography>
+                    {c.document_path ? (
+                      <Box mt={1} mb={1} sx={{ backgroundColor: '#fafafa', borderRadius: 1, overflow: 'hidden' }}>
+                        {/(jpg|jpeg|png)$/i.test((c.document_path || '').split('.').pop() || '') ? (
+                          <img
+                            src={`${BACKEND_URL}/storage/${c.document_path}`}
+                            alt={`Claim ${c.id} evidence`}
+                            style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <Button
+                            size="small"
+                            component="a"
+                            href={`${BACKEND_URL}/storage/${c.document_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View attachment
+                          </Button>
+                        )}
+                      </Box>
+                    ) : null}
                     {c.status === 'REQUEST_CLAIM' && (
                       <Stack direction="row" spacing={1} mt={1}>
                         <Button size="small" variant="contained" color="success" onClick={() => handleAction(c, 'approve')}>Approve</Button>
