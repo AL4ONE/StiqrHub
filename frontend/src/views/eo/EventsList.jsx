@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  Box,
-} from '@mui/material';
+import { Grid, Card, CardContent, Typography, Button, Stack, Chip, Box } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
+import { Link } from 'react-router';
 
 const statusColor = (status) => {
   if (status === 'ACTIVE') return 'success';
@@ -29,7 +21,7 @@ export default function EventsList() {
       setLoading(true);
       setError('');
       try {
-        const data = await apiGet(`${BACKEND_URL}/api/eo/events`);
+        const data = await apiGet(BACKEND_URL + '/api/eo/events');
         setEvents(data?.data || []);
       } catch (e) {
         setError('Failed to load events');
@@ -42,100 +34,31 @@ export default function EventsList() {
   return (
     <PageContainer title="My Events">
       <Box mb={3}>
-        <Button
-          variant="contained"
-          component="a"
-          href="/eo/events/create"
-        >
+        <Button variant="contained" component={Link} to="/eo/events/create">
           Create New Event
         </Button>
       </Box>
-
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
-
       <Grid container spacing={2}>
         {events.map((ev) => (
           <Grid item xs={12} md={6} key={ev.id}>
-            <Card
-              sx={{
-                transition: '0.3s',
-                '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' },
-              }}
-            >
+            <Card>
               <CardContent>
-                {(ev.banner_url || ev.banner) && (
-                  <Box
-                    mb={2}
-                    sx={{
-                      width: '100%',
-                      height: 160,
-                      overflow: 'hidden',
-                      borderRadius: 1,
-                      bgcolor: '#f5f5f5',
-                    }}
-                  >
-                    <img
-                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
-                      alt={ev.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </Box>
-                )}
-
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  mb={2}
-                >
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                   <Typography variant="h6">{ev.name}</Typography>
-                  <Chip
-                    label={ev.status}
-                    color={statusColor(ev.status)}
-                    size="small"
-                  />
+                  <Chip label={ev.status} color={statusColor(ev.status)} size="small" />
                 </Box>
-
-                <Typography variant="body2" color="textSecondary" mb={1}>
-                  {ev.location}
-                </Typography>
-                <Typography variant="body2" mb={1}>
-                  {ev.start_date} → {ev.end_date}
-                </Typography>
-                <Typography variant="body2" mb={1}>
-                  Category: {ev.category}
-                </Typography>
-                <Typography variant="body2" mb={1}>
-                  Booth Price: {ev.booth_price || 'Free'}
-                </Typography>
-                <Typography variant="body2" mb={2}>
-                  Registrations: {ev.registrations_count || 0}
-                </Typography>
-
+                <Typography variant="body2" color="textSecondary" mb={1}>{ev.location}</Typography>
+                <Typography variant="body2" mb={1}>{ev.start_date} → {ev.end_date}</Typography>
+                <Typography variant="body2" mb={1}>Category: {ev.category}</Typography>
+                <Typography variant="body2" mb={1}>Booth Price: {ev.booth_price || 'Free'}</Typography>
+                <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
                 <Stack direction="row" spacing={1}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    component="a"
-                    href={`/eo/events/${ev.id}`}
-                  >
+                  <Button variant="contained" size="small" component={Link} to={`/eo/events/${ev.id}`}>
                     View Details
                   </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    component="a"
-                    href={`/eo/events/${ev.id}/rules`}
-                  >
+                  <Button variant="outlined" size="small" component={Link} to={`/eo/events/${ev.id}/rules`}>
                     Rules
                   </Button>
                 </Stack>

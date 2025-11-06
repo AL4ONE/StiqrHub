@@ -5,7 +5,7 @@ import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 
 const statusColor = (status) => {
-  if (status === 'COMPLETED') return 'success';
+  if (status === 'SUCCESS') return 'success';
   if (status === 'PENDING') return 'warning';
   return 'default';
 };
@@ -39,7 +39,7 @@ export default function Payouts() {
           {error && <Typography color="error">{error}</Typography>}
           <Grid container spacing={2}>
             {payouts.map((p) => (
-              <Grid item xs={12} md={6} key={p.id || p.event_id}>
+              <Grid item xs={12} md={6} key={p.id}>
                 <Card variant="outlined">
                   <CardContent>
                     <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -47,16 +47,7 @@ export default function Payouts() {
                       <Chip label={p.status} color={statusColor(p.status)} size="small" />
                     </Box>
                     <Typography variant="body2" color="textSecondary" mb={1}>
-                      Registrations: {p.total_registrations}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" mb={1}>
-                      Gross: Rp {(p.gross_amount || 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" mb={1}>
-                      Platform Fee: Rp {(p.platform_fee || 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" mb={1}>
-                      Net Payout: Rp {(p.amount || 0).toLocaleString()}
+                      Amount: {p.amount}
                     </Typography>
                     <Typography variant="body2" color="textSecondary" mb={1}>
                       Date: {p.payout_date}
