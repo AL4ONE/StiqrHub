@@ -164,6 +164,33 @@ class EventController extends Controller
             }])
             ->get();
 
+        // attach payment summary for UI: booth + platform + insurance
+        foreach ($events as $ev) {
+            $registration = $ev->registrations->first();
+            $platformFee = 5000;
+            $insuranceFee = $ev->insurance_active ? 10000 : 0;
+
+            if ($ev->payment_method === 'per_day') {
+                $days = $registration?->days_booked;
+                if (!$days) {
+                    $start = $registration?->start_date ? new \DateTime($registration->start_date) : new \DateTime($ev->start_date);
+                    $end = $registration?->end_date ? new \DateTime($registration->end_date) : new \DateTime($ev->end_date);
+                    $interval = $start->diff($end);
+                    $days = $interval->days + 1;
+                }
+                $booth = ($ev->booth_price ?? 0) * max(1, (int)$days);
+            } else {
+                $booth = $ev->booth_price ?? 0;
+            }
+
+            $ev->setAttribute('payment_summary', [
+                'booth_price' => $booth,
+                'platform_fee' => $platformFee,
+                'insurance_fee' => $insuranceFee,
+                'total' => $booth + $platformFee + $insuranceFee,
+            ]);
+        }
+
         return ApiResponse::success($events, "Your active events retrieved successfully");
     }
 }
