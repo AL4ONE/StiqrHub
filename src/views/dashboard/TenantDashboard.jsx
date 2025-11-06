@@ -4,7 +4,7 @@ import { IconCalendar, IconShoppingCart, IconShield } from '@tabler/icons-react'
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default function TenantDashboard() {
   const [stats, setStats] = useState({
