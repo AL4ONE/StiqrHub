@@ -8,6 +8,7 @@ use App\Models\Claim;
 use App\Models\Event;
 use App\Models\InsurancePolicy;
 use App\Models\Registration;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 
 class ClaimController extends Controller
@@ -60,14 +61,39 @@ class ClaimController extends Controller
                 return ApiResponse::error('You have already submitted a claim for this event', 400);
             }
 
+            // Require successful payment before allowing claim
+            $paymentSuccess = Payment::where('registration_id', $registration->id)
+                ->where('status', 'SUCCESS')
+                ->exists();
+
+            if (!$paymentSuccess) {
+                return ApiResponse::error('You can submit a claim only after your event payment is successful', 403);
+            }
+
             $documentPath = $request->file('document')->store('claims', 'public');
+
+            // Compute booth-only claim amount based on payment method
+            $boothAmount = 0;
+            if ($event->payment_method === 'per_day') {
+                $days = $registration->days_booked;
+                if (!$days) {
+                    $start = $registration->start_date ? new \DateTime($registration->start_date) : new \DateTime($event->start_date);
+                    $end = $registration->end_date ? new \DateTime($registration->end_date) : new \DateTime($event->end_date);
+                    $interval = $start->diff($end);
+                    $days = $interval->days + 1;
+                }
+                $unit = $event->booth_price ?? 0;
+                $boothAmount = $unit * max(1, $days);
+            } else {
+                $boothAmount = $event->booth_price ?? 0;
+            }
 
             $claim = Claim::create([
                 'tenant_id' => $userId,
                 'insurance_policy_id' => $policy->id,
                 'incident_date' => $incidentDate,
                 'description' => $validated['description'],
-                'claim_amount' => $validated['claim_amount'] ?? null,
+                'claim_amount' => $boothAmount,
                 'document_path' => $documentPath,
                 'status' => 'REQUEST_CLAIM'
             ]);
