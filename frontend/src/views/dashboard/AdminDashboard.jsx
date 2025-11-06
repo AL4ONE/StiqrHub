@@ -4,7 +4,7 @@ import { IconCurrencyDollar, IconUserCheck, IconAlertCircle, IconChartBar } from
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({

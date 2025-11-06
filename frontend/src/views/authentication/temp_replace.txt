@@ -1,0 +1,924 @@
+import React from 'react';
+import {
+  Box,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Button,
+  Stack,
+  Divider,
+} from '@mui/material';
+import { Link } from 'react-router-dom'; // gunakan react-router biasa
+
+import CustomCheckbox from '../../../components/forms/theme-elements/CustomCheckbox';
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+import useLogin from './UseLogin';
+
+const AuthLogin = ({ title, subtitle, subtext }) => {
+  const {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    error,
+    handleLogin,
+  } = useLogin();
+
+  // Navigasi manual: redirect by role
+  const onLoginSuccess = () => {
+    const role = localStorage.getItem('role');
+    if (role === 'EO') return (window.location.href = '/eo/dashboard');
+    if (role === 'TENANT') return (window.location.href = '/tenant/dashboard');
+    if (role === 'ADMIN') return (window.location.href = '/admin/dashboard');
+    if (role === 'INSURER') return (window.location.href = '/insurer/dashboard');
+    window.location.href = '/tenant/dashboard';
+  };
+
+  return (
+    <>
+      {title ? (
+        <Typography fontWeight="700" variant="h3" mb={1}>
+          {title}
+        </Typography>
+      ) : null}
+
+      {subtext}
+
+
+      <form onSubmit={e => handleLogin(e, onLoginSuccess)}>
+        <Stack>
+          <Box>
+            <CustomFormLabel htmlFor="username">Email</CustomFormLabel>
+            <CustomTextField
+              id="username"
+              variant="outlined"
+              fullWidth
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+            />
+          </Box>
+          <Box>
+            <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
+            <CustomTextField
+              id="password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </Box>
+          <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>
+            <FormGroup>
+              <FormControlLabel
+                control={<CustomCheckbox defaultChecked />}
+                label="Remember this Device"
+              />
+            </FormGroup>
+            <Typography
+              component={Link}
+              to="/auth/forgot-password"
+              fontWeight="500"
+              sx={{
+                textDecoration: 'none',
+                color: 'primary.main',
+              }}
+            >
+              Forgot Password ?
+            </Typography>
+          </Stack>
+        </Stack>
+        <Box>
+          <Button
+            color="primary"
+            variant="contained"
+            size="large"
+            fullWidth
+            type="submit"
+          >
+            Sign In
+          </Button>
+        </Box>
+        {error && <Typography color="error" mt={2}>{error}</Typography>}
+      </form>
+      {subtitle}
+    </>
+  );
+};
+
+export default AuthLogin;
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  Stack,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  OutlinedInput,
+  Chip,
+} from '@mui/material';
+import { Link } from 'react-router-dom';
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+import AuthSocialButtons from './AuthSocialButtons';
+
+// ✅ Import dari env
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+const allCategories = [
+  'F&B',
+  'Fashion',
+  'Automotive',
+  'Art & Craft',
+  'Snack & Beverage',
+  'Wellness',
+  'Others',
+];
+
+const AuthRegister = ({ title, subtitle, subtext }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // ✅ Tambah loading state
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const role = params.get('role') || 'TENANT';
+
+      const payload = { name, email, password, role };
+      
+      // ✅ Validasi categories untuk EO
+      if (role === 'EO') {
+        if (categories.length === 0) {
+          setError('Please select at least 1 category');
+          setLoading(false);
+          return;
+        }
+        if (categories.length > 3) {
+          setError('Maximum 3 categories allowed');
+          setLoading(false);
+          return;
+        }
+        payload.categories = categories;
+      }
+
+      // ✅ Tambah Accept header
+      const res = await fetch(`${BACKEND_URL}/api/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', // ✅ Penting untuk Laravel
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      // ✅ Cek HTTP status code
+      if (!res.ok) {
+        // Handle validation errors
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat().join(', ');
+          setError(errorMessages);
+        } else {
+          setError(data.message || 'Registration failed');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Success case
+      if (data && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user)); // ✅ Simpan full user object
+        localStorage.setItem('role', data.user?.role);
+
+        const r = data.user?.role || 'TENANT';
+        
+        // ✅ Redirect berdasarkan role
+        if (r === 'EO') {
+          window.location.href = '/eo/dashboard';
+        } else if (r === 'ADMIN') {
+          window.location.href = '/admin/dashboard';
+        } else if (r === 'INSURER') {
+          window.location.href = '/insurer/dashboard';
+        } else {
+          window.location.href = '/tenant/dashboard';
+        }
+      } else {
+        setError(data?.message || 'Registration failed');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      setError('Network error. Please check your connection.');
+      setLoading(false);
+    }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role') || 'TENANT';
+
+  return (
+    <>
+      {title && (
+        <Typography fontWeight="700" variant="h3" mb={1}>
+          {title}
+        </Typography>
+      )}
+
+      {subtext}
+      <AuthSocialButtons title="Sign up with" />
+
+      <Box mt={3}>
+        <Divider>
+          <Typography
+            component="span"
+            color="textSecondary"
+            variant="h6"
+            fontWeight="400"
+            position="relative"
+            px={2}
+          >
+            or sign up with
+          </Typography>
+        </Divider>
+      </Box>
+
+      <Box component="form" onSubmit={handleRegister}>
+        <Stack mb={3}>
+          <CustomFormLabel htmlFor="name">Name</CustomFormLabel>
+          <CustomTextField
+            id="name"
+            variant="outlined"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <CustomFormLabel htmlFor="email">Email Address</CustomFormLabel>
+          <CustomTextField
+            id="email"
+            type="email"
+            variant="outlined"
+            fullWidth
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
+          <CustomTextField
+            id="password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            inputProps={{ minLength: 6 }}
+          />
+
+          {/* Dropdown categories muncul kalau role EO */}
+          {role === 'EO' && (
+            <>
+              <CustomFormLabel htmlFor="categories">
+                Categories (1–3) <span style={{ color: 'red' }}>*</span>
+              </CustomFormLabel>
+              <FormControl fullWidth>
+                <InputLabel id="categories-label">Select categories</InputLabel>
+                <Select
+                  labelId="categories-label"
+                  id="categories"
+                  multiple
+                  value={categories}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 3) setCategories(value);
+                  }}
+                  input={<OutlinedInput label="Select categories" />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip key={value} label={value} />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {allCategories.map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <Typography variant="caption" color="textSecondary">
+                  You can select up to 3 categories
+                </Typography>
+              </FormControl>
+            </>
+          )}
+        </Stack>
+
+        {/* ✅ Tambah loading state */}
+        <Button 
+          color="primary" 
+          variant="contained" 
+          size="large" 
+          fullWidth 
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Signing Up...' : 'Sign Up'}
+        </Button>
+
+        {/* ✅ Better error display */}
+        {error && (
+          <Box 
+            mt={2} 
+            p={2} 
+            sx={{ 
+              backgroundColor: '#ffebee', 
+              borderRadius: 1,
+              border: '1px solid #ef5350'
+            }}
+          >
+            <Typography color="error" variant="body2">
+              {error}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {subtitle}
+    </>
+  );
+};
+
+export default AuthRegister;
+import React from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+import { Stack } from '@mui/system';
+
+
+const AuthTwoSteps = () => (
+    <>
+
+
+
+        <Box mt={4} >
+            <Stack mb={3}>
+                <CustomFormLabel htmlFor="code">Type your 6 digits security code </CustomFormLabel>
+                <Stack spacing={2} direction="row">
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                    <CustomTextField id="code" variant="outlined" fullWidth />
+                </Stack>
+
+            </Stack>
+            <Button
+                color="primary"
+                variant="contained"
+                size="large"
+                fullWidth
+                component={Link}
+                to="/">
+                Verify My Account
+            </Button>
+
+
+
+            <Stack direction="row" spacing={1} mt={3}>
+                <Typography
+                    color="textSecondary"
+                    variant="h6"
+                    fontWeight="400"
+                >
+                    Didn't get the code?
+                </Typography>
+                <Typography
+                    component={Link}
+                    to="/"
+                    fontWeight="500"
+                    sx={{
+                        textDecoration: 'none',
+                        color: 'primary.main',
+                    }}
+                >
+                    Resend
+                </Typography>
+            </Stack>
+        </Box>
+    </>
+);
+
+export default AuthTwoSteps;
+
+import React from 'react';
+import {
+  Box,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Button,
+  Stack,
+  Divider,
+} from '@mui/material';
+import { Link } from 'react-router-dom';
+
+import CustomCheckbox from '../../../components/forms/theme-elements/CustomCheckbox';
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+
+import AuthSocialButtons from './AuthSocialButtons';
+
+const AuthLogin = ({ title, subtitle, subtext }) => (
+  <>
+    {title ? (
+      <Typography fontWeight="700" variant="h3" mb={1}>
+        {title}
+      </Typography>
+    ) : null}
+
+    {subtext}
+
+    <AuthSocialButtons title="Sign in with" />
+    <Box mt={3}>
+      <Divider>
+        <Typography
+          component="span"
+          color="textSecondary"
+          variant="h6"
+          fontWeight="400"
+          position="relative"
+          px={2}
+        >
+          or sign in with
+        </Typography>
+      </Divider>
+    </Box>
+
+    <Stack>
+      <Box>
+        <CustomFormLabel htmlFor="username">Username</CustomFormLabel>
+        <CustomTextField id="username" variant="outlined" fullWidth />
+      </Box>
+      <Box>
+        <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
+        <CustomTextField id="password" type="password" variant="outlined" fullWidth />
+      </Box>
+      <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>
+        <FormGroup>
+          <FormControlLabel
+            control={<CustomCheckbox defaultChecked />}
+            label="Remeber this Device"
+          />
+        </FormGroup>
+        <Typography
+          component={Link}
+          to="/auth/forgot-password"
+          fontWeight="500"
+          sx={{
+            textDecoration: 'none',
+            color: 'primary.main',
+          }}
+        >
+          Forgot Password ?
+        </Typography>
+      </Stack>
+    </Stack>
+    <Box>
+      <Button
+        color="primary"
+        variant="contained"
+        size="large"
+        fullWidth
+        component={Link}
+        to="/"
+        type="submit"
+      >
+        Sign In
+      </Button>
+    </Box>
+    {subtitle}
+  </>
+);
+
+export default AuthLogin;
+
+import React from 'react';
+import { Button, Stack } from '@mui/material';
+import { Link } from 'react-router-dom';
+
+import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+
+const AuthForgotPassword = () => (
+  <>
+    <Stack mt={4} spacing={2}>
+      <CustomFormLabel htmlFor="reset-email">Email Adddress</CustomFormLabel>
+      <CustomTextField id="reset-email" variant="outlined" fullWidth />
+
+      <Button color="primary" variant="contained" size="large" fullWidth component={Link} to="/">
+        Forgot Password
+      </Button>
+      <Button color="primary" size="large" fullWidth component={Link} to="/auth/login">
+        Back to Login
+      </Button>
+    </Stack>
+  </>
+);
+
+export default AuthForgotPassword;
+
+import React from 'react';
+import Grid from '@mui/material/Grid2';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+
+import { Link } from 'react-router-dom';
+import PageContainer from 'src/components/container/PageContainer';
+import Logo from 'src/layouts/full/shared/logo/Logo';
+
+import AuthRegister from '../authForms/AuthRegister';
+
+const Register2 = () => (
+  <PageContainer title="Register" description="this is Register page">
+    <Box
+      sx={{
+        position: 'relative',
+        '&:before': {
+          content: '""',
+          background: 'radial-gradient(#d2f1df, #d3d7fa, #bad8f4)',
+          backgroundSize: '400% 400%',
+          animation: 'gradient 15s ease infinite',
+          position: 'absolute',
+          height: '100%',
+          width: '100%',
+          opacity: '0.3',
+        },
+      }}
+    >
+      <Grid container spacing={0} justifyContent="center" sx={{ height: '100vh' }}>
+        <Grid
+          size={{ xs: 12, sm: 12, lg: 5, xl: 4 }}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Card elevation={9} sx={{ p: 4, m: 3, zIndex: 1, width: '100%', maxWidth: '450px' }}>
+            <Box display="flex" alignItems="center" justifyContent="center">
+              <Logo />
+            </Box>
+            <AuthRegister
+              subtitle={
+                <Stack direction="row" spacing={1} mt={3}>
+                  <Typography color="textSecondary" variant="h6" fontWeight="400">
+                    Already have an Account?
+                  </Typography>
+                  <Typography
+                    component={Link}
+                    to="/auth/login2"
+                    fontWeight="500"
+                    sx={{
+                      textDecoration: 'none',
+                      color: 'primary.main',
+                    }}
+                  >
+                    Sign In
+                  </Typography>
+                </Stack>
+              }
+            />
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  </PageContainer>
+);
+
+export default Register2;
+
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+// useNavigate tidak tersedia di react-router, jadi tetap pakai window.location
+
+import Grid from '@mui/material/Grid2';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+
+// components
+import PageContainer from 'src/components/container/PageContainer';
+import Logo from 'src/layouts/full/shared/logo/Logo';
+import AuthLogin from '../authForms/AuthLogin';
+import 'src/assets/css/login.css';
+
+const Login2 = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [showSignup, setShowSignup] = useState(false);
+
+  useEffect(() => {
+    if (window && typeof window !== "undefined") {
+      const script = document.createElement('script');
+      script.src = '/assets/js/wave.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    // Check signup availability (panggil dari AuthLogin jika perlu)
+    // setShowSignup(true); // Atur sesuai kebutuhan
+  }, []);
+
+  return (
+    <PageContainer title="Login" description="this is Login page">
+      <Box
+        sx={{
+          position: 'relative',
+          '&:before': {
+            content: '""',
+            background: 'radial-gradient(#d2f1df, #d3d7fa, #bad8f4)',
+            backgroundSize: '400% 400%',
+            animation: 'gradient 15s ease infinite',
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            opacity: '0.3',
+          },
+        }}
+      >
+        <Grid container spacing={0} justifyContent="center" sx={{ height: '100vh' }}>
+          <Grid
+            size={{ xs: 12, sm: 12, lg: 5, xl: 4 }}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Card elevation={9} sx={{ p: 4, zIndex: 1, width: '100%', maxWidth: '450px' }}>
+              <Box display="flex" alignItems="center" justifyContent="center">
+                <Logo />
+              </Box>
+              <div className="login-container">
+                <div className="login-logo">
+                  <img src="/assets/img/logo_wpm.svg" alt="Wcloud Logo" />
+                </div>
+                <Typography variant="h5" align="center" sx={{ mt: 2, mb: 2 }}>
+                  Wcloud Proxy Manager
+                </Typography>
+                <form onSubmit={handleLogin} id="login-form">
+                  <TextField
+                    label="Username"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    required
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                  />
+                  <TextField
+                    label="Password"
+                    type="password"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    SIGN IN
+                  </Button>
+                </form>
+                {error && <div id="login-error" style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+                {showSignup && (
+                  <div className="login-footer" id="signup-footer" style={{ marginTop: 16 }}>
+                    <a href="/signup">SIGN UP</a>
+                  </div>
+                )}
+              </div>
+              <AuthLogin
+                subtitle={
+                  <Stack direction="row" spacing={1} justifyContent="center" mt={3}>
+                    <Typography color="textSecondary" variant="h6" fontWeight="500">
+                      New to Modernize?
+                    </Typography>
+                    <Typography
+                      component={Link}
+                      to="/auth/register"
+                      fontWeight="500"
+                      sx={{
+                        textDecoration: 'none',
+                        color: 'primary.main',
+                      }}
+                    >
+                      Create an account
+                    </Typography>
+                  </Stack>
+                }
+              />
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+    </PageContainer>
+  );
+};
+
+export default Login2;
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import Grid from '@mui/material/Grid2';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+
+import PageContainer from 'src/components/container/PageContainer';
+import img1 from 'src/assets/images/backgrounds/login-bg.svg';
+import Logo from 'src/layouts/full/shared/logo/Logo';
+
+import AuthRegister from '../authForms/AuthRegister';
+
+const Register = () => (
+  <PageContainer title="Register" description="this is Register page">
+    <Grid container spacing={0} justifyContent="center" sx={{ overflowX: 'hidden' }}>
+      <Grid
+        size={{ xs: 12, sm: 12, lg: 7, xl: 8 }}
+        sx={{
+          position: 'relative',
+          '&:before': {
+            content: '""',
+            background: 'radial-gradient(#d2f1df, #d3d7fa, #bad8f4)',
+            backgroundSize: '400% 400%',
+            animation: 'gradient 15s ease infinite',
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            opacity: '0.3',
+          },
+        }}
+      >
+        <Box position="relative">
+          <Box px={3}>
+            <Logo />
+          </Box>
+          <Box
+            alignItems="center"
+            justifyContent="center"
+            height={'calc(100vh - 75px)'}
+            sx={{
+              display: {
+                xs: 'none',
+                lg: 'flex',
+              },
+            }}
+          >
+            <img
+              src={img1}
+              alt="bg"
+              style={{
+                width: '100%',
+                maxWidth: '500px',
+              }}
+            />
+          </Box>
+        </Box>
+      </Grid>
+      <Grid
+        size={{ xs: 12, sm: 12, lg: 5, xl: 4 }}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Box p={4}>
+          <AuthRegister
+            title="Welcome to Modernize"
+            subtext={
+              <Typography variant="subtitle1" color="textSecondary" mb={1}>
+                Your Admin Dashboard
+              </Typography>
+            }
+            subtitle={
+              <Stack direction="row" spacing={1} mt={3}>
+                <Typography color="textSecondary" variant="h6" fontWeight="400">
+                  Already have an Account?
+                </Typography>
+                <Typography
+                  component={Link}
+                  to="/auth/login"
+                  fontWeight="500"
+                  sx={{
+                    textDecoration: 'none',
+                    color: 'primary.main',
+                  }}
+                >
+                  Sign In
+                </Typography>
+              </Stack>
+            }
+          />
+        </Box>
+      </Grid>
+    </Grid>
+  </PageContainer>
+);
+
+export default Register;
+
+import { Box, Container, Typography, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import MaintenanceImg from 'src/assets/images/backgrounds/maintenance.svg';
+
+const Maintenance = () => (
+  <Box
+    display="flex"
+    flexDirection="column"
+    height="100vh"
+    textAlign="center"
+    justifyContent="center"
+  >
+    <Container maxWidth="md">
+      <img src={MaintenanceImg} alt="404" style={{ width: '100%', maxWidth: '500px' }} />
+      <Typography align="center" variant="h1" mb={4} mt={3}>
+        Maintenance Mode!!!
+      </Typography>
+      <Typography align="center" variant="h4" mb={4}>
+        Website is Under Construction. Check back later!
+      </Typography>
+      <Button color="primary" variant="contained" component={Link} to="/" disableElevation>
+        Go Back to Home
+      </Button>
+    </Container>
+  </Box>
+);
+
+export default Maintenance;
+
+import { Box, Container, Typography, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import ErrorImg from 'src/assets/images/backgrounds/errorimg.svg';
+
+const Error = () => (
+  <Box
+    display="flex"
+    flexDirection="column"
+    height="100vh"
+    textAlign="center"
+    justifyContent="center"
+  >
+    <Container maxWidth="md">
+      <img src={ErrorImg} alt="404" />
+      <Typography align="center" variant="h1" mb={4}>
+        Opps!!!
+      </Typography>
+      <Typography align="center" variant="h4" mb={4}>
+        This page you are looking for could not be found.
+      </Typography>
+      <Button
+        color="primary"
+        variant="contained"
+        component={Link}
+        to="/dashboards/modern"
+        disableElevation
+      >
+        Go Back to Home
+      </Button>
+    </Container>
+  </Box>
+);
+
+export default Error;
+

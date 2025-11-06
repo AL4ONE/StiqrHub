@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 // useNavigate tidak tersedia di react-router, jadi tetap pakai window.location
 
 import Grid from '@mui/material/Grid2';
