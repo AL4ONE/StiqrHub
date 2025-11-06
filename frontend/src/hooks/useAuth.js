@@ -37,7 +37,7 @@ export const useAuth = () => {
             // Jika token invalid, clear localStorage
             if (err.response?.status === 401) {
                 localStorage.clear();
-                window.location.href = '/auth/login';
+                window.location.href = '/start';
             }
             return null;
         } finally {
@@ -48,7 +48,7 @@ export const useAuth = () => {
     const logout = () => {
         localStorage.clear();
         setUser(null);
-        window.location.href = '/auth/login';
+        window.location.href = '/start';
     };
 
     useEffect(() => {
