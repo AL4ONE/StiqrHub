@@ -1,6 +1,7 @@
 import React from 'react';
 import { getMenuItemsByRole } from './MenuItemsByRole';
 import { useLocation } from 'react-router';
+import { NavLink } from 'react-router-dom';
 import { Box, List, useMediaQuery } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleMobileSidebar } from 'src/store/customizer/CustomizerSlice';

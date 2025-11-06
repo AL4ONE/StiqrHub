@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NavLink } from 'react-router';
+import { Link } from 'react-router-dom';
 // mui imports
 import { ListItemIcon, ListItem, List, styled, ListItemText, useTheme } from '@mui/material';
 import { useSelector } from 'react-redux';
@@ -37,7 +37,7 @@ const NavItem = ({ item, level, pathDirect, onClick }) => {
     <List component="li" disablePadding key={item.id}>
       <ListItemStyled2
         button="true"
-        component={item.external ? 'a' : NavLink}
+        component={item.external ? 'a' : Link}
         to={item.href}
         href={item.external ? item.href : ''}
         disabled={item.disabled}
