@@ -40,6 +40,8 @@ export default function CreateEvent() {
     try {
       const fd = new FormData();
       Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+      // Normalize boolean for backend (1/0 strings)
+      fd.set('insurance_active', formData.insurance_active ? '1' : '0');
       if (bannerFile) fd.append('banner', bannerFile);
       const res = await apiPost(BACKEND_URL + '/api/eo/events', fd, true);
       if (res?.status === 'success') {
