@@ -60,7 +60,7 @@ const FullLayout = () => {
           {/* ------------------------------------------- */}
           {/* PageContent */}
           {/* ------------------------------------------- */}
-          {customizer.isHorizontal ? <Navigation /> : ''}
+          {/* Navigation component removed to avoid undefined reference */}
           <Container
             sx={{
               pt: '30px',
