@@ -19,7 +19,7 @@ import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
 const handleLogout = () => {
   localStorage.removeItem('token');
-  window.location.href = '/auth/login';
+  window.location.href = '/start';
 };
 
 const Profile = () => {
