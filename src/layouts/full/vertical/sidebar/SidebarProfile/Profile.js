@@ -11,6 +11,7 @@ import {
 import { useSelector } from 'react-redux';
 import { IconPower } from '@tabler/icons-react';
 import axios from 'axios';
+import { BACKEND_URL } from 'src/config/constants';
 import img1 from 'src/assets/images/profile/user-1.jpg';
 
 export const Profile = () => {
@@ -24,15 +25,18 @@ export const Profile = () => {
     if (!token) return;
 
     axios
-      .get('http://localhost:8000/api/me', {
+      .get(BACKEND_URL + '/api/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        setUser(res.data);
+        const apiUser = res?.data?.data || res?.data || null;
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        setUser(apiUser || cached);
       })
       .catch((err) => {
         console.error('Error fetching user:', err);
-        setUser({ name: 'Unknown', role: '-' });
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        setUser(cached || { name: 'Unknown', role: '-' });
       });
   }, []);
 
