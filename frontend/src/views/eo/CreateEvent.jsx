@@ -26,6 +26,7 @@ export default function CreateEvent() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bannerFile, setBannerFile] = useState(null);
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -37,7 +38,10 @@ export default function CreateEvent() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiPost(BACKEND_URL + '/api/eo/events', formData);
+      const fd = new FormData();
+      Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+      if (bannerFile) fd.append('banner', bannerFile);
+      const res = await apiPost(BACKEND_URL + '/api/eo/events', fd, true);
       if (res?.status === 'success') {
         alert('Event created successfully!');
         navigate('/eo/events');
@@ -146,6 +150,23 @@ export default function CreateEvent() {
                   value={formData.booth_price}
                   onChange={handleChange('booth_price')}
                 />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Banner (jpg/png)</Typography>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
+                />
+                {bannerFile ? (
+                  <Box mt={1}>
+                    <img
+                      src={URL.createObjectURL(bannerFile)}
+                      alt="preview"
+                      style={{ maxWidth: '100%', maxHeight: 200, display: 'block' }}
+                    />
+                  </Box>
+                ) : null}
               </Grid>
               <Grid item xs={6}>
                 <TextField

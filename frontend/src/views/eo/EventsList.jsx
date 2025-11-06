@@ -45,6 +45,19 @@ export default function EventsList() {
           <Grid item xs={12} md={6} key={ev.id}>
             <Card>
               <CardContent>
+                {(ev.banner_url || ev.banner) ? (
+                  <Box
+                    mb={2}
+                    sx={{ width: '100%', height: 180, overflow: 'hidden', borderRadius: 1, backgroundColor: '#f5f5f5' }}
+                  >
+                    <img
+                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                      alt={ev.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  </Box>
+                ) : null}
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                   <Typography variant="h6">{ev.name}</Typography>
                   <Chip label={ev.status} color={statusColor(ev.status)} size="small" />
