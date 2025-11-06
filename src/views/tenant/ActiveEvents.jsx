@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -51,7 +50,7 @@ export default function ActiveEvents() {
                 <Typography variant="body2" color="textSecondary">{ev.location}</Typography>
                 <Typography variant="body2">{ev.start_date} → {ev.end_date}</Typography>
                 <Box mt={2}>
-                  <Button variant="contained" component={Link} to={`/tenant/events/${ev.id}`}>
+                  <Button variant="contained" component="a" href={`/tenant/events/${ev.id}`}>
                     View Details
                   </Button>
                 </Box>
