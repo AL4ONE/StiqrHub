@@ -62,6 +62,11 @@ export default function EventDetail() {
   // Price preview breakdown (mirrors backend calculation)
   const platformFee = 5000;
   const insuranceFee = event?.insurance_active ? 10000 : 0;
+  const toNumber = (v) => {
+    const n = typeof v === 'string' ? parseFloat(v) : v;
+    return Number.isFinite(n) ? n : 0;
+  };
+  const fmt = (n) => `Rp ${toNumber(n).toLocaleString()}`;
   const selectedDays = (() => {
     if (!event) return 0;
     if (!isPerDay) return 1;
@@ -76,10 +81,10 @@ export default function EventDetail() {
   })();
   const boothSubtotal = (() => {
     if (!event) return 0;
-    const unit = event.booth_price || 0;
+    const unit = toNumber(event.booth_price);
     return isPerDay ? unit * (selectedDays || 0) : unit;
   })();
-  const totalPreview = boothSubtotal + platformFee + insuranceFee;
+  const totalPreview = toNumber(boothSubtotal) + platformFee + insuranceFee;
 
   const register = async () => {
     if (!canRegister) return;
@@ -209,7 +214,7 @@ export default function EventDetail() {
           </Box>
 
           <Typography variant="body2" mb={2}>
-            Booth Price: {event.booth_price || "Free"}
+            Booth Price: {event.booth_price != null ? fmt(event.booth_price) : "Free"}
           </Typography>
 
           <Box mt={2} mb={2}>
@@ -218,11 +223,11 @@ export default function EventDetail() {
             </Typography>
             <Stack spacing={0.5}>
               <Typography variant="body2">
-                Booth: Rp {boothSubtotal.toLocaleString()} {isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}
+                Booth: {fmt(boothSubtotal)} {isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}
               </Typography>
-              <Typography variant="body2">Platform Fee: Rp {platformFee.toLocaleString()}</Typography>
-              <Typography variant="body2">Insurance: Rp {insuranceFee.toLocaleString()}</Typography>
-              <Typography variant="subtitle2">Total: Rp {totalPreview.toLocaleString()}</Typography>
+              <Typography variant="body2">Platform Fee: {fmt(platformFee)}</Typography>
+              <Typography variant="body2">Insurance: {fmt(insuranceFee)}</Typography>
+              <Typography variant="subtitle2">Total: {fmt(totalPreview)}</Typography>
             </Stack>
           </Box>
 
