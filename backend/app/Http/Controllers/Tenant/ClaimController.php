@@ -9,7 +9,6 @@ use App\Models\Event;
 use App\Models\InsurancePolicy;
 use App\Models\Registration;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ClaimController extends Controller
 {
@@ -23,6 +22,7 @@ class ClaimController extends Controller
             $validated = $request->validate([
                 'incident_date' => 'required|date',
                 'description' => 'required|string|min:10',
+                'claim_amount' => 'nullable|numeric|min:0',
                 'document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048', // Max 2MB
             ]);
 
@@ -60,40 +60,6 @@ class ClaimController extends Controller
                 return ApiResponse::error('You have already submitted a claim for this event', 400);
             }
 
-            // Validasi status payment: tidak boleh klaim jika masih PENDING, wajib ada SUCCESS
-            $payments = DB::table('payments')
-                ->join('registrations', 'payments.registration_id', '=', 'registrations.id')
-                ->where('registrations.tenant_id', $userId)
-                ->where('registrations.event_id', $eventId)
-                ->select('payments.status', 'payments.amount')
-                ->get();
-
-            if ($payments->isEmpty()) {
-                return ApiResponse::error('No payment found for this event. Please register and pay first.', 400);
-            }
-
-            $hasPending = $payments->contains('status', 'PENDING');
-            $hasSuccess = $payments->contains('status', 'SUCCESS');
-
-            if ($hasPending && !$hasSuccess) {
-                return ApiResponse::error('Your payment is still PENDING. Please complete your payment first before submitting a claim.', 400);
-            }
-
-            if (!$hasSuccess) {
-                return ApiResponse::error('No successful payment found for this event.', 400);
-            }
-
-            $totalPayment = DB::table('payments')
-                ->join('registrations', 'payments.registration_id', '=', 'registrations.id')
-                ->where('registrations.tenant_id', $userId)
-                ->where('registrations.event_id', $eventId)
-                ->where('payments.status', 'SUCCESS')
-                ->sum('payments.amount');
-
-            if ($totalPayment <= 0) {
-                return ApiResponse::error('No successful payment found for this event.', 400);
-            }
-
             $documentPath = $request->file('document')->store('claims', 'public');
 
             $claim = Claim::create([
@@ -101,7 +67,7 @@ class ClaimController extends Controller
                 'insurance_policy_id' => $policy->id,
                 'incident_date' => $incidentDate,
                 'description' => $validated['description'],
-                'claim_amount' => $totalPayment,
+                'claim_amount' => $validated['claim_amount'] ?? null,
                 'document_path' => $documentPath,
                 'status' => 'REQUEST_CLAIM'
             ]);

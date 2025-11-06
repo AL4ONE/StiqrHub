@@ -26,7 +26,6 @@ export default function CreateEvent() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [bannerFile, setBannerFile] = useState(null);
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -38,16 +37,7 @@ export default function CreateEvent() {
     setLoading(true);
     setError('');
     try {
-      const fd = new FormData();
-      // Append non-boolean fields first
-      Object.entries(formData).forEach(([k, v]) => {
-        if (k === 'insurance_active') return; // handle separately as 1/0
-        fd.append(k, v);
-      });
-      // Laravel boolean validator expects true booleans or 1/0; ensure 1/0
-      fd.append('insurance_active', formData.insurance_active ? '1' : '0');
-      if (bannerFile) fd.append('banner', bannerFile);
-      const res = await apiPost(BACKEND_URL + '/api/eo/events', fd, true);
+      const res = await apiPost(BACKEND_URL + '/api/eo/events', formData);
       if (res?.status === 'success') {
         alert('Event created successfully!');
         navigate('/eo/events');
@@ -190,14 +180,6 @@ export default function CreateEvent() {
                   label="Enable Insurance"
                 />
               </Grid>
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" mb={1}>Banner (optional)</Typography>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
-              />
-            </Grid>
               <Grid item xs={12}>
                 <Box display="flex" gap={2}>
                   <Button type="submit" variant="contained" disabled={loading}>
