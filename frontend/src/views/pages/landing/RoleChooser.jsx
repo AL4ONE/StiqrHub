@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
-import logoStiqr from 'src/assets/images/logos/logo-stiqr.png';
+import logoStiqr from 'src/assets/images/logos/logoNew.png';
 
 export default function RoleChooser() {
   return (

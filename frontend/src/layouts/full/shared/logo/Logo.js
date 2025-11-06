@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
-import logoStiqr2 from 'src/assets/images/logos/logo-stiqr2.jpg';
+import logoStiqr2 from 'src/assets/images/logos/logoNew.png';
 import { styled } from '@mui/material';
 
 const Logo = () => {
