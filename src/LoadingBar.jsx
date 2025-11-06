@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import TopLoadingBar from 'react-top-loading-bar';
-import { useLocation } from 'react-router';
 
 function LoadingBar() {
-    const location = useLocation(); // panggil langsung, tanpa try/catch
     const [progress, setProgress] = useState(0);
 
     const startLoading = () => setProgress(10);
@@ -14,8 +12,9 @@ function LoadingBar() {
 
     useEffect(() => {
         startLoading();
-        setTimeout(() => finishLoading(), 2000);
-    }, [location]);
+        const timer = setTimeout(() => finishLoading(), 2000);
+        return () => clearTimeout(timer);
+    }, []);
 
     return (
         <TopLoadingBar
