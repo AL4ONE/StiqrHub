@@ -152,8 +152,6 @@ const EOCreateEvent = Loadable(lazy(() => import('../views/eo/CreateEvent')));
 const EOEventDetail = Loadable(lazy(() => import('../views/eo/EventDetail')));
 const EOEventRules = Loadable(lazy(() => import('../views/eo/EventRules')));
 const EOPayouts = Loadable(lazy(() => import('../views/eo/Payouts')));
-// const TenantEventDetailPage = Loadable(lazy(() => import('../views/tenant/TenantEventDetail')));
-const TenantClaimForm = Loadable(lazy(() => import('../views/tenant/ClaimForm')));
 
 // Admin pages
 const AdminPayments = Loadable(lazy(() => import('../views/admin/Payments')));
@@ -219,8 +217,6 @@ const Router = [
       { path: '/insurer/dashboard', exact: true, element: <ProtectedRoute><InsurerDashboard /></ProtectedRoute> },
       { path: '/insurer/claims', exact: true, element: <ProtectedRoute><InsurerClaimsInbox /></ProtectedRoute> },
       { path: '/insurer/stats', exact: true, element: <ProtectedRoute><InsurerStatistics /></ProtectedRoute> },
-      // { path: '/tenant/events/:id', exact: true, element: <ProtectedRoute><TenantEventDetailPage /></ProtectedRoute> },
-      { path: '/tenant/events/:id/claim', exact: true, element: <ProtectedRoute><TenantClaimForm /></ProtectedRoute> },
       // Proteksi dashboard dan aplikasi
       { path: '/dashboards/modern', exact: true, element: <ProtectedRoute><ModernDash /></ProtectedRoute> },
       { path: '/dashboards/ecommerce', exact: true, element: <ProtectedRoute><EcommerceDash /></ProtectedRoute> },

@@ -9,7 +9,6 @@ use App\Models\InsurancePolicy;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
@@ -47,17 +46,10 @@ class EventController extends Controller
                 'payment_method' => 'required|in:per_day,per_event',
                 'insurance_active' => 'boolean',
                 'status' => 'nullable|in:DRAFT,ACTIVE,PUBLISHED',
-                'banner' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096',
             ]);
-
-            $bannerPath = null;
-            if ($request->hasFile('banner')) {
-                $bannerPath = $request->file('banner')->store('events', 'public');
-            }
 
             $event = Event::create(array_merge($validated, [
                 'eo_id' => Auth::user()->id,
-                'banner' => $bannerPath,
                 'status' => $validated['status'] ?? 'DRAFT',
             ]));
 
@@ -89,7 +81,6 @@ class EventController extends Controller
         $event = Event::where('id', $id)
             ->where('eo_id', Auth::user()->id)
             ->with(['rules', 'registrations.tenant'])
-            ->withCount('registrations')
             ->first();
 
         if (!$event) {
@@ -124,14 +115,9 @@ class EventController extends Controller
                 'payment_method' => 'sometimes|in:per_day,per_event',
                 'insurance_active' => 'boolean',
                 'status' => 'sometimes|in:DRAFT,ACTIVE,PUBLISHED',
-                'banner' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096',
             ]);
-            $data = $validated;
-            if ($request->hasFile('banner')) {
-                $newPath = $request->file('banner')->store('events', 'public');
-                $data['banner'] = $newPath;
-            }
-            $event->update($data);
+
+            $event->update($validated);
             return ApiResponse::success($event->fresh(), "Event updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error("Validation failed", 422, $e->errors());
