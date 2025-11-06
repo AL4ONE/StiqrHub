@@ -58,7 +58,7 @@ class Event extends Model
             return null;
         }
         try {
-            return Storage::url($this->banner);
+        return Storage::url($this->banner);
         } catch (\Throwable $e) {
             return null;
         }
