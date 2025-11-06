@@ -12,7 +12,7 @@ import {
   OutlinedInput,
   Chip,
 } from '@mui/material';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
 import AuthSocialButtons from './AuthSocialButtons';

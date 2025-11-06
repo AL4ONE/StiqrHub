@@ -4,7 +4,7 @@ import { IconCalendar, IconUsers, IconCurrencyDollar, IconPlus } from '@tabler/i
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 export default function EODashboard() {
   const [stats, setStats] = useState({
