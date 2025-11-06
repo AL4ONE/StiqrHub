@@ -7,7 +7,7 @@ import IconFacebook from 'src/assets/images/frontend-pages/icons/icon-facebook.s
 import IconTwitter from 'src/assets/images/frontend-pages/icons/icon-twitter.svg';
 import IconInstagram from 'src/assets/images/frontend-pages/icons/icon-instagram.svg';
 
-import LogoIcon from 'src/assets/images/logos/logoIcon.svg';
+import logoStiqr from 'src/assets/images/logos/logo-stiqr.jpg';
 
 const footerLinks = [
   {
@@ -203,7 +203,7 @@ const Footer = () => {
           justifyContent="space-between"
         >
           <Stack direction="row" gap={1} alignItems="center">
-            <img src={LogoIcon} width={20} height={20} alt="logo" />
+            <img src={logoStiqr} width={20} height={20} alt="logo" />
             <Typography variant="body1" fontSize="15px">
               All rights reserved by Modernize.{' '}
             </Typography>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography } from '@mui/material';
 
-import LogoIcon from 'src/assets/images/logos/logoIcon.svg';
+import logoStiqr from 'src/assets/images/logos/logo-stiqr.jpg';
 
 const ContentArea = () => {
   return (
@@ -24,7 +24,7 @@ const ContentArea = () => {
       >
         What our clients think{' '}
         <img
-          src={LogoIcon}
+          src={logoStiqr}
           alt="logo"
           width={40}
           height={40}
