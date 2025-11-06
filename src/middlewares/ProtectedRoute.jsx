@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router'; // pastikan dari react-router-dom
+import { Navigate } from 'react-router-dom';
 
 const isAuthenticated = () => {
   return !!localStorage.getItem("token");
