@@ -52,7 +52,7 @@ class EventController extends Controller
             $payload = array_merge($validated, [
                 'eo_id' => Auth::user()->id,
                 'status' => $validated['status'] ?? 'DRAFT',
-            ]));
+            ]);
 
             if ($request->hasFile('banner')) {
                 $path = $request->file('banner')->store('events', 'public');
