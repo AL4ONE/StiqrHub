@@ -59,6 +59,28 @@ export default function EventDetail() {
   const isPerDay = event?.payment_method === "per_day";
   const canRegister = !isPerDay || (startDate && endDate);
 
+  // Price preview breakdown (mirrors backend calculation)
+  const platformFee = 5000;
+  const insuranceFee = event?.insurance_active ? 10000 : 0;
+  const selectedDays = (() => {
+    if (!event) return 0;
+    if (!isPerDay) return 1;
+    if (!startDate || !endDate) return 0;
+    try {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      const ms = e.getTime() - s.getTime();
+      const days = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+      return Math.max(0, days);
+    } catch { return 0; }
+  })();
+  const boothSubtotal = (() => {
+    if (!event) return 0;
+    const unit = event.booth_price || 0;
+    return isPerDay ? unit * (selectedDays || 0) : unit;
+  })();
+  const totalPreview = boothSubtotal + platformFee + insuranceFee;
+
   const register = async () => {
     if (!canRegister) return;
     try {
@@ -189,6 +211,20 @@ export default function EventDetail() {
           <Typography variant="body2" mb={2}>
             Booth Price: {event.booth_price || "Free"}
           </Typography>
+
+          <Box mt={2} mb={2}>
+            <Typography variant="subtitle1" mb={1}>
+              Estimated Cost
+            </Typography>
+            <Stack spacing={0.5}>
+              <Typography variant="body2">
+                Booth: Rp {boothSubtotal.toLocaleString()} {isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}
+              </Typography>
+              <Typography variant="body2">Platform Fee: Rp {platformFee.toLocaleString()}</Typography>
+              <Typography variant="body2">Insurance: Rp {insuranceFee.toLocaleString()}</Typography>
+              <Typography variant="subtitle2">Total: Rp {totalPreview.toLocaleString()}</Typography>
+            </Stack>
+          </Box>
 
           {isPerDay && !hasRegistered && (
             <Box mt={2} mb={1}>
