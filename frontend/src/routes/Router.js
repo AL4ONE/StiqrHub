@@ -194,7 +194,7 @@ const Router = [
     path: '/',
     element: <FullLayout />,
     children: [
-      { path: '/', element: <Navigate to="/start" /> },
+      { path: '/', element: <Navigate to="/landingpage" /> },
       // Role-based dashboards
       { path: '/eo/dashboard', exact: true, element: <ProtectedRoute><EODashboard /></ProtectedRoute> },
       { path: '/eo/events', exact: true, element: <ProtectedRoute><EOEventsList /></ProtectedRoute> },
