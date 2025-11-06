@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
-import logoStiqr from 'src/assets/images/logos/logo-stiqr.png';
+import logoNew from 'src/assets/images/logos/logoNew.png';
 
 export default function RoleChooser() {
   return (
@@ -20,7 +20,7 @@ export default function RoleChooser() {
       >
         <Box mb={4}>
           <img
-            src={logoStiqr}
+            src={logoNew}
             alt="StiqrHub Logo"
             style={{ width: '320px', height: 'auto' }}
           />
