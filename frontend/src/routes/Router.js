@@ -147,6 +147,7 @@ const TenantEventsList = Loadable(lazy(() => import('../views/tenant/EventsList'
 const TenantEventDetail = Loadable(lazy(() => import('../views/tenant/EventDetail')));
 const TenantActiveEvents = Loadable(lazy(() => import('../views/tenant/ActiveEvents')));
 const TenantClaimsList = Loadable(lazy(() => import('../views/tenant/ClaimsList')));
+const TenantClaimForm = Loadable(lazy(() => import('../views/tenant/ClaimForm')));
 const EOEventsList = Loadable(lazy(() => import('../views/eo/EventsList')));
 const EOCreateEvent = Loadable(lazy(() => import('../views/eo/CreateEvent')));
 const EOEventDetail = Loadable(lazy(() => import('../views/eo/EventDetail')));
@@ -205,6 +206,7 @@ const Router = [
       { path: '/tenant/dashboard', exact: true, element: <ProtectedRoute><TenantDashboard /></ProtectedRoute> },
       { path: '/tenant/events', exact: true, element: <ProtectedRoute><TenantEventsList /></ProtectedRoute> },
       { path: '/tenant/events/:id', exact: true, element: <ProtectedRoute><TenantEventDetail /></ProtectedRoute> },
+      { path: '/tenant/events/:id/claim', exact: true, element: <ProtectedRoute><TenantClaimForm /></ProtectedRoute> },
       { path: '/tenant/events/active', exact: true, element: <ProtectedRoute><TenantActiveEvents /></ProtectedRoute> },
       { path: '/tenant/claims', exact: true, element: <ProtectedRoute><TenantClaimsList /></ProtectedRoute> },
       { path: '/admin/dashboard', exact: true, element: <ProtectedRoute><AdminDashboard /></ProtectedRoute> },
