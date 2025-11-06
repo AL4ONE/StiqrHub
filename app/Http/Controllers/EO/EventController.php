@@ -32,6 +32,13 @@ class EventController extends Controller
                 return ApiResponse::error('EO is not verified yet. Please contact admin.', 403);
             }
 
+            // Normalize boolean flags from multipart form
+            if ($request->has('insurance_active')) {
+                $request->merge([
+                    'insurance_active' => filter_var($request->input('insurance_active'), FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
+
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'location' => 'required|string',
@@ -109,6 +116,12 @@ class EventController extends Controller
         }
 
         try {
+            if ($request->has('insurance_active')) {
+                $request->merge([
+                    'insurance_active' => filter_var($request->input('insurance_active'), FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
+
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
                 'location' => 'sometimes|string',
