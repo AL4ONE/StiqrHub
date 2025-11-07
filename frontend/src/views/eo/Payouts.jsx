@@ -5,7 +5,7 @@ import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 
 const statusColor = (status) => {
-  if (status === 'SUCCESS') return 'success';
+  if (status === 'COMPLETED') return 'success';
   if (status === 'PENDING') return 'warning';
   return 'default';
 };
@@ -47,13 +47,16 @@ export default function Payouts() {
                       <Chip label={p.status} color={statusColor(p.status)} size="small" />
                     </Box>
                     <Typography variant="body2" color="textSecondary" mb={1}>
-                      Amount: {p.amount}
+                      Total: Rp {Number(p.total_amount || 0).toLocaleString()}
                     </Typography>
                     <Typography variant="body2" color="textSecondary" mb={1}>
-                      Date: {p.payout_date}
+                      Platform Fee: Rp {Number(p.platform_fee || 0).toLocaleString()}
                     </Typography>
                     <Typography variant="body2" color="textSecondary" mb={1}>
-                      Reference: {p.reference}
+                      Net: Rp {Number(p.net_amount || 0).toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" mb={1}>
+                      Payout Date: {p.payout_date || '-'}
                     </Typography>
                   </CardContent>
                 </Card>
