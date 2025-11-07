@@ -17,16 +17,13 @@ return new class extends Migration
             $table->dateTime('published_end_date')->nullable();
         });
 
-        // Update existing ACTIVE records to ACTIVATED first
-        DB::statement("UPDATE events SET status = 'ACTIVATED' WHERE status = 'ACTIVE'");
-
-        // Update status enum: change ACTIVE to ACTIVATED
+        // Update status constraint/enum: change ACTIVE to ACTIVATED
         // Handle different database drivers
         $driver = DB::getDriverName();
         
         if ($driver === 'pgsql') {
-            // PostgreSQL: Need to recreate the enum type
-            // First, get the actual enum type name
+            // PostgreSQL: Either enum or check constraint may be used. Handle both safely.
+            // 1) Try enum path
             $result = DB::select("
                 SELECT pg_type.typname 
                 FROM pg_type 
@@ -37,25 +34,43 @@ return new class extends Migration
                 AND pg_type.typtype = 'e'
                 LIMIT 1
             ");
-            
+
             if (!empty($result)) {
                 $oldTypeName = $result[0]->typname;
                 $newTypeName = $oldTypeName . '_new';
-                
-                // Create new enum type
                 DB::statement("CREATE TYPE {$newTypeName} AS ENUM('DRAFT', 'ACTIVATED', 'PUBLISHED')");
-                
-                // Update column to use new type
                 DB::statement("ALTER TABLE events ALTER COLUMN status TYPE {$newTypeName} USING status::text::{$newTypeName}");
                 DB::statement("ALTER TABLE events ALTER COLUMN status SET DEFAULT 'DRAFT'");
-                
-                // Drop old type and rename new type
                 DB::statement("DROP TYPE {$oldTypeName}");
                 DB::statement("ALTER TYPE {$newTypeName} RENAME TO {$oldTypeName}");
+                // after enum expanded, convert data
+                DB::statement("UPDATE events SET status = 'ACTIVATED' WHERE status = 'ACTIVE'");
+            } else {
+                // 2) Fallback: CHECK constraint path
+                // Drop existing constraint if exists
+                DB::statement("DO $$
+                BEGIN
+                  IF EXISTS (
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_class t ON c.conrelid = t.oid
+                    WHERE c.conname = 'events_status_check' AND t.relname = 'events'
+                  ) THEN
+                    ALTER TABLE events DROP CONSTRAINT events_status_check;
+                  END IF;
+                END $$;");
+                // Add temporary relaxed constraint allowing ACTIVE and ACTIVATED
+                DB::statement("ALTER TABLE events ADD CONSTRAINT events_status_check CHECK (status IN ('DRAFT','ACTIVE','ACTIVATED','PUBLISHED'))");
+                // Update data
+                DB::statement("UPDATE events SET status = 'ACTIVATED' WHERE status = 'ACTIVE'");
+                // Replace constraint without ACTIVE
+                DB::statement("ALTER TABLE events DROP CONSTRAINT events_status_check");
+                DB::statement("ALTER TABLE events ADD CONSTRAINT events_status_check CHECK (status IN ('DRAFT','ACTIVATED','PUBLISHED'))");
+                DB::statement("ALTER TABLE events ALTER COLUMN status SET DEFAULT 'DRAFT'");
             }
         } elseif ($driver === 'mysql' || $driver === 'mariadb') {
             // MySQL/MariaDB
             DB::statement("ALTER TABLE events MODIFY COLUMN status ENUM('DRAFT', 'ACTIVATED', 'PUBLISHED') DEFAULT 'DRAFT'");
+            DB::statement("UPDATE events SET status = 'ACTIVATED' WHERE status = 'ACTIVE'");
         } else {
             // For other databases, just update the data
             DB::statement("UPDATE events SET status = 'ACTIVATED' WHERE status = 'ACTIVE'");
@@ -71,10 +86,8 @@ return new class extends Migration
         $driver = DB::getDriverName();
         
         if ($driver === 'pgsql') {
-            // PostgreSQL: Revert enum type
-            DB::statement("UPDATE events SET status = 'ACTIVE' WHERE status = 'ACTIVATED'");
-            
-            // Get the actual enum type name
+            // PostgreSQL: Revert to allow ACTIVE again
+            // Try enum path first
             $result = DB::select("
                 SELECT pg_type.typname 
                 FROM pg_type 
@@ -85,21 +98,33 @@ return new class extends Migration
                 AND pg_type.typtype = 'e'
                 LIMIT 1
             ");
-            
+
             if (!empty($result)) {
+                // Convert data first
+                DB::statement("UPDATE events SET status = 'ACTIVE' WHERE status = 'ACTIVATED'");
                 $oldTypeName = $result[0]->typname;
                 $newTypeName = $oldTypeName . '_new';
-                
-                // Create new enum type with old values
                 DB::statement("CREATE TYPE {$newTypeName} AS ENUM('DRAFT', 'ACTIVE', 'PUBLISHED')");
-                
-                // Update column to use new type
                 DB::statement("ALTER TABLE events ALTER COLUMN status TYPE {$newTypeName} USING status::text::{$newTypeName}");
                 DB::statement("ALTER TABLE events ALTER COLUMN status SET DEFAULT 'DRAFT'");
-                
-                // Drop old type and rename new type
                 DB::statement("DROP TYPE {$oldTypeName}");
                 DB::statement("ALTER TYPE {$newTypeName} RENAME TO {$oldTypeName}");
+            } else {
+                // CHECK constraint path
+                // Drop if exists then add with ACTIVE allowed
+                DB::statement("DO $$
+                BEGIN
+                  IF EXISTS (
+                    SELECT 1 FROM pg_constraint c
+                    JOIN pg_class t ON c.conrelid = t.oid
+                    WHERE c.conname = 'events_status_check' AND t.relname = 'events'
+                  ) THEN
+                    ALTER TABLE events DROP CONSTRAINT events_status_check;
+                  END IF;
+                END $$;");
+                DB::statement("ALTER TABLE events ADD CONSTRAINT events_status_check CHECK (status IN ('DRAFT','ACTIVE','PUBLISHED'))");
+                DB::statement("UPDATE events SET status = 'ACTIVE' WHERE status = 'ACTIVATED'");
+                DB::statement("ALTER TABLE events ALTER COLUMN status SET DEFAULT 'DRAFT'");
             }
         } elseif ($driver === 'mysql' || $driver === 'mariadb') {
             // MySQL/MariaDB
