@@ -77,6 +77,8 @@ Route::middleware('jwt.verify')->group(function () {
         Route::get('/eos', [AdminEoController::class, 'index']);
         Route::post('/eos/{id}/verify', [AdminEoController::class, 'verify']);
         Route::get('/events/active', [AdminEventAuditController::class, 'active']);
+        Route::get('/events/pending', [AdminEventAuditController::class, 'pending']);
+        Route::post('/events/{id}/activate', [AdminEventAuditController::class, 'activate']);
         Route::get('/payouts/settlement-tracking', [AdminPayoutController::class, 'settlementTracking']);
         Route::get('/fraud/duplicate-registrations', [AdminFraudController::class, 'duplicateRegistrations']);
         Route::get('/analytics/summary', [AdminAnalyticsController::class, 'summary']);

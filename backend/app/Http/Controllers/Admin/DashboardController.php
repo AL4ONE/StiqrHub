@@ -16,7 +16,7 @@ class DashboardController extends Controller
         try {
             $pendingPayments = Payment::where('status', 'PENDING')->count();
             $eosToVerify = User::where('role', 'EO')->where('is_active', false)->count();
-            $activeEvents = Event::where('status', 'ACTIVE')->count();
+            $activeEvents = Event::whereIn('status', ['ACTIVATED', 'PUBLISHED'])->count();
             $qrisVolume = Payment::where('status', 'SUCCESS')->sum('amount');
             $activeClaims = Claim::where('status', 'REQUEST_CLAIM')->count();
 

@@ -5,7 +5,7 @@ import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 
 const statusColor = (status) => {
-  if (status === 'ACTIVE') return 'success';
+  if (status === 'ACTIVATED') return 'success';
   if (status === 'PUBLISHED') return 'primary';
   return 'default';
 };

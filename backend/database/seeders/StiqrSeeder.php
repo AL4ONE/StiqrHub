@@ -60,6 +60,8 @@ class StiqrSeeder extends Seeder
             'map_link' => 'https://maps.google.com/?q=JCC+Senayan',
             'start_date' => now()->addDays(5),
             'end_date' => now()->addDays(7),
+            'published_start_date' => now()->addDays(1), // Event akan visible mulai besok
+            'published_end_date' => now()->addDays(6), // Registration berakhir 1 hari sebelum event
             'category' => 'F&B',
             'booth_capacity' => 50,
             'booth_size' => '3x3m',
@@ -68,7 +70,7 @@ class StiqrSeeder extends Seeder
             'booth_price' => 250000,
             'estimated_visitors' => 2000,
             'payment_method' => 'per_event',
-            'status' => 'ACTIVE',
+            'status' => 'PUBLISHED', // Set ke PUBLISHED agar bisa dilihat tenant
         ]);
 
         $reg1 = Registration::create([

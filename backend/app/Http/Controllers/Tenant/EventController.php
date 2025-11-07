@@ -14,14 +14,37 @@ class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::whereIn('status', ['ACTIVE', 'PUBLISHED'])->get();
+        $now = now();
+        $events = Event::where('status', 'PUBLISHED')
+            ->where(function ($query) use ($now) {
+                $query->where(function ($q) use ($now) {
+                    $q->whereNull('published_start_date')
+                      ->whereNull('published_end_date');
+                })
+                ->orWhere(function ($q) use ($now) {
+                    $q->where('published_start_date', '<=', $now)
+                      ->where('published_end_date', '>=', $now);
+                });
+            })
+            ->get();
         return response()->json($events);
     }
 
     public function show($id)
     {
+        $now = now();
         $event = Event::where('id', $id)
-            ->whereIn('status', ['ACTIVE', 'PUBLISHED'])
+            ->where('status', 'PUBLISHED')
+            ->where(function ($query) use ($now) {
+                $query->where(function ($q) use ($now) {
+                    $q->whereNull('published_start_date')
+                      ->whereNull('published_end_date');
+                })
+                ->orWhere(function ($q) use ($now) {
+                    $q->where('published_start_date', '<=', $now)
+                      ->where('published_end_date', '>=', $now);
+                });
+            })
             ->with('rules')
             ->first();
 
@@ -35,6 +58,25 @@ class EventController extends Controller
     public function register($id)
     {
         $event = Event::findOrFail($id);
+        
+        // Check if event is published
+        if ($event->status !== 'PUBLISHED') {
+            return ApiResponse::error('Event is not published yet', 403);
+        }
+
+        // Check if current date is within published date range
+        $now = now();
+        if ($event->published_start_date && $event->published_end_date) {
+            if ($now < $event->published_start_date || $now > $event->published_end_date) {
+                return ApiResponse::error('Event is not available for registration at this time', 403);
+            }
+        }
+
+        // Check if registration period has ended (published_end_date)
+        if ($event->published_end_date && $now > $event->published_end_date) {
+            return ApiResponse::error('Registration period has ended', 403);
+        }
+
         $userId = auth()->user()->id;
 
         $existing = Registration::where('tenant_id', $userId)
@@ -155,7 +197,7 @@ class EventController extends Controller
             return ApiResponse::error('Unauthorized', 401);
         }
 
-        $events = Event::where('status', 'ACTIVE')
+        $events = Event::whereIn('status', ['ACTIVATED', 'PUBLISHED'])
             ->whereHas('registrations', function ($query) use ($user) {
                 $query->where('tenant_id', $user->id);
             })
