@@ -161,6 +161,15 @@ export default function EventDetail() {
                 <Typography variant="h4">{event.name}</Typography>
                 <Chip label={event.status} color={statusColor(event.status)} />
               </Box>
+              {event.banner_url && (
+                <Box mb={2}>
+                  <img
+                    src={event.banner_url.startsWith('http') ? event.banner_url : `${BACKEND_URL}${event.banner_url}`}
+                    alt="event banner"
+                    style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </Box>
+              )}
               <Box display="flex" gap={1} mb={1}>
                 {event.status === 'ACTIVATED' || event.status === 'PUBLISHED' ? (
                   <Button variant="contained" color="success" size="small" disabled>
