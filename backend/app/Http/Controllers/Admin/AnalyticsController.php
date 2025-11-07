@@ -15,7 +15,7 @@ class AnalyticsController extends Controller
         try {
             $data = [
                 'total_events' => Event::count(),
-                'active_events' => Event::where('status', 'ACTIVE')->count(),
+                'active_events' => Event::whereIn('status', ['ACTIVATED', 'PUBLISHED'])->count(),
                 'total_transactions' => Payment::count(),
                 'qris_volume' => Payment::where('status', 'SUCCESS')->sum('amount'),
                 'active_claims' => Claim::where('status', 'REQUEST_CLAIM')->count(),

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, FormControlLabel, Checkbox, Box } from '@mui/material';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiPost } from 'src/utils/api';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 const categories = ['F&B', 'Fashion', 'Automotive', 'Art & Craft', 'Snack & Beverage', 'Wellness', 'Others'];
 
@@ -21,7 +21,7 @@ export default function CreateEvent() {
     booth_price: 0,
     estimated_visitors: 500,
     payment_method: 'per_event',
-    insurance_active: false,
+    insurance_active: true,
     status: 'DRAFT'
   });
   const [loading, setLoading] = useState(false);
@@ -112,6 +112,7 @@ export default function CreateEvent() {
                   required
                 />
               </Grid>
+              
               <Grid item xs={6}>
                 <TextField
                   fullWidth
@@ -191,17 +192,6 @@ export default function CreateEvent() {
                   <option value="per_event">Per Event</option>
                   <option value="per_day">Per Day</option>
                 </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.insurance_active}
-                      onChange={handleChange('insurance_active')}
-                    />
-                  }
-                  label="Enable Insurance"
-                />
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex" gap={2}>

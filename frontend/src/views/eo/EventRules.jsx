@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Button, TextField, Grid, Box, Chip } fro
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPost } from 'src/utils/api';
-import { useParams } from 'react-router';
+import { useParams } from 'react-router-dom';
 
 export default function EventRules() {
   const { id } = useParams();

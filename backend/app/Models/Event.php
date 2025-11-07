@@ -14,6 +14,8 @@ class Event extends Model
         'map_link',
         'start_date',
         'end_date',
+        'published_start_date',
+        'published_end_date',
         'category',
         'booth_capacity',
         'booth_size',
