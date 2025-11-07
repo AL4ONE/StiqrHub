@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Button, Grid, Box, Chip, Stack, Divider } from '@mui/material';
+import { 
+  Card, 
+  CardContent, 
+  Typography, 
+  Button, 
+  Grid, 
+  Box, 
+  Chip, 
+  Stack, 
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert
+} from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut } from 'src/utils/api';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const statusColor = (status) => {
-  if (status === 'ACTIVE') return 'success';
+  if (status === 'ACTIVATED') return 'success';
   if (status === 'PUBLISHED') return 'primary';
   if (status === 'DRAFT') return 'default';
   return 'default';
@@ -19,6 +35,12 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishForm, setPublishForm] = useState({
+    published_start_date: '',
+    published_end_date: ''
+  });
+  const [publishError, setPublishError] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -36,6 +58,78 @@ export default function EventDetail() {
   useEffect(() => {
     (async () => { await load(); })();
   }, [id]);
+
+  const handlePublishClick = () => {
+    // Check if published dates are null
+    if (!event.published_start_date || !event.published_end_date) {
+      // Set default published_start_date to now
+      const now = new Date();
+      const publishedStart = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+      
+      setPublishForm({
+        published_start_date: publishedStart,
+        published_end_date: ''
+      });
+      setPublishDialogOpen(true);
+      setPublishError('');
+    } else {
+      // If already has published dates, just update status
+      setStatus('PUBLISHED');
+    }
+  };
+
+  const handlePublishSubmit = async () => {
+    setPublishError('');
+    
+    // Validate
+    if (!publishForm.published_start_date || !publishForm.published_end_date) {
+      setPublishError('Both published start date and end date are required');
+      return;
+    }
+
+    const startDate = new Date(publishForm.published_start_date);
+    const endDate = new Date(publishForm.published_end_date);
+    const eventEndDate = new Date(event.end_date);
+
+    if (endDate > eventEndDate) {
+      setPublishError('Published end date cannot be later than event end date');
+      return;
+    }
+
+    if (endDate < startDate) {
+      setPublishError('Published end date must be after start date');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Format datetime for backend (YYYY-MM-DD HH:mm:ss)
+      const formatDateTime = (dateTimeString) => {
+        if (!dateTimeString) return null;
+        const date = new Date(dateTimeString);
+        return date.toISOString().slice(0, 19).replace('T', ' ');
+      };
+
+      const res = await apiPut(BACKEND_URL + `/api/eo/events/${id}`, {
+        status: 'PUBLISHED',
+        published_start_date: formatDateTime(publishForm.published_start_date),
+        published_end_date: formatDateTime(publishForm.published_end_date)
+      });
+      
+      if (res?.status === 'success') {
+        setPublishDialogOpen(false);
+        await load();
+      } else {
+        setPublishError(res?.message || 'Failed to publish event');
+      }
+    } catch (e) {
+      setPublishError('Failed to publish event');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const setStatus = async (status) => {
     setSaving(true);
@@ -67,10 +161,37 @@ export default function EventDetail() {
                 <Typography variant="h4">{event.name}</Typography>
                 <Chip label={event.status} color={statusColor(event.status)} />
               </Box>
-              <Box display="flex" gap={1} mb={2}>
-                <Button variant="outlined" size="small" disabled={saving} onClick={() => setStatus('ACTIVE')}>Set Active</Button>
-                <Button variant="contained" size="small" disabled={saving} onClick={() => setStatus('PUBLISHED')}>Publish</Button>
+              <Box display="flex" gap={1} mb={1}>
+                {event.status === 'ACTIVATED' || event.status === 'PUBLISHED' ? (
+                  <Button variant="contained" color="success" size="small" disabled>
+                    Activated
+                  </Button>
+                ) : (
+                  <Button variant="outlined" size="small" disabled>
+                    Activate (admin only)
+                  </Button>
+                )}
+                <Button 
+                  variant="contained" 
+                  size="small" 
+                  disabled={saving || event.status !== 'ACTIVATED'}
+                  onClick={handlePublishClick}
+                >
+                  {event.status !== 'ACTIVATED' ? 'Publish (after activated)' : 'Publish'}
+                </Button>
               </Box>
+              {event.status === 'DRAFT' && (
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                  Event harus di-activate oleh admin sebelum bisa dipublish (estimasi approval 3-5 x 24 jam).
+                </Typography>
+              )}
+              {event.published_start_date && event.published_end_date && (
+                <Box mb={2}>
+                  <Typography variant="body2" color="textSecondary">
+                    <strong>Published Period:</strong> {new Date(event.published_start_date).toLocaleString()} - {new Date(event.published_end_date).toLocaleString()}
+                  </Typography>
+                </Box>
+              )}
               <Typography variant="body1" color="textSecondary" mb={2}>{event.location}</Typography>
               <Typography variant="body2" mb={1}>
                 <strong>Start:</strong> {new Date(event.start_date).toLocaleString()}
@@ -144,6 +265,62 @@ export default function EventDetail() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Publish Dialog */}
+      <Dialog open={publishDialogOpen} onClose={() => !saving && setPublishDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Set Publish Dates</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              <strong>Event Period:</strong> {new Date(event.start_date).toLocaleDateString()} - {new Date(event.end_date).toLocaleDateString()}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              Published end date cannot exceed event end date.
+            </Typography>
+          </Alert>
+
+          {publishError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {publishError}
+            </Alert>
+          )}
+
+          <TextField
+            fullWidth
+            label="Published Start Date"
+            type="datetime-local"
+            value={publishForm.published_start_date}
+            onChange={(e) => setPublishForm({ ...publishForm, published_start_date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            margin="normal"
+            required
+            helperText="When event becomes visible to tenants (default: now)"
+          />
+
+          <TextField
+            fullWidth
+            label="Published End Date"
+            type="datetime-local"
+            value={publishForm.published_end_date}
+            onChange={(e) => setPublishForm({ ...publishForm, published_end_date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            margin="normal"
+            required
+            inputProps={{
+              max: new Date(event.end_date).toISOString().slice(0, 16)
+            }}
+            helperText={`Last date tenants can register (max: ${new Date(event.end_date).toLocaleDateString()})`}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPublishDialogOpen(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={handlePublishSubmit} variant="contained" disabled={saving}>
+            {saving ? 'Publishing...' : 'Publish Event'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 }

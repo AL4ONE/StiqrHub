@@ -116,7 +116,7 @@ export default function EventDetail() {
 
   const StatusChip = ({ value }) => {
     const color =
-      value === "ACTIVE"
+      value === "ACTIVATED"
         ? "success"
         : value === "PUBLISHED"
         ? "primary"
