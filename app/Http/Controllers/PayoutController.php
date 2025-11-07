@@ -16,7 +16,7 @@ class PayoutController extends Controller
 
         $stats = [
             'total_events' => Event::where('eo_id', $eoId)->count(),
-            'active_events' => Event::where('eo_id', $eoId)->where('status', 'ACTIVE')->count(),
+            'active_events' => Event::where('eo_id', $eoId)->whereIn('status', ['ACTIVATED', 'PUBLISHED'])->count(),
             'total_tenants' => Registration::whereHas('event', function ($q) use ($eoId) {
                 $q->where('eo_id', $eoId);
             })->count(),

@@ -17,14 +17,26 @@ class DashboardController extends Controller
         try {
             $tenantId = Auth::user()->id;
 
-            // Count of available events (ACTIVE or PUBLISHED)
-            $availableEvents = Event::whereIn('status', ['ACTIVE', 'PUBLISHED'])->count();
+            // Count of available events (PUBLISHED only, visible to tenants)
+            $now = now();
+            $availableEvents = Event::where('status', 'PUBLISHED')
+                ->where(function ($query) use ($now) {
+                    $query->where(function ($q) use ($now) {
+                        $q->whereNull('published_start_date')
+                          ->whereNull('published_end_date');
+                    })
+                    ->orWhere(function ($q) use ($now) {
+                        $q->where('published_start_date', '<=', $now)
+                          ->where('published_end_date', '>=', $now);
+                    });
+                })
+                ->count();
 
             // Total registrations for this tenant
             $totalRegistrations = Registration::where('tenant_id', $tenantId)->count();
 
-            // Active events for this tenant (has registration on ACTIVE event)
-            $activeEvents = Event::where('status', 'ACTIVE')
+            // Active events for this tenant (has registration on ACTIVATED or PUBLISHED event)
+            $activeEvents = Event::whereIn('status', ['ACTIVATED', 'PUBLISHED'])
                 ->whereHas('registrations', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                 })
