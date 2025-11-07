@@ -26,23 +26,32 @@ class PayoutController extends Controller
             ->get();
             
             // Group by event and calculate totals
-            $payouts = $payments->groupBy('registration.event_id')->map(function($eventPayments) {
+            $grouped = $payments->groupBy('registration.event_id');
+
+            // Fetch existing payout records for these events
+            $eventIds = $grouped->keys();
+            $payoutRecords = Payout::whereIn('event_id', $eventIds)->get()->keyBy('event_id');
+
+            $payouts = $grouped->map(function($eventPayments, $eventId) use ($payoutRecords) {
                 $event = $eventPayments->first()->registration->event;
                 $totalAmount = $eventPayments->sum('amount');
                 $platformFee = $eventPayments->count() * 5000; // Rp 5,000 per registration
                 $netAmount = $totalAmount - $platformFee;
-                
+
+                $payout = $payoutRecords->get($eventId);
+                $status = $payout ? $payout->status : 'PENDING';
+                $payoutDate = $payout ? $payout->payout_date : null;
+
                 return [
                     'event_id' => $event->id,
                     'event_name' => $event->name,
                     'event_date' => $event->start_date,
                     'total_registrations' => $eventPayments->count(),
-                    'total_amount' => $totalAmount,
-                    'platform_fee' => $platformFee,
-                    'net_amount' => $netAmount,
-                    'status' => 'PENDING', // Default status
-                    'payout_date' => null,
-                    'reference' => null,
+                    'total_amount' => (float) $totalAmount,
+                    'platform_fee' => (float) $platformFee,
+                    'net_amount' => (float) $netAmount,
+                    'status' => $status,
+                    'payout_date' => $payoutDate,
                 ];
             })->values();
             
