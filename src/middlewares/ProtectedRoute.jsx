@@ -6,11 +6,11 @@ const isAuthenticated = () => {
 
 const getDashboardByRole = (role) => {
   switch (role) {
-    case 'EO': return '/eo/dashboard';
-    case 'TENANT': return '/tenant/dashboard';
-    case 'ADMIN': return '/admin/dashboard';
-    case 'INSURER': return '/insurer/dashboard';
-    default: return '/tenant/dashboard';
+    case 'EO': return '/app/eo/dashboard';
+    case 'TENANT': return '/app/tenant/dashboard';
+    case 'ADMIN': return '/app/admin/dashboard';
+    case 'INSURER': return '/app/insurer/dashboard';
+    default: return '/app/tenant/dashboard';
   }
 };
 
@@ -23,16 +23,16 @@ export default function ProtectedRoute({ children }) {
   const role = localStorage.getItem('role');
   const currentPath = window.location.pathname;
   
-  if (currentPath.startsWith('/eo/') && role !== 'EO') {
+  if (currentPath.startsWith('/app/eo/') && role !== 'EO') {
     return <Navigate to={getDashboardByRole(role)} replace />;
   }
-  if (currentPath.startsWith('/tenant/') && role !== 'TENANT') {
+  if (currentPath.startsWith('/app/tenant/') && role !== 'TENANT') {
     return <Navigate to={getDashboardByRole(role)} replace />;
   }
-  if (currentPath.startsWith('/admin/') && role !== 'ADMIN') {
+  if (currentPath.startsWith('/app/admin/') && role !== 'ADMIN') {
     return <Navigate to={getDashboardByRole(role)} replace />;
   }
-  if (currentPath.startsWith('/insurer/') && role !== 'INSURER') {
+  if (currentPath.startsWith('/app/insurer/') && role !== 'INSURER') {
     return <Navigate to={getDashboardByRole(role)} replace />;
   }
   
