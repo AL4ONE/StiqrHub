@@ -30,7 +30,7 @@ const UserRoleFeatures = () => {
     width: '80px',
     height: '80px',
     borderRadius: '12px',
-    backgroundColor: '#22C55E',
+    backgroundColor: '#00C68E',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -84,7 +84,7 @@ const UserRoleFeatures = () => {
                 {eoFeatures.map((feature, index) => (
                   <ListItem key={index} sx={{ px: 0, py: 1 }}>
                     <ListItemIcon sx={{ minWidth: '40px' }}>
-                      <CheckCircleIcon sx={{ fontSize: 24, color: '#22C55E' }} />
+                      <CheckCircleIcon sx={{ fontSize: 24, color: '#00C68E' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={feature}
@@ -126,7 +126,7 @@ const UserRoleFeatures = () => {
                 {tenantFeatures.map((feature, index) => (
                   <ListItem key={index} sx={{ px: 0, py: 1 }}>
                     <ListItemIcon sx={{ minWidth: '40px' }}>
-                      <CheckCircleIcon sx={{ fontSize: 24, color: '#22C55E' }} />
+                      <CheckCircleIcon sx={{ fontSize: 24, color: '#00C68E' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={feature}
