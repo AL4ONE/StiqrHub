@@ -230,10 +230,10 @@ export default function EventDetail() {
                 <strong>Estimated Visitors:</strong> {event.estimated_visitors}
               </Typography>
               <Stack direction="row" spacing={2}>
-                <Button variant="outlined" onClick={() => navigate(`/eo/events/${id}/rules`)}>
+                <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}/rules`)}>
                   Manage Rules
                 </Button>
-                <Button variant="outlined" onClick={() => navigate('/eo/events')}>
+                <Button variant="outlined" onClick={() => navigate('/app/eo/events')}>
                   Back to Events
                 </Button>
               </Stack>

@@ -33,7 +33,7 @@ export default function EventsList() {
   return (
     <PageContainer title="My Events">
       <Box mb={3}>
-        <Button variant="contained" component="a" href="/eo/events/create">
+        <Button variant="contained" component="a" href="/app/eo/events/create">
           Create New Event
         </Button>
       </Box>
@@ -67,10 +67,10 @@ export default function EventsList() {
                 <Typography variant="body2" mb={1}>Booth Price: {ev.booth_price || 'Free'}</Typography>
                 <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
                 <Stack direction="row" spacing={1}>
-                  <Button variant="contained" size="small" component="a" href={`/eo/events/${ev.id}`}>
+                  <Button variant="contained" size="small" component="a" href={`/app/eo/events/${ev.id}`}>
                     View Details
                   </Button>
-                  <Button variant="outlined" size="small" component="a" href={`/eo/events/${ev.id}/rules`}>
+                  <Button variant="outlined" size="small" component="a" href={`/app/eo/events/${ev.id}/rules`}>
                     Rules
                   </Button>
                 </Stack>

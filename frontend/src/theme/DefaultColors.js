@@ -2,9 +2,9 @@
 export const baselightTheme = {
   palette: {
     primary: {
-      main: '#6DD5FA',   // ijo muda
-      light: '#B2EBF2',
-      dark: '#00ACC1',
+      main: '#00C68E',
+      light: '#6DE3C6',
+      dark: '#00AE7D',
       contrastText: '#fff',
     },
     secondary: {
@@ -23,9 +23,9 @@ export const baselightTheme = {
 export const baseDarkTheme = {
   palette: {
     primary: {
-      main: '#6DD5FA',
-      light: '#81D4FA',
-      dark: '#0288D1',
+      main: '#00C68E',
+      light: '#34D6AA',
+      dark: '#00AE7D',
       contrastText: '#fff',
     },
     secondary: {

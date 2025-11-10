@@ -35,10 +35,10 @@ export default function RoleChooser() {
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={4} justifyContent="center">
-          <Button variant="contained" size="large" href="/auth/register?role=EO">
+          <Button variant="contained" size="large" href="/start">
             Register as EO
           </Button>
-          <Button variant="outlined" size="large" href="/auth/register?role=TENANT">
+          <Button variant="outlined" size="large" href="/start">
             Register as Tenant
           </Button>
         </Stack>

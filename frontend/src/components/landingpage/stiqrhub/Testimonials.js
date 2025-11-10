@@ -23,7 +23,7 @@ const Testimonials = () => {
     textAlign: 'center',
     marginBottom: theme.spacing(6),
     '& span': {
-      color: '#22C55E',
+      color: '#00C68E',
       fontWeight: 600,
     },
   }));

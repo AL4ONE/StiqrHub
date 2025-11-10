@@ -111,7 +111,7 @@ export default function EventDetail() {
   };
 
   const handleClaim = () => {
-    window.location.href = `/tenant/events/${id}/claim`;
+    window.location.href = `/app/tenant/events/${id}/claim`;
   };
 
   const StatusChip = ({ value }) => {
