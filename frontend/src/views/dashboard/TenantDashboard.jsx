@@ -94,12 +94,12 @@ export default function TenantDashboard() {
               <Typography variant="h6" mb={2}>Quick Actions</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Button variant="contained" fullWidth component={Link} to="/tenant/events">
+                  <Button variant="contained" fullWidth component={Link} to="/app/tenant/events">
                     Browse Events ({stats.available_events})
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Button variant="outlined" fullWidth component={Link} to="/tenant/events/active">
+                  <Button variant="outlined" fullWidth component={Link} to="/app/tenant/events/active">
                     My Active Events
                   </Button>
                 </Grid>

@@ -28,11 +28,11 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
   // Navigasi manual: redirect by role
   const onLoginSuccess = () => {
     const role = localStorage.getItem('role');
-    if (role === 'EO') return (window.location.href = '/eo/dashboard');
-    if (role === 'TENANT') return (window.location.href = '/tenant/dashboard');
-    if (role === 'ADMIN') return (window.location.href = '/admin/dashboard');
-    if (role === 'INSURER') return (window.location.href = '/insurer/dashboard');
-    window.location.href = '/tenant/dashboard';
+    if (role === 'EO') return (window.location.href = '/app/eo/dashboard');
+    if (role === 'TENANT') return (window.location.href = '/app/tenant/dashboard');
+    if (role === 'ADMIN') return (window.location.href = '/app/admin/dashboard');
+    if (role === 'INSURER') return (window.location.href = '/app/insurer/dashboard');
+    window.location.href = '/app/tenant/dashboard';
   };
 
   return (

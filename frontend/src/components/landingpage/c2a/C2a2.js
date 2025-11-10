@@ -61,7 +61,7 @@ const C2a2 = () => {
                   variant="outlined"
                   color="inherit"
                   component={NavLink}
-                  to="/auth/register"
+                to="/start"
                 >
                   Register
                 </StyledButton2>

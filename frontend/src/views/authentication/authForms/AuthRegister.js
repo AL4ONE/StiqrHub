@@ -99,13 +99,13 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
         
         // ✅ Redirect berdasarkan role
         if (r === 'EO') {
-          window.location.href = '/eo/dashboard';
+          window.location.href = '/app/eo/dashboard';
         } else if (r === 'ADMIN') {
-          window.location.href = '/admin/dashboard';
+          window.location.href = '/app/admin/dashboard';
         } else if (r === 'INSURER') {
-          window.location.href = '/insurer/dashboard';
+          window.location.href = '/app/insurer/dashboard';
         } else {
-          window.location.href = '/tenant/dashboard';
+          window.location.href = '/app/tenant/dashboard';
         }
       } else {
         setError(data?.message || 'Registration failed');
