@@ -71,7 +71,7 @@ export default function EventsList() {
                  <Button
                             variant="contained"
                             component="a"
-                            href={`/tenant/events/${ev.id}`}
+                           href={`/app/tenant/events/${ev.id}`}
                           >
                             View Details
                   </Button>

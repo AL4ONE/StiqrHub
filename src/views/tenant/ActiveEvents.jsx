@@ -66,7 +66,7 @@ export default function ActiveEvents() {
                   </Box>
                 )}
                 <Box mt={2}>
-                  <Button variant="contained" component="a" href={`/tenant/events/${ev.id}`}>
+                  <Button variant="contained" component="a" href={`/app/tenant/events/${ev.id}`}>
                     View Details
                   </Button>
                 </Box>

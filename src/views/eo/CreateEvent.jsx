@@ -46,7 +46,7 @@ export default function CreateEvent() {
       const res = await apiPost(BACKEND_URL + '/api/eo/events', fd, true);
       if (res?.status === 'success') {
         alert('Event created successfully!');
-        navigate('/eo/events');
+        navigate('/app/eo/events');
       } else {
         setError(res?.message || 'Failed to create event');
       }
@@ -198,7 +198,7 @@ export default function CreateEvent() {
                   <Button type="submit" variant="contained" disabled={loading}>
                     {loading ? 'Creating...' : 'Create Event'}
                   </Button>
-                  <Button variant="outlined" onClick={() => navigate('/eo/events')}>
+                  <Button variant="outlined" onClick={() => navigate('/app/eo/events')}>
                     Cancel
                   </Button>
                 </Box>

@@ -96,18 +96,18 @@ export default function EODashboard() {
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h6">Quick Actions</Typography>
-                <Button variant="contained" component={Link} to="/eo/events/create" startIcon={<IconPlus size={20} />}>
+                <Button variant="contained" component={Link} to="/app/eo/events/create" startIcon={<IconPlus size={20} />}>
                   Create Event
                 </Button>
               </Box>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Button variant="outlined" fullWidth component={Link} to="/eo/events">
+                  <Button variant="outlined" fullWidth component={Link} to="/app/eo/events">
                     View All Events
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Button variant="outlined" fullWidth component={Link} to="/eo/payouts">
+                  <Button variant="outlined" fullWidth component={Link} to="/app/eo/payouts">
                     View Payouts
                   </Button>
                 </Grid>

@@ -18,7 +18,7 @@ import { getAuthHeaders } from 'src/utils/auth';
 const ClaimForm = () => {
   // Ambil eventId dari URL params
   const params = useParams();
-  const eventId = params.id || window.location.pathname.split('/')[3]; // /tenant/events/{ID}/claim
+  const eventId = params.id || window.location.pathname.split('/')[4]; // /app/tenant/events/{ID}/claim
   
   const [eventInfo, setEventInfo] = useState(null);
   const [formData, setFormData] = useState({

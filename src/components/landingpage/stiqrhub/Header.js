@@ -117,7 +117,7 @@ const StiqrHubHeader = () => {
       >
         <Box sx={{ p: 3 }}>
           <Stack direction="column" spacing={2}>
-            <SignUpButton component={Link} to="/auth/register" fullWidth onClick={toggleDrawer(false)}>
+            <SignUpButton component={Link} to="/start" fullWidth onClick={toggleDrawer(false)}>
               Sign Up
             </SignUpButton>
             <LoginButton component={Link} to="/auth/login" fullWidth onClick={toggleDrawer(false)}>

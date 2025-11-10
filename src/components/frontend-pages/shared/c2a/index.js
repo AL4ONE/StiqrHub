@@ -60,7 +60,7 @@ const C2a = () => {
                   <Button variant="contained" size="large" href="/auth/login">
                     Member Login
                   </Button>
-                  <Button variant="outlined" size="large" href="/auth/register">
+                  <Button variant="outlined" size="large" href="/start">
                     Register as Member
                   </Button>
                 </Stack>

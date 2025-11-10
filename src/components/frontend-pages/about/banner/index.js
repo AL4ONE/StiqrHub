@@ -36,7 +36,7 @@ const Banner = () => {
               Get to know Modernize Dashboard Template
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <Button variant="contained" size="large" component={Link} to="/auth/register">
+              <Button variant="contained" size="large" component={Link} to="/start">
                 Create an account
               </Button>
               <Button variant="outlined" size="large">

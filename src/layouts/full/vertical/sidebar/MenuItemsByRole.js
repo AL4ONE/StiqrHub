@@ -23,7 +23,7 @@ export const EOMenuItems = [
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconAperture,
-    href: '/eo/dashboard',
+    href: '/app/eo/dashboard',
   },
   {
     navlabel: true,
@@ -33,13 +33,13 @@ export const EOMenuItems = [
     id: uniqueId(),
     title: 'My Events',
     icon: IconCalendar,
-    href: '/eo/events',
+    href: '/app/eo/events',
   },
   {
     id: uniqueId(),
     title: 'Create Event',
     icon: IconFileDescription,
-    href: '/eo/events/create',
+    href: '/app/eo/events/create',
   },
   // {
   //   id: uniqueId(),
@@ -55,7 +55,7 @@ export const EOMenuItems = [
     id: uniqueId(),
     title: 'Payouts & Settlement',
     icon: IconChartLine,
-    href: '/eo/payouts',
+    href: '/app/eo/payouts',
   },
 ];
 
@@ -69,7 +69,7 @@ export const TenantMenuItems = [
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconAperture,
-    href: '/tenant/dashboard',
+    href: '/app/tenant/dashboard',
   },
   {
     navlabel: true,
@@ -79,13 +79,13 @@ export const TenantMenuItems = [
     id: uniqueId(),
     title: 'Browse Events',
     icon: IconShoppingCart,
-    href: '/tenant/events',
+    href: '/app/tenant/events',
   },
   {
     id: uniqueId(),
     title: 'Active Events',
     icon: IconCalendar,
-    href: '/tenant/events/active',
+    href: '/app/tenant/events/active',
   },
   {
     navlabel: true,
@@ -95,7 +95,7 @@ export const TenantMenuItems = [
     id: uniqueId(),
     title: 'My Claims',
     icon: IconShield,
-    href: '/tenant/claims',
+    href: '/app/tenant/claims',
   },
 ];
 
@@ -109,7 +109,7 @@ export const AdminMenuItems = [
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconAperture,
-    href: '/admin/dashboard',
+    href: '/app/admin/dashboard',
   },
   {
     navlabel: true,
@@ -119,7 +119,7 @@ export const AdminMenuItems = [
     id: uniqueId(),
     title: 'Payment Management',
     icon: IconShoppingCart,
-    href: '/admin/payments',
+    href: '/app/admin/payments',
   },
   {
     navlabel: true,
@@ -129,7 +129,7 @@ export const AdminMenuItems = [
     id: uniqueId(),
     title: 'Verify EO',
     icon: IconUserCheck,
-    href: '/admin/eos',
+    href: '/app/admin/eos',
   },
   {
     navlabel: true,
@@ -139,19 +139,19 @@ export const AdminMenuItems = [
     id: uniqueId(),
     title: 'Event Audit',
     icon: IconAlertCircle,
-    href: '/admin/events',
+    href: '/app/admin/events',
   },
   {
     id: uniqueId(),
     title: 'Fraud Detection',
     icon: IconBan,
-    href: '/admin/fraud',
+    href: '/app/admin/fraud',
   },
   {
     id: uniqueId(),
     title: 'Payout Tracking',
     icon: IconChartLine,
-    href: '/admin/payouts',
+    href: '/app/admin/payouts',
   },
   {
     navlabel: true,
@@ -161,7 +161,7 @@ export const AdminMenuItems = [
     id: uniqueId(),
     title: 'Analytics',
     icon: IconChartBar,
-    href: '/admin/analytics',
+    href: '/app/admin/analytics',
   },
 ];
 
@@ -175,7 +175,7 @@ export const InsurerMenuItems = [
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconAperture,
-    href: '/insurer/dashboard',
+    href: '/app/insurer/dashboard',
   },
   {
     navlabel: true,
@@ -185,13 +185,13 @@ export const InsurerMenuItems = [
     id: uniqueId(),
     title: 'Claims Inbox',
     icon: IconShield,
-    href: '/insurer/claims',
+    href: '/app/insurer/claims',
   },
   {
     id: uniqueId(),
     title: 'Statistics',
     icon: IconChartBar,
-    href: '/insurer/stats',
+    href: '/app/insurer/stats',
   },
 ];
 
