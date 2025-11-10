@@ -30,7 +30,7 @@ const FooterCTA = () => {
   }));
 
   const CTButton = styled(Button)(({ theme }) => ({
-    backgroundColor: '#22C55E',
+    backgroundColor: '#00C68E',
     color: '#FFFFFF',
     borderRadius: '8px',
     padding: '12px 32px',
@@ -39,7 +39,7 @@ const FooterCTA = () => {
     fontSize: '16px',
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     '&:hover': {
-      backgroundColor: '#16A34A',
+      backgroundColor: '#00AE7D',
       boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
     },
   }));
@@ -62,10 +62,10 @@ const FooterCTA = () => {
           spacing={2}
           justifyContent="center"
         >
-          <CTButton component={Link} to="/auth/register?role=EO">
+          <CTButton component={Link} to="/start">
             Daftar Sebagai EO
           </CTButton>
-          <CTButton component={Link} to="/auth/register?role=TENANT">
+          <CTButton component={Link} to="/start">
             Temukan Event & Bazar
           </CTButton>
         </Stack>

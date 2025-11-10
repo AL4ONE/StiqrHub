@@ -23,28 +23,28 @@ const StiqrHubHeader = () => {
   }));
 
   const SignUpButton = styled(Button)(({ theme }) => ({
-    border: '2px solid #22C55E',
-    color: '#22C55E',
+    border: '2px solid #00C68E',
+    color: '#00C68E',
     backgroundColor: '#FFFFFF',
     borderRadius: '8px',
     padding: '8px 24px',
     textTransform: 'none',
     fontWeight: 600,
     '&:hover': {
-      border: '2px solid #16A34A',
+      border: '2px solid #00AE7D',
       backgroundColor: '#F0FDF4',
     },
   }));
 
   const LoginButton = styled(Button)(({ theme }) => ({
-    backgroundColor: '#22C55E',
+    backgroundColor: '#00C68E',
     color: '#FFFFFF',
     borderRadius: '8px',
     padding: '8px 24px',
     textTransform: 'none',
     fontWeight: 600,
     '&:hover': {
-      backgroundColor: '#16A34A',
+      backgroundColor: '#00AE7D',
     },
   }));
 
@@ -88,7 +88,7 @@ const StiqrHubHeader = () => {
           <Box flexGrow={1} />
           {lgUp ? (
             <Stack direction="row" spacing={2} alignItems="center">
-              <SignUpButton component={Link} to="/auth/register">
+              <SignUpButton component={Link} to="/start">
                 Sign Up
               </SignUpButton>
               <LoginButton component={Link} to="/auth/login">

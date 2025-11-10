@@ -27,7 +27,7 @@ const PlatformBenefits = () => {
       transform: 'translateX(-50%)',
       width: '60px',
       height: '4px',
-      backgroundColor: '#22C55E',
+      backgroundColor: '#00C68E',
       borderRadius: '2px',
     },
   }));
@@ -56,17 +56,17 @@ const PlatformBenefits = () => {
 
   const features = [
     {
-      icon: <SettingsIcon sx={{ fontSize: 32, color: '#22C55E' }} />,
+      icon: <SettingsIcon sx={{ fontSize: 32, color: '#00C68E' }} />,
       title: 'Otomatis & Efisien',
       description: 'Semua proses pendaftaran, laporan, dan pembayaran berjalan otomatis.',
     },
     {
-      icon: <ShieldIcon sx={{ fontSize: 32, color: '#22C55E' }} />,
+      icon: <ShieldIcon sx={{ fontSize: 32, color: '#00C68E' }} />,
       title: 'Aman & Terlindungi',
       description: 'Tenant kamu diproteksi oleh asuransi kebakaran, gempa bumi, dan bencana alam lainnya.',
     },
     {
-      icon: <CampaignIcon sx={{ fontSize: 32, color: '#22C55E' }} />,
+      icon: <CampaignIcon sx={{ fontSize: 32, color: '#00C68E' }} />,
       title: 'Event Kamu Viral',
       description: 'Event otomatis dipromosikan ke apps partner Stiqr - jangkau ribuan pengguna potensial.',
     },

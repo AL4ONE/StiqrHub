@@ -22,7 +22,7 @@ const BonusSection = () => {
   }));
 
   const BonusButton = styled(Button)(({ theme }) => ({
-    backgroundColor: '#22C55E',
+    backgroundColor: '#00C68E',
     color: '#FFFFFF',
     borderRadius: '8px',
     padding: '14px 48px',
@@ -31,7 +31,7 @@ const BonusSection = () => {
     fontSize: '18px',
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     '&:hover': {
-      backgroundColor: '#16A34A',
+      backgroundColor: '#00AE7D',
       boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
     },
   }));
@@ -42,7 +42,7 @@ const BonusSection = () => {
       text: "E-book 'Bikin Event & Bazar Anti Rugi'",
     },
     {
-      icon: <WhatsAppIcon sx={{ fontSize: 24, color: '#22C55E' }} />,
+      icon: <WhatsAppIcon sx={{ fontSize: 24, color: '#00C68E' }} />,
       text: 'Akses Grup WhatsApp Komunitas StiqrHub',
     },
     {
@@ -78,7 +78,7 @@ const BonusSection = () => {
         </Box>
 
         <Box sx={{ textAlign: 'center' }}>
-          <BonusButton component={Link} to="/auth/register">
+          <BonusButton component={Link} to="/start">
             Daftar & Ambil Bonus Sekarang
           </BonusButton>
         </Box>

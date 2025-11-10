@@ -84,7 +84,7 @@ const Testimonials = () => {
                         sx={{
                           width: 56,
                           height: 56,
-                          bgcolor: '#22C55E',
+                          bgcolor: '#00C68E',
                           fontSize: '24px',
                           fontWeight: 700,
                         }}
@@ -124,7 +124,7 @@ const Testimonials = () => {
                       readOnly
                       sx={{
                         '& .MuiRating-iconFilled': {
-                          color: '#22C55E',
+                          color: '#00C68E',
                         },
                       }}
                     />

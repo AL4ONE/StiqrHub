@@ -12,7 +12,7 @@ const MiddleCTA = () => {
   }));
 
   const CTAButton = styled(Button)(({ theme }) => ({
-    backgroundColor: '#22C55E',
+    backgroundColor: '#00C68E',
     color: '#FFFFFF',
     borderRadius: '8px',
     padding: '14px 48px',
@@ -21,7 +21,7 @@ const MiddleCTA = () => {
     fontSize: '18px',
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     '&:hover': {
-      backgroundColor: '#16A34A',
+      backgroundColor: '#00AE7D',
       boxShadow: '0 6px 8px rgba(0,0,0,0.15)',
     },
   }));
@@ -29,7 +29,7 @@ const MiddleCTA = () => {
   return (
     <CTABox>
       <Container maxWidth="lg">
-        <CTAButton component={Link} to="/auth/register">
+        <CTAButton component={Link} to="/start">
           Mulai Sekarang - Gratis untuk EO & Tenant
         </CTAButton>
       </Container>
