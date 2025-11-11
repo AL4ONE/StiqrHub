@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
-import { apiGet, apiPut } from 'src/utils/api';
+import { apiGet, apiPut, apiDelete } from 'src/utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const statusColor = (status) => {
@@ -41,6 +41,8 @@ export default function EventDetail() {
     published_end_date: ''
   });
   const [publishError, setPublishError] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -147,6 +149,31 @@ export default function EventDetail() {
     }
   };
 
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      const res = await apiDelete(BACKEND_URL + `/api/eo/events/${id}`);
+      if (res?.status === 'success') {
+        navigate('/app/eo/events');
+      } else {
+        alert(res?.message || 'Failed to delete event');
+        setDeleting(false);
+        setDeleteDialogOpen(false);
+      }
+    } catch (e) {
+      alert('Failed to delete event');
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  // Check if event can be deleted (DRAFT or ACTIVATED, not PUBLISHED)
+  const canDelete = event && (event.status === 'DRAFT' || event.status === 'ACTIVATED');
+
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!event) return <Typography>Event not found</Typography>;
@@ -161,10 +188,14 @@ export default function EventDetail() {
                 <Typography variant="h4">{event.name}</Typography>
                 <Chip label={event.status} color={statusColor(event.status)} />
               </Box>
-              {event.banner_url && (
+              {(event.banner_url || event.banner) && (
                 <Box mb={2}>
                   <img
-                    src={event.banner_url.startsWith('http') ? event.banner_url : `${BACKEND_URL}${event.banner_url}`}
+                    src={
+                      event.banner_url
+                        ? (event.banner_url.startsWith('http') ? event.banner_url : `${BACKEND_URL}${event.banner_url}`)
+                        : `${BACKEND_URL}/storage/${event.banner}`
+                    }
                     alt="event banner"
                     style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 8 }}
                   />
@@ -233,6 +264,39 @@ export default function EventDetail() {
                 <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}/rules`)}>
                   Manage Rules
                 </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate(`/app/eo/events/${id}/edit`)}
+                  disabled={event.status !== 'DRAFT'}
+                  sx={{
+                    ...((event.status !== 'DRAFT') && {
+                      backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                      color: 'rgba(0, 0, 0, 0.26)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                      }
+                    })
+                  }}
+                >
+                  Edit Event
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  color="error"
+                  onClick={handleDeleteClick}
+                  disabled={!canDelete || deleting}
+                  sx={{
+                    ...(!canDelete && {
+                      backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                      color: 'rgba(0, 0, 0, 0.26)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                      }
+                    })
+                  }}
+                >
+                  Delete Event
+                </Button>
                 <Button variant="outlined" onClick={() => navigate('/app/eo/events')}>
                   Back to Events
                 </Button>
@@ -274,6 +338,27 @@ export default function EventDetail() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => !deleting && setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Event</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this event? This action cannot be undone.
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Event: <strong>{event?.name}</strong>
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Publish Dialog */}
       <Dialog open={publishDialogOpen} onClose={() => !saving && setPublishDialogOpen(false)} maxWidth="sm" fullWidth>
