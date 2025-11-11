@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box, Chip } from '@mui/material';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPost } from 'src/utils/api';
@@ -12,32 +12,62 @@ export default function EventRules() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await apiGet(BACKEND_URL + `/api/eo/events/${id}/rules`);
-        setRules(data?.data || []);
-      } catch (e) {
-        setError('Failed to load rules');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadRules = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await apiGet(BACKEND_URL + `/api/eo/events/${id}/rules`);
+      setRules(data?.data || []);
+    } catch (e) {
+      setError('Failed to load rules');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    loadRules();
+  }, [loadRules]);
 
   const handleAddRule = async () => {
     if (!newRule.trim()) return;
     setLoading(true);
     setError('');
     try {
-      const res = await apiPost(BACKEND_URL + `/api/eo/events/${id}/rules`, { rule: newRule });
-      if (res?.status === 'success') {
-        setRules(prev => [...prev, { id: Date.now(), rule: newRule }]);
-        setNewRule('');
+      // Split by newline and filter empty lines
+      const ruleLines = newRule
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      if (ruleLines.length === 0) {
+        setError('Please enter at least one rule');
+        setLoading(false);
+        return;
+      }
+
+      // If single rule, use regular endpoint
+      if (ruleLines.length === 1) {
+        const res = await apiPost(BACKEND_URL + `/api/eo/events/${id}/rules`, { rule: ruleLines[0] });
+        if (res?.status === 'success') {
+          await loadRules();
+          setNewRule('');
+        } else {
+          setError(res?.message || 'Failed to add rule');
+        }
       } else {
-        setError(res?.message || 'Failed to add rule');
+        // Multiple rules, use bulk endpoint
+        const rulesData = ruleLines.map(ruleName => ({
+          rule_name: ruleName,
+          is_mandatory: true
+        }));
+        const res = await apiPost(BACKEND_URL + `/api/eo/events/${id}/rules/bulk`, { rules: rulesData });
+        if (res?.status === 'success') {
+          await loadRules();
+          setNewRule('');
+        } else {
+          setError(res?.message || 'Failed to add rules');
+        }
       }
     } catch (e) {
       setError('Failed to add rule');
@@ -52,31 +82,45 @@ export default function EventRules() {
         <CardContent>
           <Typography variant="h6" mb={3}>Event Rules</Typography>
           <Box mb={3}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={8}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Add New Rule"
+                  multiline
+                  rows={6}
+                  label="Add Rules (one per line)"
                   value={newRule}
                   onChange={(e) => setNewRule(e.target.value)}
+                  placeholder="Enter each rule on a new line. Example:&#10;&#10;Rule 1&#10;Rule 2&#10;Rule 3"
+                  helperText="Press Enter to create a new line. Each line will become a separate rule."
                 />
               </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={12}>
                 <Button variant="contained" onClick={handleAddRule} disabled={loading || !newRule.trim()}>
-                  Add Rule
+                  Add Rules
                 </Button>
               </Grid>
             </Grid>
           </Box>
           {loading && <Typography>Loading...</Typography>}
           {error && <Typography color="error">{error}</Typography>}
-          <Grid container spacing={1}>
-            {rules.map((r) => (
-              <Grid item key={r.id}>
-                <Chip label={r.rule} onDelete={() => {}} />
-              </Grid>
-            ))}
-          </Grid>
+          {rules.length > 0 && (
+            <Box>
+              <Typography variant="h6" mb={2}>Current Rules</Typography>
+              <Box component="ul" sx={{ pl: 3, m: 0 }}>
+                {rules.map((r) => (
+                  <Typography key={r.id} component="li" variant="body1" sx={{ mb: 1 }}>
+                    {r.rule_name || r.rule}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
+          )}
+          {!loading && rules.length === 0 && (
+            <Typography variant="body2" color="textSecondary">
+              No rules added yet. Add rules above.
+            </Typography>
+          )}
         </CardContent>
       </Card>
     </PageContainer>

@@ -150,6 +150,7 @@ const TenantClaimsList = Loadable(lazy(() => import('../views/tenant/ClaimsList'
 const TenantClaimForm = Loadable(lazy(() => import('../views/tenant/ClaimForm')));
 const EOEventsList = Loadable(lazy(() => import('../views/eo/EventsList')));
 const EOCreateEvent = Loadable(lazy(() => import('../views/eo/CreateEvent')));
+const EOEditEvent = Loadable(lazy(() => import('../views/eo/EditEvent')));
 const EOEventDetail = Loadable(lazy(() => import('../views/eo/EventDetail')));
 const EOEventRules = Loadable(lazy(() => import('../views/eo/EventRules')));
 const EOPayouts = Loadable(lazy(() => import('../views/eo/Payouts')));
@@ -200,6 +201,7 @@ const Router = [
       { path: 'eo/dashboard', element: <ProtectedRoute><EODashboard /></ProtectedRoute> },
       { path: 'eo/events', element: <ProtectedRoute><EOEventsList /></ProtectedRoute> },
       { path: 'eo/events/create', element: <ProtectedRoute><EOCreateEvent /></ProtectedRoute> },
+      { path: 'eo/events/:id/edit', element: <ProtectedRoute><EOEditEvent /></ProtectedRoute> },
       { path: 'eo/events/:id', element: <ProtectedRoute><EOEventDetail /></ProtectedRoute> },
       { path: 'eo/events/:id/rules', element: <ProtectedRoute><EOEventRules /></ProtectedRoute> },
       { path: 'eo/payouts', element: <ProtectedRoute><EOPayouts /></ProtectedRoute> },
