@@ -33,3 +33,14 @@ export async function apiPut(url, body) {
   });
   return res.json();
 }
+
+export async function apiDelete(url) {
+  const token = localStorage.getItem('token');
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers,
+  });
+  return res.json();
+}
