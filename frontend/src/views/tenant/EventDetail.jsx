@@ -13,7 +13,7 @@ import PageContainer from "src/components/container/PageContainer";
 import { BACKEND_URL } from "src/config/constants";
 import { apiGet, apiPost } from "src/utils/api";
 import { useParams } from "react-router-dom";
-import { formatDate } from "src/utils/dateFormat";
+import { formatDateIndonesia } from "src/utils/dateFormat";
 
 export default function EventDetail() {
   const params = useParams();
@@ -189,7 +189,7 @@ export default function EventDetail() {
             {event.location}
           </Typography>
           <Typography variant="body2" mb={2}>
-            {formatDate(event.start_date)} → {formatDate(event.end_date)}
+            {formatDateIndonesia(event.start_date)} → {formatDateIndonesia(event.end_date)}
           </Typography>
           <Typography variant="body2" mb={2}>
             Category: {event.category}
@@ -256,8 +256,8 @@ export default function EventDetail() {
                 />
               </Stack>
               <Typography variant="caption" color="textSecondary">
-                Dates must be within event range: {formatDate(event.start_date)} to{" "}
-                {formatDate(event.end_date)}
+                Dates must be within event range: {formatDateIndonesia(event.start_date)} to{" "}
+                {formatDateIndonesia(event.end_date)}
               </Typography>
             </Box>
           )}

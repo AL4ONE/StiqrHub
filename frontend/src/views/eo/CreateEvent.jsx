@@ -4,6 +4,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiPost } from 'src/utils/api';
 import { useNavigate } from 'react-router-dom';
+import { fromIndonesiaDateTimeToUTC } from 'src/utils/dateFormat';
 
 const categories = ['F&B', 'Fashion', 'Automotive', 'Art & Craft', 'Snack & Beverage', 'Wellness', 'Others'];
 
@@ -39,7 +40,15 @@ export default function CreateEvent() {
     setError('');
     try {
       const fd = new FormData();
-      Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+      // Convert dates from Indonesia timezone to UTC for backend
+      Object.entries(formData).forEach(([k, v]) => {
+        if (k === 'start_date' || k === 'end_date') {
+          const utcDate = fromIndonesiaDateTimeToUTC(v);
+          if (utcDate) fd.append(k, utcDate);
+        } else {
+          fd.append(k, v);
+        }
+      });
       // Normalize boolean for backend (1/0 strings)
       fd.set('insurance_active', formData.insurance_active ? '1' : '0');
       if (bannerFile) fd.append('banner', bannerFile);
