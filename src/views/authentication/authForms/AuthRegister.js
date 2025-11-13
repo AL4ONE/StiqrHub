@@ -47,7 +47,7 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
       const params = new URLSearchParams(window.location.search);
       const role = params.get('role') || 'TENANT';
 
-      const payload = { name, email, password, role };
+      const payload = { name, email: email.toLowerCase(), password, role };
       
       // ✅ Validasi categories untuk EO
       if (role === 'EO') {
@@ -166,7 +166,7 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
             variant="outlined"
             fullWidth
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.toLowerCase())}
             required
           />
 
