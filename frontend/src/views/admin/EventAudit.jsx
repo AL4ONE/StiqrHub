@@ -68,6 +68,32 @@ export default function EventAudit() {
           <Grid item xs={12} md={6} key={ev.id}>
             <Card>
               <CardContent>
+                {(ev.banner_url || ev.banner) && (
+                  <Box
+                    mb={2}
+                    sx={{
+                      width: '100%',
+                      height: 180,
+                      overflow: 'hidden',
+                      borderRadius: 1,
+                      backgroundColor: '#f5f5f5',
+                    }}
+                  >
+                    <img
+                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                      alt={ev.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </Box>
+                )}
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                   <Typography variant="h6">{ev.name}</Typography>
                   <Chip label={ev.status} size="small" />
@@ -87,10 +113,41 @@ export default function EventAudit() {
       {/* Active Section */}
       <Typography variant="h6" sx={{ mb: 1 }}>Active & Published</Typography>
       <Grid container spacing={2}>
+        {events.length === 0 && (
+          <Grid item xs={12}>
+            <Typography variant="body2" color="textSecondary">No active events</Typography>
+          </Grid>
+        )}
         {events.map((ev) => (
           <Grid item xs={12} md={6} key={ev.id}>
             <Card>
               <CardContent>
+                {(ev.banner_url || ev.banner) && (
+                  <Box
+                    mb={2}
+                    sx={{
+                      width: '100%',
+                      height: 180,
+                      overflow: 'hidden',
+                      borderRadius: 1,
+                      backgroundColor: '#f5f5f5',
+                    }}
+                  >
+                    <img
+                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                      alt={ev.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </Box>
+                )}
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                   <Typography variant="h6">{ev.name}</Typography>
                   <Chip label={ev.status} size="small" />
