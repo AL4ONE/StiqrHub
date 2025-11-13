@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Grid, Card, CardContent, Typography, Button, Stack, Box } from '@mui/material';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Grid, Card, CardContent, Typography, Button, Stack, Box, TextField, MenuItem } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -10,6 +10,8 @@ export default function EventsList() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [priceFilter, setPriceFilter] = useState('ALL'); // ALL | FREE | PAID
 
   useEffect(() => {
     (async () => {
@@ -26,12 +28,50 @@ export default function EventsList() {
     })();
   }, []);
 
+  const filteredEvents = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return events.filter((ev) => {
+      const matchesQuery =
+        !q ||
+        (ev.name && ev.name.toLowerCase().includes(q)) ||
+        (ev.location && ev.location.toLowerCase().includes(q));
+      const isFree = Number(ev.booth_price || 0) === 0;
+      const matchesPrice =
+        priceFilter === 'ALL' ||
+        (priceFilter === 'FREE' && isFree) ||
+        (priceFilter === 'PAID' && !isFree);
+      return matchesQuery && matchesPrice;
+    });
+  }, [events, query, priceFilter]);
+
   return (
     <PageContainer title="Browse Events">
+      <Box mb={2} display="flex" gap={2} flexDirection={{ xs: 'column', sm: 'row' }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Cari nama atau lokasi event"
+          placeholder="Contoh: jakarta, taman, sol ground"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <TextField
+          select
+          size="small"
+          label="Harga Booth"
+          value={priceFilter}
+          onChange={(e) => setPriceFilter(e.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          <MenuItem value="ALL">Semua</MenuItem>
+          <MenuItem value="FREE">Gratis</MenuItem>
+          <MenuItem value="PAID">Berbayar</MenuItem>
+        </TextField>
+      </Box>
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
-        {events.map((ev) => (
+        {filteredEvents.map((ev) => (
           <Grid item xs={12} md={6} key={ev.id}>
             <Card>
               <CardContent>
