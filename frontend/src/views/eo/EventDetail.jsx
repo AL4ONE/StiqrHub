@@ -316,7 +316,7 @@ export default function EventDetail() {
           <Card>
             <CardContent>
               <Typography variant="h6" mb={2}>Registrations</Typography>
-              <Typography variant="h4" color="primary">{event.registrations_count || 0}</Typography>
+              <Typography variant="h4" color="primary">{event.registrations_count ?? (event.registrations ? event.registrations.length : 0)}</Typography>
               <Typography variant="body2" color="textSecondary">
                 Total registrations for this event
               </Typography>

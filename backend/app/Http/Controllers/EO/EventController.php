@@ -107,6 +107,7 @@ class EventController extends Controller
         $event = Event::where('id', $id)
             ->where('eo_id', Auth::user()->id)
             ->with(['rules', 'registrations.tenant'])
+            ->withCount('registrations')
             ->first();
 
         if (!$event) {
