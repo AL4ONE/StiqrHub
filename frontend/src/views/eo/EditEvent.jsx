@@ -92,10 +92,6 @@ export default function EditEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (status !== 'DRAFT') {
-      setError('Only DRAFT events can be updated');
-      return;
-    }
     setSaving(true);
     setError('');
     try {
@@ -176,7 +172,8 @@ export default function EditEvent() {
     }
   };
 
-  const disabled = status !== 'DRAFT';
+  // TEMP: enable editing regardless of status for testing
+  const disabled = false;
 
   return (
     <PageContainer title="Edit Event">
