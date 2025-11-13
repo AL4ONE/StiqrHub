@@ -28,14 +28,35 @@ export const formatDate = (date) => {
 
 /**
  * Format date to DD-MM-YYYY HH:mm format with Indonesia timezone (WIB - UTC+7)
- * @param {string|Date} date - Date string or Date object
+ * @param {string|Date} date - Date string or Date object (assumed to be UTC from backend)
  * @returns {string} Formatted date string (DD-MM-YYYY HH:mm) in Indonesia timezone
  */
 export const formatDateIndonesia = (date) => {
   if (!date) return '';
   
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // Backend sends dates in UTC format "YYYY-MM-DD HH:mm:ss"
+    // We need to ensure JavaScript treats it as UTC, not local time
+    let dateObj;
+    if (typeof date === 'string') {
+      // If it's a string without timezone info, assume it's UTC
+      if (date.includes('T')) {
+        // ISO format with T
+        dateObj = new Date(date.endsWith('Z') ? date : date + 'Z');
+      } else if (date.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        // Backend format: "YYYY-MM-DD HH:mm:ss" - treat as UTC
+        dateObj = new Date(date.replace(' ', 'T') + 'Z');
+      } else {
+        // Try parsing as-is, but assume UTC
+        dateObj = new Date(date);
+        // If no timezone info, assume it's UTC
+        if (!date.includes('Z') && !date.includes('+') && !date.includes('-', 10)) {
+          dateObj = new Date(date + 'Z');
+        }
+      }
+    } else {
+      dateObj = date;
+    }
     
     if (isNaN(dateObj.getTime())) {
       return '';
@@ -61,23 +82,46 @@ export const formatDateIndonesia = (date) => {
     
     return `${day}-${month}-${year} ${hours}:${minutes}`;
   } catch (error) {
-    console.error('Error formatting date to Indonesia timezone:', error);
+    console.error('Error formatting date to Indonesia timezone:', error, date);
     return '';
   }
 };
 
 /**
  * Convert date to Indonesia timezone for datetime-local input
- * @param {string|Date} date - Date string or Date object
+ * @param {string|Date} date - Date string or Date object (assumed to be UTC from backend)
  * @returns {string} Formatted date string (YYYY-MM-DDTHH:mm) in Indonesia timezone
  */
 export const toIndonesiaDateTimeLocal = (date) => {
   if (!date) return '';
   
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // Backend sends dates in UTC format "YYYY-MM-DD HH:mm:ss"
+    // We need to ensure JavaScript treats it as UTC, not local time
+    let dateObj;
+    if (typeof date === 'string') {
+      // If it's a string without timezone info, assume it's UTC
+      // Add 'Z' to indicate UTC, or convert format
+      if (date.includes('T')) {
+        // ISO format with T
+        dateObj = new Date(date.endsWith('Z') ? date : date + 'Z');
+      } else if (date.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        // Backend format: "YYYY-MM-DD HH:mm:ss" - treat as UTC
+        dateObj = new Date(date.replace(' ', 'T') + 'Z');
+      } else {
+        // Try parsing as-is, but assume UTC
+        dateObj = new Date(date);
+        // If no timezone info, assume it's UTC
+        if (!date.includes('Z') && !date.includes('+') && !date.includes('-', 10)) {
+          dateObj = new Date(date + 'Z');
+        }
+      }
+    } else {
+      dateObj = date;
+    }
     
     if (isNaN(dateObj.getTime())) {
+      console.error('Invalid date in toIndonesiaDateTimeLocal:', date);
       return '';
     }
     
@@ -101,7 +145,7 @@ export const toIndonesiaDateTimeLocal = (date) => {
     
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   } catch (error) {
-    console.error('Error converting date to Indonesia timezone:', error);
+    console.error('Error converting date to Indonesia timezone:', error, date);
     return '';
   }
 };
