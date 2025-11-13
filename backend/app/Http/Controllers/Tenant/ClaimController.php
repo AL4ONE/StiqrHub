@@ -70,7 +70,9 @@ class ClaimController extends Controller
                 return ApiResponse::error('You can submit a claim only after your event payment is successful', 403);
             }
 
-            $documentPath = $request->file('document')->store('claims', 'public');
+            // Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
+            $disk = config('filesystems.default', 'public');
+            $documentPath = $request->file('document')->store('claims', $disk);
 
             // Compute booth-only claim amount based on payment method
             $boothAmount = 0;
