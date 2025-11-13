@@ -22,6 +22,12 @@ class User extends Authenticatable implements JWTSubject
         'password',
     ];
 
+    // Mutator to ensure email is always lowercase
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = strtolower($value);
+    }
+
     // JWT Auth
     public function getJWTIdentifier()
     {
