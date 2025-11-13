@@ -92,6 +92,10 @@ export default function EditEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (status === 'ACTIVATED' || status === 'PUBLISHED') {
+      setError('Activated/Published events cannot be edited');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -172,8 +176,8 @@ export default function EditEvent() {
     }
   };
 
-  // TEMP: enable editing regardless of status for testing
-  const disabled = false;
+  // Disable editing when event is ACTIVATED or PUBLISHED
+  const disabled = status === 'ACTIVATED' || status === 'PUBLISHED';
 
   return (
     <PageContainer title="Edit Event">
