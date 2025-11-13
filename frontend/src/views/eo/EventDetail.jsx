@@ -20,7 +20,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut, apiDelete } from 'src/utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
-import { formatDate } from 'src/utils/dateFormat';
+import { formatDate, formatDateIndonesia } from 'src/utils/dateFormat';
 
 const statusColor = (status) => {
   if (status === 'ACTIVATED') return 'success';
@@ -229,7 +229,7 @@ export default function EventDetail() {
               {event.published_start_date && event.published_end_date && (
                 <Box mb={2}>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Published Period:</strong> {formatDate(event.published_start_date)} sampai {formatDate(event.published_end_date)}
+                    <strong>Published Period:</strong> {formatDateIndonesia(event.published_start_date)} sampai {formatDateIndonesia(event.published_end_date)}
                   </Typography>
                 </Box>
               )}
