@@ -4,6 +4,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 import { Link } from 'react-router-dom'; // ✅ ganti dari 'react-router' ke 'react-router-dom'
+import { formatDate } from 'src/utils/dateFormat';
 
 export default function EventsList() {
   const [events, setEvents] = useState([]);
@@ -65,7 +66,7 @@ export default function EventsList() {
                   {ev.location}
                 </Typography>
                 <Typography variant="body2">
-                  {ev.start_date} → {ev.end_date}
+                  {formatDate(ev.start_date)} → {formatDate(ev.end_date)}
                 </Typography>
                 <Stack direction="row" spacing={1} mt={2}>
                  <Button

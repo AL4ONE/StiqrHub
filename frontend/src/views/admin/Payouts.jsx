@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Grid, Chip, Box } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
+import { formatDate } from 'src/utils/dateFormat';
 
 const statusColor = (s) => (s === 'SETTLED' ? 'success' : 'warning');
 
@@ -39,7 +40,7 @@ export default function Payouts() {
                   <Typography variant="h6">{p.event_name}</Typography>
                   <Chip label={p.status || 'PENDING'} color={statusColor(p.status || '')} size="small" />
                 </Box>
-                <Typography variant="body2" color="textSecondary" mb={1}>Date: {p.date || '-'}</Typography>
+                <Typography variant="body2" color="textSecondary" mb={1}>Date: {p.date ? formatDate(p.date) : '-'}</Typography>
                 <Typography variant="body2" mb={1}>Total Success Payments: {p.success_count || 0}</Typography>
                 <Typography variant="body2" mb={1}>Amount: Rp {(p.total_amount || 0).toLocaleString()}</Typography>
               </CardContent>
