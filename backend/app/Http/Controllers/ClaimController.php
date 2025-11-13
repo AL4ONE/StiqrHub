@@ -101,8 +101,9 @@ class ClaimController extends Controller
             ], 400);
         }
 
-        // Upload dokumen
-        $path = $request->file('document')->store('claims', 'public');
+        // Upload dokumen - Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
+        $disk = config('filesystems.default', 'public');
+        $path = $request->file('document')->store('claims', $disk);
 
         // Buat claim dengan claim_amount otomatis dari total payment
         $claim = Claim::create([

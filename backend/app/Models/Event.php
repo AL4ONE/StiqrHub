@@ -60,7 +60,9 @@ class Event extends Model
             return null;
         }
         try {
-            return Storage::disk('public')->url($this->banner);
+            // Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
+            $disk = config('filesystems.default', 'public');
+            return Storage::disk($disk)->url($this->banner);
         } catch (\Throwable $e) {
             return null;
         }

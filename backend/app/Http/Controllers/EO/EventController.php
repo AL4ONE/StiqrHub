@@ -71,7 +71,9 @@ class EventController extends Controller
             ]);
 
             if ($request->hasFile('banner')) {
-                $path = $request->file('banner')->store('events', 'public');
+                // Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
+                $disk = config('filesystems.default', 'public');
+                $path = $request->file('banner')->store('events', $disk);
                 $payload['banner'] = $path;
             }
 
@@ -173,7 +175,9 @@ class EventController extends Controller
 
             $update = $validated;
             if ($request->hasFile('banner')) {
-                $path = $request->file('banner')->store('events', 'public');
+                // Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
+                $disk = config('filesystems.default', 'public');
+                $path = $request->file('banner')->store('events', $disk);
                 $update['banner'] = $path;
             }
 
