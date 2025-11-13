@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Grid, Box, Chip, Button, Divider } from 
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPost } from 'src/utils/api';
+import { formatDate } from 'src/utils/dateFormat';
 
 export default function EventAudit() {
   const [events, setEvents] = useState([]);
@@ -99,7 +100,7 @@ export default function EventAudit() {
                   <Chip label={ev.status} size="small" />
                 </Box>
                 <Typography variant="body2" color="textSecondary" mb={1}>EO: {ev?.eo?.name || '-'}</Typography>
-                <Typography variant="body2" mb={1}>{ev.start_date} → {ev.end_date}</Typography>
+                <Typography variant="body2" mb={1}>{formatDate(ev.start_date)} → {formatDate(ev.end_date)}</Typography>
                 <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
                 <Button variant="contained" size="small" onClick={() => activate(ev.id)} disabled={activatingId === ev.id}>
                   {activatingId === ev.id ? 'Activating...' : 'Activate'}

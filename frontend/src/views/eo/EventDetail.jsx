@@ -20,6 +20,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut, apiDelete } from 'src/utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { formatDate } from 'src/utils/dateFormat';
 
 const statusColor = (status) => {
   if (status === 'ACTIVATED') return 'success';
@@ -228,16 +229,16 @@ export default function EventDetail() {
               {event.published_start_date && event.published_end_date && (
                 <Box mb={2}>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Published Period:</strong> {new Date(event.published_start_date).toLocaleString()} - {new Date(event.published_end_date).toLocaleString()}
+                    <strong>Published Period:</strong> {formatDate(event.published_start_date)} - {formatDate(event.published_end_date)}
                   </Typography>
                 </Box>
               )}
               <Typography variant="body1" color="textSecondary" mb={2}>{event.location}</Typography>
               <Typography variant="body2" mb={1}>
-                <strong>Start:</strong> {new Date(event.start_date).toLocaleString()}
+                <strong>Start:</strong> {formatDate(event.start_date)}
               </Typography>
               <Typography variant="body2" mb={1}>
-                <strong>End:</strong> {new Date(event.end_date).toLocaleString()}
+                <strong>End:</strong> {formatDate(event.end_date)}
               </Typography>
               <Typography variant="body2" mb={1}>
                 <strong>Category:</strong> {event.category}
@@ -366,7 +367,7 @@ export default function EventDetail() {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="body2">
-              <strong>Event Period:</strong> {new Date(event.start_date).toLocaleDateString()} - {new Date(event.end_date).toLocaleDateString()}
+              <strong>Event Period:</strong> {formatDate(event.start_date)} - {formatDate(event.end_date)}
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               Published end date cannot exceed event end date.
@@ -403,7 +404,7 @@ export default function EventDetail() {
             inputProps={{
               max: new Date(event.end_date).toISOString().slice(0, 16)
             }}
-            helperText={`Last date tenants can register (max: ${new Date(event.end_date).toLocaleDateString()})`}
+            helperText={`Last date tenants can register (max: ${formatDate(event.end_date)})`}
           />
         </DialogContent>
         <DialogActions>

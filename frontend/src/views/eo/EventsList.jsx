@@ -3,6 +3,7 @@ import { Grid, Card, CardContent, Typography, Button, Stack, Chip, Box } from '@
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
+import { formatDate } from 'src/utils/dateFormat';
 
 const statusColor = (status) => {
   if (status === 'ACTIVATED') return 'success';
@@ -62,7 +63,7 @@ export default function EventsList() {
                   <Chip label={ev.status} color={statusColor(ev.status)} size="small" />
                 </Box>
                 <Typography variant="body2" color="textSecondary" mb={1}>{ev.location}</Typography>
-                <Typography variant="body2" mb={1}>{ev.start_date} → {ev.end_date}</Typography>
+                <Typography variant="body2" mb={1}>{formatDate(ev.start_date)} → {formatDate(ev.end_date)}</Typography>
                 <Typography variant="body2" mb={1}>Category: {ev.category}</Typography>
                 <Typography variant="body2" mb={1}>Booth Price: {ev.booth_price || 'Free'}</Typography>
                 <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
