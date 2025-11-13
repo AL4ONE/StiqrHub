@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Grid, 
   Card, 
@@ -78,6 +78,8 @@ const EventCard = styled(Card)(({ theme }) => ({
 
 export default function PublishedEventsPublic() {
   const [events, setEvents] = useState([]);
+  const [query, setQuery] = useState('');
+  const [priceFilter, setPriceFilter] = useState('ALL'); // ALL | FREE | PAID
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
@@ -197,6 +199,36 @@ export default function PublishedEventsPublic() {
           </Typography>
         </Box>
 
+        {/* Filters */}
+        <Box sx={{ mb: 3 }}>
+          <Grid container spacing={2} justifyContent="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Cari nama atau lokasi event"
+                placeholder="Contoh: jakarta, taman, bazar"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Harga Booth"
+                value={priceFilter}
+                onChange={(e) => setPriceFilter(e.target.value)}
+              >
+                <MenuItem value="ALL">Semua</MenuItem>
+                <MenuItem value="FREE">Gratis</MenuItem>
+                <MenuItem value="PAID">Berbayar</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
+        </Box>
+
         {loading && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography>Memuat event...</Typography>
@@ -218,7 +250,22 @@ export default function PublishedEventsPublic() {
         )}
 
         <Grid container spacing={3}>
-          {events.map((ev) => (
+          {useMemo(() => {
+            const q = query.trim().toLowerCase();
+            const list = events.filter((ev) => {
+              const matchesQuery =
+                !q ||
+                (ev.name && ev.name.toLowerCase().includes(q)) ||
+                (ev.location && ev.location.toLowerCase().includes(q));
+              const isFree = Number(ev.booth_price || 0) === 0;
+              const matchesPrice =
+                priceFilter === 'ALL' ||
+                (priceFilter === 'FREE' && isFree) ||
+                (priceFilter === 'PAID' && !isFree);
+              return matchesQuery && matchesPrice;
+            });
+            return list;
+          }, [events, query, priceFilter]).map((ev) => (
             <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
                 {(ev.banner_url || ev.banner) && (
