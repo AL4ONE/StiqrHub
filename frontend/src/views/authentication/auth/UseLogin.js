@@ -13,7 +13,7 @@ export default function useLogin() {
       const res = await fetch(BACKEND_URL + '/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, password })
+        body: JSON.stringify({ email: username.toLowerCase(), password })
       });
       const data = await res.json();
       if (data.token) {

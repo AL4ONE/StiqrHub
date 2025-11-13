@@ -55,7 +55,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               variant="outlined"
               fullWidth
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value.toLowerCase())}
               required
             />
           </Box>
