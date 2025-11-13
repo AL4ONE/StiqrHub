@@ -1,0 +1,175 @@
+dnf install -y nodejs
+default:
+  image: docker:24.0.5
+
+variables:
+
+    START_TIME: ""
+    RELEASE_VER: ""
+
+    DOCKER_TLS_CERTDIR: ""  # Tidak menggunakan TLS untuk Docker Machine Executor
+    DOCKER_HOST: tcp://dockerhost:2375
+    DOCKER_DRIVER: overlay2
+
+services:
+  - name: docker:24.0.5-dind
+    alias: dockerhost
+    command:
+      - /bin/sh
+      - -c
+      - dockerd-entrypoint.sh --mtu=1300 || exit
+
+before_script:
+  - echo $DOCKER_HOST
+  - until docker info; do
+      echo "Waiting for Docker daemon to be ready...";
+      sleep 5;
+    done
+  - echo "Attempting Docker login..."
+  - docker version
+  - cat /etc/*ease
+  - ps -ef
+  - docker ps
+  - hostname
+  - df -hT
+  - echo "Attempting Docker login..."
+  - echo "$CI_REG_SANDY" | docker login -u "$CI_REG_USER" --password-stdin "$CI_REG_URL"
+  - echo "Docker login successful."
+
+
+after_script:
+  - docker logout
+
+stages:
+  - init
+  - build
+  - test
+  - release
+  - deploy
+
+generate-variables:
+  stage: init
+  script:
+    - |
+      if [ -z "$START_TIME" ]; then
+        export START_TIME=$(date -u '+%Y%m%d%H%M%S')
+        echo "START_TIME=$START_TIME" >> variables.env
+      fi
+      export RELEASE_VER="${CI_COMMIT_BRANCH}-${START_TIME}"
+      export RELEASE_VER_PRE="${RELEASE_VER}-pre"
+
+      echo "RELEASE_VER=$RELEASE_VER" >> variables.env
+      echo "RELEASE_VER_PRE=$RELEASE_VER_PRE" >> variables.env
+      echo "IMAGE_TAG=\"$CI_REG_URL/$CI_REG_PROJECT_PATH/$CI_REG_PROJECT_NAME:$RELEASE_VER\"" >> variables.env
+      echo "IMAGE_TAG_PRE=\"$CI_REG_URL/$CI_REG_PROJECT_PATH/$CI_REG_PROJECT_NAME:$RELEASE_VER_PRE\"" >> variables.env
+      echo "IMAGE_TAG_LATEST=\"$CI_REG_URL/$CI_REG_PROJECT_PATH/$CI_REG_PROJECT_NAME:latest\"" >> variables.env
+
+      cat variables.env
+  artifacts:
+    paths:
+      - variables.env
+  when: on_success
+
+build-app:
+  stage: build
+  script:
+    - source variables.env
+    - echo "Building Docker image..."
+    - docker build -t "$IMAGE_TAG_PRE" . -f Dockerfile
+    - docker push "$IMAGE_TAG_PRE"
+
+test-curl:
+  stage: test
+  script:
+    - source variables.env
+    - echo "Testing $CI_REG_PROJECT_NAME connectivity using cURL..."
+    - docker network create net-$CI_REG_PROJECT_NAME
+    - docker run --network=net-$CI_REG_PROJECT_NAME -d --name $CI_REG_PROJECT_NAME $IMAGE_TAG_PRE
+    - docker inspect $CI_REG_PROJECT_NAME
+    - sleep 10
+    - docker exec $CI_REG_PROJECT_NAME curl -vvv --fail http://127.0.0.1/
+  allow_failure: true  # Pipeline tidak akan gagal meskipun job ini gagal
+
+
+test-direct:
+  stage: test
+  script:
+    - source variables.env
+    - docker pull "$IMAGE_TAG_PRE"
+    - docker run -d --name "$CI_REG_PROJECT_NAME" "$IMAGE_TAG_PRE"
+    - docker commit "$CI_REG_PROJECT_NAME" "$IMAGE_TAG_PRE-direct"
+    - docker push "$IMAGE_TAG_PRE-direct"
+
+release:
+  stage: release
+  script:
+    - source variables.env
+    - apk update && apk add skopeo
+    - skopeo copy docker://$IMAGE_TAG_PRE docker://$IMAGE_TAG
+    - skopeo copy docker://$IMAGE_TAG_PRE docker://$IMAGE_TAG_LATEST
+
+
+deploy-onprem:
+  stage: deploy
+  script:
+    - source variables.env
+    - echo "Deploying $CI_REG_PROJECT_NAME to production..."
+    - apk add curl
+    - echo "Validating required environment variables..."
+    - echo "Using DEPLOYMENT_API ":"" "$DEPLOYMENT_API"
+    - echo "Using TOKEN_API ":"" "(hidden)"
+    - echo "Using IMAGE_TAG ":"" "$IMAGE_TAG"
+    - >
+      if [ -z "$DEPLOYMENT_API" ] || [ -z "$TOKEN_API" ] || [ -z "$IMAGE_TAG" ]; then
+      echo "Error: Required environment variables are not set." >&2;
+      exit 1;
+      fi
+    - echo "Downloading deployment script..."
+    - >
+      curl --fail -o /tmp/curl-deploy.sh https://gitlab.com/go-public1/ci-library/-/raw/main/script-deployment-k8s.sh ||
+      { echo "Error: Failed to download deployment script." >&2; exit 1; }
+    - echo "Customizing deployment script..."
+    - sed -i "s|DEPLOYMENT_API|$DEPLOYMENT_API|g" /tmp/curl-deploy.sh
+    - sed -i "s|AUTHTOKEN|$TOKEN_API|g" /tmp/curl-deploy.sh
+    - sed -i "s|IMAGETAG|$IMAGE_TAG|g" /tmp/curl-deploy.sh
+    - chmod +x /tmp/curl-deploy.sh
+    - cat /tmp/curl-deploy.sh
+    - echo "Executing deployment script..."
+    - sh /tmp/curl-deploy.sh
+  only:
+    - development
+    - main
+
+
+deploy-oncloud:
+  stage: deploy
+  script:
+    - source variables.env
+    - echo "Deploying $APP_NAME application to VM..."
+    - apk update && apk add --no-cache ca-certificates curl bash
+    - cp /etc/gitlab-runner/certs/ca.crt /usr/local/share/ca-certificates/custom-ca.crt && update-ca-certificates
+    - echo "Validating required environment variables..."
+    - echo "Using DEPLOYMENT_API ":"" "$DEPLOYMENT_API_CLOUD"
+    - echo "Using TOKEN_API_CLOUD ":"" "(hidden)"
+    - echo "Using IMAGE_TAG ":"" "$IMAGE_TAG"
+    - >
+      if [ -z "$DEPLOYMENT_API_CLOUD" ] || [ -z "$TOKEN_API_CLOUD" ] || [ -z "$IMAGE_TAG" ]; then
+      echo "Error: Required environment variables are not set." >&2;
+      exit 1;
+      fi
+    - echo "Downloading deployment script..."
+    - >
+      curl --fail -o /tmp/curl-deploy.sh https://dns-gits.dnstech.co.id/go-public/ci-library/-/raw/main/script-deployment-k8s.sh ||
+      { echo "Error: Failed to download deployment script." >&2; exit 1; }
+    - echo "Customizing deployment script..."
+    - sed -i "s|DEPLOYMENT_API|$DEPLOYMENT_API_CLOUD|g" /tmp/curl-deploy.sh
+    - sed -i "s|AUTHTOKEN|$TOKEN_API_CLOUD|g" /tmp/curl-deploy.sh
+    - sed -i "s|IMAGETAG|$IMAGE_TAG|g" /tmp/curl-deploy.sh
+    - chmod +x /tmp/curl-deploy.sh
+    - cat /tmp/curl-deploy.sh
+    - echo "Executing deployment script..."
+    - bash -x /tmp/curl-deploy.sh
+  only:
+    - production
+    - on-cloud
+
