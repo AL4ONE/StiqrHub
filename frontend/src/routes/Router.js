@@ -142,6 +142,7 @@ const Maintenance = Loadable(lazy(() => import('../views/authentication/Maintena
 
 // landingpage
 const Landingpage = Loadable(lazy(() => import('../views/pages/landingpage/Landingpage')));
+const PublishedEventsPublic = Loadable(lazy(() => import('../views/public/PublishedEvents')));
 const RoleChooser = Loadable(lazy(() => import('../views/pages/landing/RoleChooser')));
 const TenantEventsList = Loadable(lazy(() => import('../views/tenant/EventsList')));
 const TenantEventDetail = Loadable(lazy(() => import('../views/tenant/EventDetail')));
@@ -329,6 +330,7 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { index: true, element: <Landingpage /> },
+      { path: '/events', element: <PublishedEventsPublic /> },
       { path: '/start', element: <RoleChooser /> },
       { path: '/auth/404', element: <Error /> },
       { path: '/auth/login', element: <Login /> },
