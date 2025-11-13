@@ -20,7 +20,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut, apiDelete } from 'src/utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
-import { formatDate, formatDateIndonesia } from 'src/utils/dateFormat';
+import { formatDateIndonesia, toIndonesiaDateTimeLocal, fromIndonesiaDateTimeToUTC } from 'src/utils/dateFormat';
 
 const statusColor = (status) => {
   if (status === 'ACTIVATED') return 'success';
@@ -65,11 +65,9 @@ export default function EventDetail() {
   const handlePublishClick = () => {
     // Check if published dates are null
     if (!event.published_start_date || !event.published_end_date) {
-      // Set default published_start_date to now
+      // Set default published_start_date to now in Indonesia timezone
       const now = new Date();
-      const publishedStart = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16);
+      const publishedStart = toIndonesiaDateTimeLocal(now);
       
       setPublishForm({
         published_start_date: publishedStart,
@@ -78,8 +76,13 @@ export default function EventDetail() {
       setPublishDialogOpen(true);
       setPublishError('');
     } else {
-      // If already has published dates, just update status
-      setStatus('PUBLISHED');
+      // If already has published dates, load them in Indonesia timezone for editing
+      setPublishForm({
+        published_start_date: toIndonesiaDateTimeLocal(event.published_start_date),
+        published_end_date: toIndonesiaDateTimeLocal(event.published_end_date)
+      });
+      setPublishDialogOpen(true);
+      setPublishError('');
     }
   };
 
@@ -92,9 +95,18 @@ export default function EventDetail() {
       return;
     }
 
-    const startDate = new Date(publishForm.published_start_date);
-    const endDate = new Date(publishForm.published_end_date);
-    const eventEndDate = new Date(event.end_date);
+    // Convert publish dates from Indonesia timezone to UTC for comparison
+    const startDateUTC = fromIndonesiaDateTimeToUTC(publishForm.published_start_date);
+    const endDateUTC = fromIndonesiaDateTimeToUTC(publishForm.published_end_date);
+    
+    if (!startDateUTC || !endDateUTC) {
+      setPublishError('Invalid date format');
+      return;
+    }
+
+    const startDate = new Date(startDateUTC);
+    const endDate = new Date(endDateUTC);
+    const eventEndDate = new Date(event.end_date); // event.end_date is UTC from backend
 
     if (endDate > eventEndDate) {
       setPublishError('Published end date cannot be later than event end date');
@@ -108,17 +120,11 @@ export default function EventDetail() {
 
     setSaving(true);
     try {
-      // Format datetime for backend (YYYY-MM-DD HH:mm:ss)
-      const formatDateTime = (dateTimeString) => {
-        if (!dateTimeString) return null;
-        const date = new Date(dateTimeString);
-        return date.toISOString().slice(0, 19).replace('T', ' ');
-      };
-
+      // Convert from Indonesia timezone to UTC for backend
       const res = await apiPut(BACKEND_URL + `/api/eo/events/${id}`, {
         status: 'PUBLISHED',
-        published_start_date: formatDateTime(publishForm.published_start_date),
-        published_end_date: formatDateTime(publishForm.published_end_date)
+        published_start_date: fromIndonesiaDateTimeToUTC(publishForm.published_start_date),
+        published_end_date: fromIndonesiaDateTimeToUTC(publishForm.published_end_date)
       });
       
       if (res?.status === 'success') {
@@ -382,19 +388,19 @@ export default function EventDetail() {
 
           <TextField
             fullWidth
-            label="Published Start Date"
+            label="Published Start Date (WIB)"
             type="datetime-local"
             value={publishForm.published_start_date}
             onChange={(e) => setPublishForm({ ...publishForm, published_start_date: e.target.value })}
             InputLabelProps={{ shrink: true }}
             margin="normal"
             required
-            helperText="When event becomes visible to tenants (default: now)"
+            helperText="Waktu Indonesia Barat (WIB) - When event becomes visible to tenants"
           />
 
           <TextField
             fullWidth
-            label="Published End Date"
+            label="Published End Date (WIB)"
             type="datetime-local"
             value={publishForm.published_end_date}
             onChange={(e) => setPublishForm({ ...publishForm, published_end_date: e.target.value })}
@@ -402,9 +408,9 @@ export default function EventDetail() {
             margin="normal"
             required
             inputProps={{
-              max: new Date(event.end_date).toISOString().slice(0, 16)
+              max: toIndonesiaDateTimeLocal(event.end_date)
             }}
-            helperText={`Last date tenants can register (max: ${formatDateIndonesia(event.end_date)})`}
+            helperText={`Waktu Indonesia Barat (WIB) - Last date tenants can register (max: ${formatDateIndonesia(event.end_date)})`}
           />
         </DialogContent>
         <DialogActions>
