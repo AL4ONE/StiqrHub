@@ -13,6 +13,9 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        // Convert email to lowercase before validation
+        $request->merge(['email' => strtolower($request->email)]);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|unique:users',
@@ -27,7 +30,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => strtolower($validated['email']),
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             // EO must be verified by admin before active
@@ -54,12 +57,15 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        // Convert email to lowercase before validation
+        $request->merge(['email' => strtolower($request->email)]);
+        
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', strtolower($credentials['email']))->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
