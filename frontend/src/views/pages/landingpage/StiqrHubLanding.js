@@ -44,35 +44,48 @@ const StiqrHubLanding = () => {
         {/* Featured Published Events */}
         <Box sx={{ px: { xs: 2, md: 6 }, mt: 6, mb: 2 }}>
           <Typography variant="h5" gutterBottom>Published Events</Typography>
-          <Grid container spacing={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              overflowX: 'auto',
+              py: 1,
+              '&::-webkit-scrollbar': {
+                height: '6px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: '#c2c2c2',
+                borderRadius: '4px',
+              },
+            }}
+          >
             {events.map((ev) => (
-              <Grid item xs={12} sm={6} md={4} key={ev.id}>
-                <Card>
-                  <CardContent>
-                    <Box
-                      mb={2}
-                      sx={{ width: '100%', height: 160, overflow: 'hidden', borderRadius: 1, backgroundColor: '#f5f5f5' }}
-                    >
-                      <img
-                        src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
-                        alt={ev.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    </Box>
-                    <Typography variant="subtitle1">{ev.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">{ev.location}</Typography>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      {formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}
-                    </Typography>
-                    <Button variant="contained" color="primary" href={`/auth/register?eventId=${ev.id}`} fullWidth>
-                      Register
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
+              <Box
+                key={ev.id}
+                component={Link}
+                to={`/auth/register?eventId=${ev.id}`}
+                sx={{
+                  minWidth: { xs: 220, sm: 280 },
+                  height: { xs: 120, sm: 160 },
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                  },
+                }}
+              >
+                <img
+                  src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                  alt={ev.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
         <PlatformBenefits />
