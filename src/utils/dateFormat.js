@@ -115,26 +115,33 @@ export const fromIndonesiaDateTimeToUTC = (dateTimeLocal) => {
   if (!dateTimeLocal) return null;
   
   try {
-    // Parse as Indonesia timezone (Asia/Jakarta - UTC+7)
     // datetime-local input format: YYYY-MM-DDTHH:mm (no timezone info)
-    // We need to treat it as Indonesia timezone (WIB = UTC+7)
-    const dateStr = dateTimeLocal.replace('T', ' ');
+    // IMPORTANT: We treat this input as Indonesia timezone (WIB = UTC+7), NOT browser local timezone
+    // So if user inputs "2024-12-25T10:00", we treat it as 10:00 WIB = 03:00 UTC
     
-    // Create date string with Indonesia timezone offset
-    // Format: "YYYY-MM-DD HH:mm+07:00"
-    const indonesiaDateStr = dateStr + '+07:00';
+    // Parse the date parts
+    const [datePart, timePart] = dateTimeLocal.split('T');
+    if (!datePart || !timePart) {
+      console.error('Invalid datetime-local format:', dateTimeLocal);
+      return null;
+    }
+    
+    // Create date in Indonesia timezone by appending +07:00
+    // This tells JavaScript to treat the time as Indonesia timezone
+    const indonesiaDateStr = `${dateTimeLocal}+07:00`;
     const indonesiaDate = new Date(indonesiaDateStr);
     
-    // Check if date is valid
+    // Validate
     if (isNaN(indonesiaDate.getTime())) {
       console.error('Invalid date:', dateTimeLocal);
       return null;
     }
     
-    // Convert to UTC and format as "YYYY-MM-DD HH:mm:ss"
-    return indonesiaDate.toISOString().slice(0, 19).replace('T', ' ');
+    // Convert to UTC ISO string, then format as "YYYY-MM-DD HH:mm:ss"
+    const utcISO = indonesiaDate.toISOString();
+    return utcISO.slice(0, 19).replace('T', ' ');
   } catch (error) {
-    console.error('Error converting Indonesia date to UTC:', error);
+    console.error('Error converting Indonesia date to UTC:', error, dateTimeLocal);
     return null;
   }
 };
