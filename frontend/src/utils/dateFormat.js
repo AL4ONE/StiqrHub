@@ -66,3 +66,64 @@ export const formatDateIndonesia = (date) => {
   }
 };
 
+/**
+ * Convert date to Indonesia timezone for datetime-local input
+ * @param {string|Date} date - Date string or Date object
+ * @returns {string} Formatted date string (YYYY-MM-DDTHH:mm) in Indonesia timezone
+ */
+export const toIndonesiaDateTimeLocal = (date) => {
+  if (!date) return '';
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) {
+      return '';
+    }
+    
+    // Convert to Indonesia timezone (Asia/Jakarta - UTC+7)
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    const parts = formatter.formatToParts(dateObj);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const hours = parts.find(p => p.type === 'hour').value;
+    const minutes = parts.find(p => p.type === 'minute').value;
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error converting date to Indonesia timezone:', error);
+    return '';
+  }
+};
+
+/**
+ * Convert datetime-local input (Indonesia timezone) to UTC for backend
+ * @param {string} dateTimeLocal - Date string from datetime-local input (YYYY-MM-DDTHH:mm)
+ * @returns {string} UTC date string in format "YYYY-MM-DD HH:mm:ss"
+ */
+export const fromIndonesiaDateTimeToUTC = (dateTimeLocal) => {
+  if (!dateTimeLocal) return null;
+  
+  try {
+    // Parse as Indonesia timezone (Asia/Jakarta)
+    // Create date string with timezone info
+    const dateStr = dateTimeLocal.replace('T', ' ');
+    // Create date in Indonesia timezone, then convert to UTC
+    const indonesiaDate = new Date(dateStr + '+07:00'); // WIB is UTC+7
+    return indonesiaDate.toISOString().slice(0, 19).replace('T', ' ');
+  } catch (error) {
+    console.error('Error converting Indonesia date to UTC:', error);
+    return null;
+  }
+};
+

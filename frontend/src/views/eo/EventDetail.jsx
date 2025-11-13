@@ -235,10 +235,10 @@ export default function EventDetail() {
               )}
               <Typography variant="body1" color="textSecondary" mb={2}>{event.location}</Typography>
               <Typography variant="body2" mb={1}>
-                <strong>Start:</strong> {formatDate(event.start_date)}
+                <strong>Start:</strong> {formatDateIndonesia(event.start_date)}
               </Typography>
               <Typography variant="body2" mb={1}>
-                <strong>End:</strong> {formatDate(event.end_date)}
+                <strong>End:</strong> {formatDateIndonesia(event.end_date)}
               </Typography>
               <Typography variant="body2" mb={1}>
                 <strong>Category:</strong> {event.category}
@@ -367,7 +367,7 @@ export default function EventDetail() {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="body2">
-              <strong>Event Period:</strong> {formatDate(event.start_date)} - {formatDate(event.end_date)}
+              <strong>Event Period:</strong> {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
             </Typography>
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               Published end date cannot exceed event end date.
@@ -404,7 +404,7 @@ export default function EventDetail() {
             inputProps={{
               max: new Date(event.end_date).toISOString().slice(0, 16)
             }}
-            helperText={`Last date tenants can register (max: ${formatDate(event.end_date)})`}
+            helperText={`Last date tenants can register (max: ${formatDateIndonesia(event.end_date)})`}
           />
         </DialogContent>
         <DialogActions>

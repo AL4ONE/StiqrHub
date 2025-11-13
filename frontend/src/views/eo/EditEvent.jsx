@@ -4,6 +4,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut } from 'src/utils/api';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toIndonesiaDateTimeLocal, fromIndonesiaDateTimeToUTC } from 'src/utils/dateFormat';
 
 const categories = ['F&B', 'Fashion', 'Automotive', 'Art & Craft', 'Snack & Beverage', 'Wellness', 'Others'];
 
@@ -48,9 +49,9 @@ export default function EditEvent() {
           name: ev.name || '',
           location: ev.location || '',
           map_link: ev.map_link || '',
-          // Convert to datetime-local compatible
-          start_date: ev.start_date ? new Date(ev.start_date).toISOString().slice(0,16) : '',
-          end_date: ev.end_date ? new Date(ev.end_date).toISOString().slice(0,16) : '',
+          // Convert to datetime-local compatible (Indonesia timezone)
+          start_date: toIndonesiaDateTimeLocal(ev.start_date),
+          end_date: toIndonesiaDateTimeLocal(ev.end_date),
           category: ev.category || 'F&B',
           booth_capacity: ev.booth_capacity ?? 1,
           booth_size: ev.booth_size || '3x3m',
@@ -92,8 +93,9 @@ export default function EditEvent() {
         const fd = new FormData();
           // Override to POST + _method=PUT for Laravel file handling
           fd.append('_method', 'PUT');
-        // Backend expects datetime format "YYYY-MM-DD HH:mm:ss"
-        const toBackendDate = (v) => (v ? new Date(v).toISOString().slice(0,19).replace('T',' ') : null);
+        // Backend expects datetime format "YYYY-MM-DD HH:mm:ss" in UTC
+        // datetime-local input is in Indonesia timezone, convert to UTC
+        const toBackendDate = fromIndonesiaDateTimeToUTC;
           if (formData.name) fd.append('name', formData.name);
           if (formData.location) fd.append('location', formData.location);
           if (formData.map_link) fd.append('map_link', formData.map_link);
@@ -128,7 +130,9 @@ export default function EditEvent() {
         }
       } else {
         // JSON path
-        const toBackendDate = (v) => (v ? new Date(v).toISOString().slice(0,19).replace('T',' ') : null);
+        // Backend expects datetime format "YYYY-MM-DD HH:mm:ss" in UTC
+        // datetime-local input is in Indonesia timezone, convert to UTC
+        const toBackendDate = fromIndonesiaDateTimeToUTC;
         const payload = {
           name: formData.name,
           location: formData.location,
