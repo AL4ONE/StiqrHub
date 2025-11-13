@@ -26,3 +26,43 @@ export const formatDate = (date) => {
   }
 };
 
+/**
+ * Format date to DD-MM-YYYY HH:mm format with Indonesia timezone (WIB - UTC+7)
+ * @param {string|Date} date - Date string or Date object
+ * @returns {string} Formatted date string (DD-MM-YYYY HH:mm) in Indonesia timezone
+ */
+export const formatDateIndonesia = (date) => {
+  if (!date) return '';
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) {
+      return '';
+    }
+    
+    // Convert to Indonesia timezone (Asia/Jakarta - UTC+7) using Intl.DateTimeFormat
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    const parts = formatter.formatToParts(dateObj);
+    const day = parts.find(p => p.type === 'day').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const year = parts.find(p => p.type === 'year').value;
+    const hours = parts.find(p => p.type === 'hour').value;
+    const minutes = parts.find(p => p.type === 'minute').value;
+    
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error formatting date to Indonesia timezone:', error);
+    return '';
+  }
+};
+
