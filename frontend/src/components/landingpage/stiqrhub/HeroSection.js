@@ -80,10 +80,10 @@ const HeroSection = () => {
           justifyContent="center"
           sx={{ marginBottom: 6 }}
         >
-          <CTButton component={Link} to="/start">
+          <CTButton component={Link} to="/auth/register?role=EO">
             Daftar Sebagai EO
           </CTButton>
-          <CTButton component={Link} to="/start">
+          <CTButton component={Link} to="/events">
             Temukan Event & Bazar
           </CTButton>
         </Stack>
