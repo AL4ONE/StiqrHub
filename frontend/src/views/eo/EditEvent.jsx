@@ -210,25 +210,27 @@ export default function EditEvent() {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Start Date"
+                    label="Start Date (WIB)"
                     type="datetime-local"
                     value={formData.start_date}
                     onChange={handleChange('start_date')}
                     InputLabelProps={{ shrink: true }}
                     required
                     disabled={disabled}
+                    helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="End Date"
+                    label="End Date (WIB)"
                     type="datetime-local"
                     value={formData.end_date}
                     onChange={handleChange('end_date')}
                     InputLabelProps={{ shrink: true }}
                     required
                     disabled={disabled}
+                    helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
                 <Grid item xs={6}>

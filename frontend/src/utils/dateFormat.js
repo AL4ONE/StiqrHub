@@ -115,11 +115,23 @@ export const fromIndonesiaDateTimeToUTC = (dateTimeLocal) => {
   if (!dateTimeLocal) return null;
   
   try {
-    // Parse as Indonesia timezone (Asia/Jakarta)
-    // Create date string with timezone info
+    // Parse as Indonesia timezone (Asia/Jakarta - UTC+7)
+    // datetime-local input format: YYYY-MM-DDTHH:mm (no timezone info)
+    // We need to treat it as Indonesia timezone (WIB = UTC+7)
     const dateStr = dateTimeLocal.replace('T', ' ');
-    // Create date in Indonesia timezone, then convert to UTC
-    const indonesiaDate = new Date(dateStr + '+07:00'); // WIB is UTC+7
+    
+    // Create date string with Indonesia timezone offset
+    // Format: "YYYY-MM-DD HH:mm+07:00"
+    const indonesiaDateStr = dateStr + '+07:00';
+    const indonesiaDate = new Date(indonesiaDateStr);
+    
+    // Check if date is valid
+    if (isNaN(indonesiaDate.getTime())) {
+      console.error('Invalid date:', dateTimeLocal);
+      return null;
+    }
+    
+    // Convert to UTC and format as "YYYY-MM-DD HH:mm:ss"
     return indonesiaDate.toISOString().slice(0, 19).replace('T', ' ');
   } catch (error) {
     console.error('Error converting Indonesia date to UTC:', error);
