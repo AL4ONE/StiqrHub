@@ -229,7 +229,7 @@ export default function EventDetail() {
               {event.published_start_date && event.published_end_date && (
                 <Box mb={2}>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Published Period:</strong> {formatDate(event.published_start_date)} - {formatDate(event.published_end_date)}
+                    <strong>Published Period:</strong> {formatDate(event.published_start_date)} sampai {formatDate(event.published_end_date)}
                   </Typography>
                 </Box>
               )}
