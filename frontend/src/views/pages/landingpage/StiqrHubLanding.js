@@ -4,6 +4,7 @@ import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 import { formatDateIndonesia } from 'src/utils/dateFormat';
+import { Link } from 'react-router-dom';
 
 // StiqrHub Landing Page Components
 import StiqrHubHeader from 'src/components/landingpage/stiqrhub/Header';
