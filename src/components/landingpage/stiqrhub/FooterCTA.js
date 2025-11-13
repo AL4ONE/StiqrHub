@@ -62,10 +62,10 @@ const FooterCTA = () => {
           spacing={2}
           justifyContent="center"
         >
-          <CTButton component={Link} to="/start">
+          <CTButton component={Link} to="/auth/register?role=EO">
             Daftar Sebagai EO
           </CTButton>
-          <CTButton component={Link} to="/start">
+          <CTButton component={Link} to="/events">
             Temukan Event & Bazar
           </CTButton>
         </Stack>
