@@ -45,13 +45,22 @@ export default function EditEvent() {
           return;
         }
         setStatus(ev.status);
+        // Convert to datetime-local compatible (Indonesia timezone)
+        const convertedStart = toIndonesiaDateTimeLocal(ev.start_date);
+        const convertedEnd = toIndonesiaDateTimeLocal(ev.end_date);
+        // Debug: log the conversion
+        console.log('EditEvent - Load event:', {
+          original_start: ev.start_date,
+          converted_start: convertedStart,
+          original_end: ev.end_date,
+          converted_end: convertedEnd
+        });
         setFormData({
           name: ev.name || '',
           location: ev.location || '',
           map_link: ev.map_link || '',
-          // Convert to datetime-local compatible (Indonesia timezone)
-          start_date: toIndonesiaDateTimeLocal(ev.start_date),
-          end_date: toIndonesiaDateTimeLocal(ev.end_date),
+          start_date: convertedStart,
+          end_date: convertedEnd,
           category: ev.category || 'F&B',
           booth_capacity: ev.booth_capacity ?? 1,
           booth_size: ev.booth_size || '3x3m',
@@ -74,7 +83,10 @@ export default function EditEvent() {
   }, [id]);
 
   const handleChange = (field) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    
+    // For datetime-local fields, the value is already in the format we need
+    // We just store it as-is, and convert to UTC on submit
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -100,8 +112,10 @@ export default function EditEvent() {
           if (formData.location) fd.append('location', formData.location);
           if (formData.map_link) fd.append('map_link', formData.map_link);
           const sd = toBackendDate(formData.start_date);
+          console.log('EditEvent - Input start_date:', formData.start_date, '-> UTC:', sd);
           if (sd) fd.append('start_date', sd);
           const ed = toBackendDate(formData.end_date);
+          console.log('EditEvent - Input end_date:', formData.end_date, '-> UTC:', ed);
           if (ed) fd.append('end_date', ed);
           if (formData.category) fd.append('category', formData.category);
           if (formData.booth_capacity != null) fd.append('booth_capacity', String(formData.booth_capacity));
