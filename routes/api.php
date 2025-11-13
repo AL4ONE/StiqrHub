@@ -23,6 +23,9 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Public endpoints (no auth)
+Route::get('/public/events', [\App\Http\Controllers\Public\PublicEventController::class, 'index']);
+
 Route::middleware('jwt.verify')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
