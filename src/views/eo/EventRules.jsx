@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
-import { apiGet, apiPost } from 'src/utils/api';
+import { apiGet, apiPost, apiDelete } from 'src/utils/api';
 import { useParams } from 'react-router-dom';
 
 export default function EventRules() {
@@ -76,6 +77,26 @@ export default function EventRules() {
     }
   };
 
+  const handleDeleteRule = async (ruleId) => {
+    if (!window.confirm('Are you sure you want to delete this rule?')) {
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiDelete(BACKEND_URL + `/api/eo/events/${id}/rules/${ruleId}`);
+      if (res?.status === 'success') {
+        await loadRules();
+      } else {
+        setError(res?.message || 'Failed to delete rule');
+      }
+    } catch (e) {
+      setError('Failed to delete rule');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <PageContainer title="Event Rules">
       <Card>
@@ -107,11 +128,36 @@ export default function EventRules() {
           {rules.length > 0 && (
             <Box>
               <Typography variant="h6" mb={2}>Current Rules</Typography>
-              <Box component="ul" sx={{ pl: 3, m: 0 }}>
+              <Box component="ul" sx={{ pl: 3, m: 0, listStyle: 'none' }}>
                 {rules.map((r) => (
-                  <Typography key={r.id} component="li" variant="body1" sx={{ mb: 1 }}>
-                    {r.rule_name || r.rule}
-                  </Typography>
+                  <Box
+                    key={r.id}
+                    component="li"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mb: 1,
+                      p: 1,
+                      borderRadius: 1,
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <Typography variant="body1" sx={{ flex: 1 }}>
+                      {r.rule_name || r.rule}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteRule(r.id)}
+                      disabled={loading}
+                      aria-label="delete rule"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                 ))}
               </Box>
             </Box>
