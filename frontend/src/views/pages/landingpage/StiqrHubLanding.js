@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -40,62 +41,19 @@ const StiqrHubLanding = () => {
     })();
   }, []);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const sliderSettings = useMemo(() => ({
     infinite: events.length > 1,
-    autoplay: events.length > 1,
-    autoplaySpeed: 5000,
-    arrows: events.length > 1,
+    autoplay: false,
+    arrows: false,
     dots: events.length > 1,
-    pauseOnHover: true,
     slidesToShow: 1,
     slidesToScroll: 1,
     adaptiveHeight: true,
-    nextArrow: <ArrowButton direction="next" />,
-    prevArrow: <ArrowButton direction="prev" />,
-    appendDots: (dots) => (
-      <Box component="ul" sx={{ margin: 0, padding: 0, bottom: 24 }}>
-        {dots}
-      </Box>
-    ),
-    customPaging: (i) => (
-      <Box
-        sx={{
-          width: 30,
-          height: 6,
-          borderRadius: 999,
-          backgroundColor: 'rgba(255,255,255,0.6)',
-          border: 0,
-          mx: 0.5,
-        }}
-      />
-    ),
+    dotsClass: 'slick-dots slick-dots-custom',
   }), [events.length]);
-
-  function ArrowButton({ direction, onClick }) {
-    if (!events.length || events.length === 1) return null;
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          [direction === 'next' ? 'right' : 'left']: 24,
-          transform: 'translateY(-50%)',
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          border: 'none',
-          backgroundColor: 'rgba(0,0,0,0.45)',
-          color: '#fff',
-          cursor: 'pointer',
-          zIndex: 2,
-        }}
-      >
-        {direction === 'next' ? '›' : '‹'}
-      </button>
-    );
-  }
 
   return (
     <PageContainer title="StiqrHub - Kelola Event Lokal Lebih Praktis" description="StiqrHub menghubungkan EO dengan Tenant, proses daftar cepat, pembayaran QRIS otomatis, proteksi asuransi untuk tenant">
@@ -104,16 +62,10 @@ const StiqrHubLanding = () => {
         <HeroSection />
 
         {/* Featured Published Events */}
-        <Box sx={{ px: { xs: 0, md: 0 }, mt: 6, mb: 2 }}>
-          <Typography variant="h5" sx={{ px: { xs: 2, md: 6 }, mb: 2 }}>Published Events</Typography>
-          <Box
-            sx={{
-              position: 'relative',
-              width: '100%',
-              overflow: 'hidden',
-            }}
-          >
-            {events.length > 0 ? (
+        <Box sx={{ px: { xs: 0, md: 6 }, mt: 6, mb: 2 }}>
+          <Typography variant="h5" sx={{ px: { xs: 2, md: 0 }, mb: 2 }}>Published Events</Typography>
+          {events.length > 0 ? (
+            isMobile ? (
               <Slider {...sliderSettings}>
                 {events.map((ev) => (
                   <Box
@@ -123,43 +75,93 @@ const StiqrHubLanding = () => {
                     sx={{
                       display: 'block',
                       width: '100%',
-                      height: { xs: 220, sm: 320, md: 420 },
-                      position: 'relative',
-                      borderRadius: { xs: 0, md: 2 },
-                      overflow: 'hidden',
+                      height: 220,
+                      px: 1,
                     }}
                   >
-                    <img
-                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
-                      alt={ev.name}
-                      style={{
-                        width: '100%',
+                    <Box
+                      sx={{
                         height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                       }}
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/1200x500?text=Banner+Unavailable';
-                      }}
-                    />
+                    >
+                      <img
+                        src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                        alt={ev.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </Box>
                   </Box>
                 ))}
               </Slider>
             ) : (
               <Box
                 sx={{
-                  width: '100%',
-                  height: { xs: 220, sm: 320, md: 420 },
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#f4f4f4',
+                  gap: 2,
+                  overflowX: 'auto',
+                  py: 1,
+                  '&::-webkit-scrollbar': {
+                    height: '6px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: '#c2c2c2',
+                    borderRadius: '4px',
+                  },
                 }}
               >
-                <Typography color="text.secondary">Belum ada event yang ditampilkan.</Typography>
+                {events.map((ev) => (
+                  <Box
+                    key={ev.id}
+                    component={Link}
+                    to={`/auth/register?eventId=${ev.id}`}
+                    sx={{
+                      minWidth: { xs: 220, sm: 280 },
+                      height: { xs: 120, sm: 160 },
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                      },
+                    }}
+                  >
+                    <img
+                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                      alt={ev.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  </Box>
+                ))}
               </Box>
-            )}
-          </Box>
+            )
+          ) : (
+            <Box
+              sx={{
+                width: '100%',
+                height: { xs: 220, sm: 320, md: 420 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f4f4f4',
+              }}
+            >
+              <Typography color="text.secondary">Belum ada event yang ditampilkan.</Typography>
+            </Box>
+          )}
         </Box>
 
         <PlatformBenefits />
