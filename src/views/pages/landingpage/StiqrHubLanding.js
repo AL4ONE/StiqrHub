@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -24,7 +25,6 @@ import FooterCTA from 'src/components/landingpage/stiqrhub/FooterCTA';
 
 const StiqrHubLanding = () => {
   const [events, setEvents] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -34,21 +34,68 @@ const StiqrHubLanding = () => {
         const list = Array.isArray(resp?.data) ? resp.data : Array.isArray(resp) ? resp : [];
         const slices = list.slice(0, 6);
         setEvents(slices); // show up to 6 banners
-        setCurrentSlide(0);
       } catch (e) {
         setError('');
       }
     })();
   }, []);
 
-  useEffect(() => {
-    if (!events.length) return undefined;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % events.length);
-    }, 5000);
+  const sliderSettings = useMemo(() => ({
+    infinite: events.length > 1,
+    autoplay: events.length > 1,
+    autoplaySpeed: 5000,
+    arrows: events.length > 1,
+    dots: events.length > 1,
+    pauseOnHover: true,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
+    nextArrow: <ArrowButton direction="next" />,
+    prevArrow: <ArrowButton direction="prev" />,
+    appendDots: (dots) => (
+      <Box component="ul" sx={{ margin: 0, padding: 0, bottom: 24 }}>
+        {dots}
+      </Box>
+    ),
+    customPaging: (i) => (
+      <Box
+        sx={{
+          width: 30,
+          height: 6,
+          borderRadius: 999,
+          backgroundColor: 'rgba(255,255,255,0.6)',
+          border: 0,
+          mx: 0.5,
+        }}
+      />
+    ),
+  }), [events.length]);
 
-    return () => clearInterval(interval);
-  }, [events]);
+  function ArrowButton({ direction, onClick }) {
+    if (!events.length || events.length === 1) return null;
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          [direction === 'next' ? 'right' : 'left']: 24,
+          transform: 'translateY(-50%)',
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          border: 'none',
+          backgroundColor: 'rgba(0,0,0,0.45)',
+          color: '#fff',
+          cursor: 'pointer',
+          zIndex: 2,
+        }}
+      >
+        {direction === 'next' ? '›' : '‹'}
+      </button>
+    );
+  }
 
   return (
     <PageContainer title="StiqrHub - Kelola Event Lokal Lebih Praktis" description="StiqrHub menghubungkan EO dengan Tenant, proses daftar cepat, pembayaran QRIS otomatis, proteksi asuransi untuk tenant">
@@ -67,112 +114,37 @@ const StiqrHubLanding = () => {
             }}
           >
             {events.length > 0 ? (
-              <>
-                <Box
-                  component={Link}
-                  to={`/auth/register?eventId=${events[currentSlide]?.id}`}
-                  sx={{
-                    display: 'block',
-                    width: '100%',
-                    height: { xs: 220, sm: 320, md: 420 },
-                    position: 'relative',
-                  }}
-                >
-                  <img
-                    src={events[currentSlide]?.banner_url || `${BACKEND_URL}/storage/${events[currentSlide]?.banner}`}
-                    alt={events[currentSlide]?.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://via.placeholder.com/1200x500?text=Banner+Unavailable';
-                    }}
-                  />
-                </Box>
-
-                {events.length > 1 && (
-                  <>
-                    <IconButton
-                      aria-label="previous banner"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: { xs: 8, md: 24 },
-                        transform: 'translateY(-50%)',
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0,0,0,0.6)',
-                        },
-                        zIndex: 2,
-                      }}
-                    >
-                      <ArrowBackIosNewIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton
-                      aria-label="next banner"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentSlide((prev) => (prev + 1) % events.length);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        right: { xs: 8, md: 24 },
-                        transform: 'translateY(-50%)',
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0,0,0,0.6)',
-                        },
-                        zIndex: 2,
-                      }}
-                    >
-                      <ArrowForwardIosIcon fontSize="small" />
-                    </IconButton>
-                  </>
-                )}
-
-                {events.length > 1 && (
+              <Slider {...sliderSettings}>
+                {events.map((ev) => (
                   <Box
+                    key={ev.id}
+                    component={Link}
+                    to={`/auth/register?eventId=${ev.id}`}
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      gap: 1,
-                      position: 'absolute',
-                      bottom: 16,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
+                      display: 'block',
+                      width: '100%',
+                      height: { xs: 220, sm: 320, md: 420 },
+                      position: 'relative',
+                      borderRadius: { xs: 0, md: 2 },
+                      overflow: 'hidden',
                     }}
                   >
-                    {events.map((_, idx) => (
-                      <Box
-                        key={idx}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentSlide(idx);
-                        }}
-                        sx={{
-                          width: idx === currentSlide ? 18 : 8,
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: idx === currentSlide ? '#00C68E' : 'rgba(255,255,255,0.7)',
-                          cursor: 'pointer',
-                          transition: 'width 0.2s ease',
-                        }}
-                      />
-                    ))}
+                    <img
+                      src={ev.banner_url || `${BACKEND_URL}/storage/${ev.banner}`}
+                      alt={ev.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/1200x500?text=Banner+Unavailable';
+                      }}
+                    />
                   </Box>
-                )}
-              </>
+                ))}
+              </Slider>
             ) : (
               <Box
                 sx={{
