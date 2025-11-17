@@ -37,6 +37,7 @@ class PublicEventController extends Controller
                     'banner',
                     'booth_price',
                     'category',
+                    'payment_method',
                     'created_at'
                 ]);
 
