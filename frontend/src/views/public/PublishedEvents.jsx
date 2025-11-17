@@ -324,7 +324,9 @@ export default function PublishedEventsPublic() {
                     📅 {formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: isFree ? '#2E7D32' : '#00C68E' }}>
-                    💰 {isFree ? 'Gratis' : `Rp ${priceValue.toLocaleString('id-ID')}`}
+                    💰 {isFree 
+                      ? 'Gratis' 
+                      : `Rp ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
                   </Typography>
                   <Box sx={{ mt: 'auto', pt: 2 }}>
                     <Stack direction="row" spacing={1}>
