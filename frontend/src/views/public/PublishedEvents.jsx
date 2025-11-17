@@ -259,7 +259,9 @@ export default function PublishedEventsPublic() {
                 !q ||
                 (ev.name && ev.name.toLowerCase().includes(q)) ||
                 (ev.location && ev.location.toLowerCase().includes(q));
-              const isFree = Number(ev.booth_price || 0) === 0;
+              // Check if event is free: booth_price is null, undefined, 0, or empty string
+              const boothPrice = ev.booth_price;
+              const isFree = !boothPrice || Number(boothPrice) === 0 || boothPrice === '';
               const matchesPrice =
                 priceFilter === 'ALL' ||
                 (priceFilter === 'FREE' && isFree) ||
@@ -267,7 +269,11 @@ export default function PublishedEventsPublic() {
               return matchesQuery && matchesPrice;
             });
             return list;
-          }, [events, query, priceFilter]).map((ev) => (
+          }, [events, query, priceFilter]).map((ev) => {
+            // Calculate if event is free
+            const boothPrice = ev.booth_price;
+            const isFree = !boothPrice || Number(boothPrice) === 0 || boothPrice === '';
+            return (
             <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
                 {(ev.banner_url || ev.banner) && (
@@ -315,11 +321,9 @@ export default function PublishedEventsPublic() {
                   <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
                     📅 {formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}
                   </Typography>
-                  {ev.booth_price && (
-                    <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: '#00C68E' }}>
-                      💰 Rp {ev.booth_price.toLocaleString('id-ID')}
-                    </Typography>
-                  )}
+                  <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: isFree ? '#2E7D32' : '#00C68E' }}>
+                    💰 {isFree ? 'Gratis' : `Rp ${Number(boothPrice).toLocaleString('id-ID')}`}
+                  </Typography>
                   <Box sx={{ mt: 'auto', pt: 2 }}>
                     <Stack direction="row" spacing={1}>
                       <Button
@@ -358,7 +362,8 @@ export default function PublishedEventsPublic() {
                 </CardContent>
               </EventCard>
             </Grid>
-          ))}
+            );
+          })}
         </Grid>
       </Container>
     </Box>
