@@ -261,7 +261,8 @@ export default function PublishedEventsPublic() {
                 (ev.location && ev.location.toLowerCase().includes(q));
               // Check if event is free: booth_price is null, undefined, 0, or empty string
               const boothPrice = ev.booth_price;
-              const isFree = !boothPrice || Number(boothPrice) === 0 || boothPrice === '';
+              const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
+              const isFree = !boothPrice || priceValue === 0 || isNaN(priceValue);
               const matchesPrice =
                 priceFilter === 'ALL' ||
                 (priceFilter === 'FREE' && isFree) ||
@@ -272,7 +273,8 @@ export default function PublishedEventsPublic() {
           }, [events, query, priceFilter]).map((ev) => {
             // Calculate if event is free
             const boothPrice = ev.booth_price;
-            const isFree = !boothPrice || Number(boothPrice) === 0 || boothPrice === '';
+            const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
+            const isFree = !boothPrice || priceValue === 0 || isNaN(priceValue);
             return (
             <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
@@ -322,7 +324,7 @@ export default function PublishedEventsPublic() {
                     📅 {formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: isFree ? '#2E7D32' : '#00C68E' }}>
-                    💰 {isFree ? 'Gratis' : `Rp ${Number(boothPrice).toLocaleString('id-ID')}`}
+                    💰 {isFree ? 'Gratis' : `Rp ${priceValue.toLocaleString('id-ID')}`}
                   </Typography>
                   <Box sx={{ mt: 'auto', pt: 2 }}>
                     <Stack direction="row" spacing={1}>
