@@ -92,8 +92,9 @@ export default function EditEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (status === 'ACTIVATED' || status === 'PUBLISHED') {
-      setError('Activated/Published events cannot be edited');
+    // Allow editing until PUBLISHED status
+    if (status === 'PUBLISHED') {
+      setError('Published events cannot be edited');
       return;
     }
     setSaving(true);
@@ -176,8 +177,8 @@ export default function EditEvent() {
     }
   };
 
-  // Disable editing when event is ACTIVATED or PUBLISHED
-  const disabled = status === 'ACTIVATED' || status === 'PUBLISHED';
+  // Disable editing only when event is PUBLISHED
+  const disabled = status === 'PUBLISHED';
 
   return (
     <PageContainer title="Edit Event">
@@ -186,7 +187,7 @@ export default function EditEvent() {
           <Typography variant="h6" mb={3}>Edit Event</Typography>
           {disabled && (
             <Typography color="error" mb={2}>
-              This event cannot be edited because it is {status}.
+              Event yang sudah dipublish tidak dapat diedit.
             </Typography>
           )}
           {error && <Typography color="error" mb={2}>{error}</Typography>}
