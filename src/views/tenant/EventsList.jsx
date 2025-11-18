@@ -102,11 +102,19 @@ export default function EventsList() {
                   </Box>
                 )}
                 <Typography variant="h6">{ev.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
+                <Typography variant="body2" color="textSecondary" mb={0.5}>
                   {ev.location}
                 </Typography>
-                <Typography variant="body2">
-                  {formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}
+                <Typography variant="body2" mb={0.5}>
+                  <strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}
+                </Typography>
+                <Typography variant="body2" mb={1}>
+                  <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
+                </Typography>
+                <Typography variant="body2" mb={1} sx={{ fontWeight: 600, color: Number(ev.booth_price || 0) === 0 ? '#2E7D32' : '#00C68E' }}>
+                  <strong>Harga:</strong> {Number(ev.booth_price || 0) === 0 
+                    ? 'Gratis' 
+                    : `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
                 </Typography>
                 <Stack direction="row" spacing={1} mt={2}>
                  <Button

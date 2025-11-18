@@ -28,14 +28,129 @@ export default function CreateEvent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bannerFile, setBannerFile] = useState(null);
+  const [dateErrors, setDateErrors] = useState({ start_date: '', end_date: '' });
+
+  // Get current date in Indonesia timezone for min attribute
+  const getCurrentDateTimeLocal = () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const hours = parts.find(p => p.type === 'hour').value;
+    const minutes = parts.find(p => p.type === 'minute').value;
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const [minDateTime] = useState(getCurrentDateTimeLocal());
+
+  const validateDate = (field, value) => {
+    if (!value) {
+      setDateErrors(prev => ({ ...prev, [field]: '' }));
+      return;
+    }
+
+    const errors = { ...dateErrors };
+    
+    // Check if date is before today
+    const selectedDate = new Date(value + '+07:00'); // Treat as Indonesia timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      errors[field] = 'Tanggal tidak boleh sebelum hari ini';
+    } else {
+      errors[field] = '';
+    }
+
+    // Validate end_date is after start_date
+    if (field === 'end_date' && formData.start_date) {
+      const startDate = new Date(formData.start_date + '+07:00');
+      if (selectedDate <= startDate) {
+        errors.end_date = 'Tanggal akhir harus setelah tanggal mulai';
+      }
+    } else if (field === 'start_date' && formData.end_date) {
+      const endDate = new Date(formData.end_date + '+07:00');
+      if (selectedDate >= endDate) {
+        errors.start_date = 'Tanggal mulai harus sebelum tanggal akhir';
+      }
+    }
+
+    setDateErrors(errors);
+  };
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Validate date fields on change
+    if (field === 'start_date' || field === 'end_date') {
+      validateDate(field, value);
+    }
+  };
+
+  const handleDateBlur = (field) => (e) => {
+    validateDate(field, e.target.value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate dates before submit
+    let hasErrors = false;
+    const errors = { start_date: '', end_date: '' };
+    
+    if (!formData.start_date) {
+      errors.start_date = 'Tanggal mulai wajib diisi';
+      hasErrors = true;
+    } else {
+      const startDate = new Date(formData.start_date + '+07:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        errors.start_date = 'Tanggal tidak boleh sebelum hari ini';
+        hasErrors = true;
+      }
+    }
+
+    if (!formData.end_date) {
+      errors.end_date = 'Tanggal akhir wajib diisi';
+      hasErrors = true;
+    } else {
+      const endDate = new Date(formData.end_date + '+07:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (endDate < today) {
+        errors.end_date = 'Tanggal tidak boleh sebelum hari ini';
+        hasErrors = true;
+      }
+    }
+
+    // Validate end_date is after start_date
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date + '+07:00');
+      const endDate = new Date(formData.end_date + '+07:00');
+      if (endDate <= startDate) {
+        errors.end_date = 'Tanggal akhir harus setelah tanggal mulai';
+        hasErrors = true;
+      }
+    }
+
+    if (hasErrors) {
+      setDateErrors(errors);
+      setError('Mohon perbaiki error pada field tanggal');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -57,10 +172,41 @@ export default function CreateEvent() {
         alert('Event created successfully!');
         navigate('/app/eo/events');
       } else {
-        setError(res?.message || 'Failed to create event');
+        // Handle validation errors from backend
+        if (res?.errors && typeof res.errors === 'object') {
+          const fieldErrors = {};
+          Object.keys(res.errors).forEach(field => {
+            const errorMessages = Array.isArray(res.errors[field]) 
+              ? res.errors[field].join(', ') 
+              : res.errors[field];
+            fieldErrors[field] = errorMessages;
+          });
+          
+          // Set date errors if any
+          if (fieldErrors.start_date || fieldErrors.end_date) {
+            setDateErrors({
+              start_date: fieldErrors.start_date || '',
+              end_date: fieldErrors.end_date || ''
+            });
+          }
+          
+          // Set general error with field details
+          const errorFields = Object.keys(fieldErrors);
+          if (errorFields.length > 0) {
+            const errorMessages = errorFields.map(field => {
+              const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              return `${fieldName}: ${fieldErrors[field]}`;
+            }).join('; ');
+            setError(`Validation failed: ${errorMessages}`);
+          } else {
+            setError(res?.message || 'Failed to create event');
+          }
+        } else {
+          setError(res?.message || 'Failed to create event');
+        }
       }
     } catch (e) {
-      setError('Failed to create event');
+      setError('Failed to create event: ' + (e.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -106,9 +252,12 @@ export default function CreateEvent() {
                   type="datetime-local"
                   value={formData.start_date}
                   onChange={handleChange('start_date')}
+                  onBlur={handleDateBlur('start_date')}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: minDateTime }}
                   required
-                  helperText="Waktu Indonesia Barat (WIB)"
+                  error={!!dateErrors.start_date}
+                  helperText={dateErrors.start_date || "Waktu Indonesia Barat (WIB)"}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -118,9 +267,12 @@ export default function CreateEvent() {
                   type="datetime-local"
                   value={formData.end_date}
                   onChange={handleChange('end_date')}
+                  onBlur={handleDateBlur('end_date')}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ min: formData.start_date || minDateTime }}
                   required
-                  helperText="Waktu Indonesia Barat (WIB)"
+                  error={!!dateErrors.end_date}
+                  helperText={dateErrors.end_date || "Waktu Indonesia Barat (WIB)"}
                 />
               </Grid>
               
