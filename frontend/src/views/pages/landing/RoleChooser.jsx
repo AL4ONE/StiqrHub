@@ -48,7 +48,7 @@ export default function RoleChooser() {
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-          <Button variant="text" size="large" href="/auth/login">
+          <Button variant="contained" size="large" href="/auth/login">
             Login
           </Button>
         </Stack>

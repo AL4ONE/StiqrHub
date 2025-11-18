@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-import { IconCalendar, IconUsers, IconCurrencyDollar, IconPlus } from '@tabler/icons-react';
+import { Grid, Card, CardContent, Typography, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { IconCalendar, IconUsers, IconCurrencyDollar } from '@tabler/icons-react';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -18,6 +18,8 @@ export default function EODashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState({ title: '', content: '' });
 
   useEffect(() => {
     (async () => {
@@ -34,11 +36,44 @@ export default function EODashboard() {
     })();
   }, []);
 
+  const handleCardClick = (type) => {
+    let title = '';
+    let content = '';
+    
+    switch(type) {
+      case 'total_events':
+        title = 'Total Events';
+        content = `Anda memiliki total ${stats.total_events} event yang telah dibuat. Event ini mencakup semua event yang pernah Anda buat, baik yang aktif maupun yang sudah selesai.`;
+        break;
+      case 'total_tenants':
+        title = 'Tenants Registered';
+        content = `Total ${stats.total_tenants} tenant yang telah terdaftar di semua event Anda. Tenant adalah penyewa booth yang telah mendaftar untuk berpartisipasi dalam event-event Anda.`;
+        break;
+      case 'total_revenue':
+        title = 'Total Revenue';
+        content = `Total pendapatan Anda adalah Rp ${(stats.total_revenue || 0).toLocaleString('id-ID')}. Pendapatan ini berasal dari pembayaran yang berhasil dari tenant yang terdaftar di event-event Anda.`;
+        break;
+      case 'active_events':
+        title = 'Active Events';
+        content = `Anda memiliki ${stats.active_events} event yang sedang aktif (dipublikasikan). Event aktif adalah event yang sedang berlangsung dan dapat menerima pendaftaran tenant.`;
+        break;
+      default:
+        return;
+    }
+    
+    setDialogContent({ title, content });
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
   return (
     <PageContainer title="EO Dashboard">
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_events')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -51,7 +86,7 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_tenants')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -64,12 +99,12 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_revenue')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h4">
-                    {loading ? '...' : `Rp ${stats.total_revenue?.toLocaleString() || 0}`}
+                    {loading ? '...' : `Rp ${(stats.total_revenue || 0).toLocaleString('id-ID')}`}
                   </Typography>
                   <Typography variant="subtitle2" color="textSecondary">Total Revenue</Typography>
                 </Box>
@@ -79,7 +114,7 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('active_events')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -96,9 +131,6 @@ export default function EODashboard() {
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h6">Quick Actions</Typography>
-                <Button variant="contained" component={Link} to="/app/eo/events/create" startIcon={<IconPlus size={20} />}>
-                  Create Event
-                </Button>
               </Box>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
@@ -117,6 +149,16 @@ export default function EODashboard() {
           </Card>
         </Grid>
       </Grid>
+
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>{dialogContent.title}</DialogTitle>
+        <DialogContent>
+          <Typography>{dialogContent.content}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Tutup</Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 }
