@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -24,6 +24,34 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
     error,
     handleLogin,
   } = useLogin();
+  
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // Validate email format
+  useEffect(() => {
+    if (username && username.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(username.toLowerCase())) {
+        setEmailError('Format email tidak valid');
+      } else {
+        setEmailError('');
+      }
+    } else {
+      setEmailError('');
+    }
+  }, [username]);
+
+  // Validate password when email is valid
+  useEffect(() => {
+    if (username && !emailError && password === '') {
+      setPasswordError('Password wajib diisi');
+    } else if (password && password.length < 6) {
+      setPasswordError('Password minimal 6 karakter');
+    } else {
+      setPasswordError('');
+    }
+  }, [username, emailError, password]);
 
   // Navigasi manual: redirect by role
   const onLoginSuccess = () => {
@@ -56,6 +84,8 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               fullWidth
               value={username}
               onChange={e => setUsername(e.target.value.toLowerCase())}
+              error={!!emailError}
+              helperText={emailError}
               required
             />
           </Box>
@@ -68,6 +98,8 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               fullWidth
               value={password}
               onChange={e => setPassword(e.target.value)}
+              error={!!passwordError}
+              helperText={passwordError}
               required
             />
           </Box>

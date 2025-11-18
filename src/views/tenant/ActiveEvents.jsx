@@ -53,16 +53,16 @@ export default function ActiveEvents() {
                 {ev.payment_summary && (
                   <Box mt={1}>
                     <Typography variant="body2">
-                      Booth: Rp {(ev.payment_summary.booth_price || 0).toLocaleString()}
+                      Booth: Rp. {(ev.payment_summary.booth_price || 0).toLocaleString('id-ID')}
                     </Typography>
                     <Typography variant="body2">
-                      Platform Fee: Rp {(ev.payment_summary.platform_fee || 0).toLocaleString()}
+                      Platform Fee: Rp. {(ev.payment_summary.platform_fee || 0).toLocaleString('id-ID')}
                     </Typography>
                     <Typography variant="body2">
-                      Insurance: Rp {(ev.payment_summary.insurance_fee || 0).toLocaleString()}
+                      Insurance: Rp. {(ev.payment_summary.insurance_fee || 0).toLocaleString('id-ID')}
                     </Typography>
                     <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      Total: Rp {(ev.payment_summary.total || 0).toLocaleString()}
+                      Total: Rp. {(ev.payment_summary.total || 0).toLocaleString('id-ID')}
                     </Typography>
                   </Box>
                 )}
