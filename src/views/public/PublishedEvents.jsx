@@ -14,9 +14,9 @@ import {
   IconButton,
   Drawer,
   Chip,
-  TextField,
   MenuItem
 } from '@mui/material';
+import TextField from '@mui/material/TextField';
 import { styled } from '@mui/material/styles';
 import { IconMenu2 } from '@tabler/icons';
 import { Link } from 'react-router-dom';
