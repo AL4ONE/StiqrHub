@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
-import { apiGet, apiPost, apiDelete } from 'src/utils/api';
+import { apiGet, apiPost, apiDelete, apiPut } from 'src/utils/api';
 import { useParams } from 'react-router-dom';
 
 export default function EventRules() {
   const { id } = useParams();
   const [rules, setRules] = useState([]);
   const [newRule, setNewRule] = useState('');
-  const [currentRulesText, setCurrentRulesText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -21,8 +23,6 @@ export default function EventRules() {
       const data = await apiGet(BACKEND_URL + `/api/eo/events/${id}/rules`);
       const rulesList = data?.data || [];
       setRules(rulesList);
-      // Convert rules array to text format (one per line)
-      setCurrentRulesText(rulesList.map(r => r.rule_name || r.rule).join('\n'));
     } catch (e) {
       setError('Failed to load rules');
     } finally {
@@ -81,61 +81,59 @@ export default function EventRules() {
     }
   };
 
-  const handleUpdateRules = async () => {
-    if (!currentRulesText.trim()) {
-      // If empty, delete all rules
-      if (rules.length === 0) return;
-      
-      setSaving(true);
-      setError('');
-      try {
-        // Delete all existing rules
-        for (const rule of rules) {
-          await apiDelete(BACKEND_URL + `/api/eo/events/${id}/rules/${rule.id}`);
-        }
-        await loadRules();
-      } catch (e) {
-        setError('Failed to update rules');
-      } finally {
-        setSaving(false);
-      }
+  const handleEdit = (rule) => {
+    setEditingId(rule.id);
+    setEditingText(rule.rule_name || rule.rule || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const handleSaveEdit = async (ruleId) => {
+    if (!editingText.trim()) {
+      setError('Rule cannot be empty');
       return;
     }
 
     setSaving(true);
     setError('');
     try {
-      // Split by newline and filter empty lines
-      const ruleLines = currentRulesText
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+      const res = await apiPut(BACKEND_URL + `/api/eo/events/${id}/rules/${ruleId}`, {
+        rule_name: editingText.trim()
+      });
       
-      if (ruleLines.length === 0) {
-        setError('Mohon masukkan setidaknya satu aturan');
-        setSaving(false);
-        return;
+      if (res?.status === 'success') {
+        await loadRules();
+        setEditingId(null);
+        setEditingText('');
+      } else {
+        setError(res?.message || 'Failed to save changes');
       }
+    } catch (e) {
+      setError('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-      // Delete all existing rules first
-      for (const rule of rules) {
-        await apiDelete(BACKEND_URL + `/api/eo/events/${id}/rules/${rule.id}`);
-      }
+  const handleDeleteRule = async (ruleId) => {
+    if (!window.confirm('Are you sure you want to delete this rule?')) {
+      return;
+    }
 
-      // Add new rules using bulk endpoint
-      const rulesData = ruleLines.map(ruleName => ({
-        rule_name: ruleName,
-        is_mandatory: true
-      }));
-      
-      const res = await apiPost(BACKEND_URL + `/api/eo/events/${id}/rules/bulk`, { rules: rulesData });
+    setSaving(true);
+    setError('');
+    try {
+      const res = await apiDelete(BACKEND_URL + `/api/eo/events/${id}/rules/${ruleId}`);
       if (res?.status === 'success') {
         await loadRules();
       } else {
-        setError(res?.message || 'Failed to update rules');
+        setError(res?.message || 'Failed to delete rule');
       }
     } catch (e) {
-      setError('Failed to update rules');
+      setError('Failed to delete rule');
     } finally {
       setSaving(false);
     }
@@ -172,34 +170,88 @@ export default function EventRules() {
           
           <Box mt={3}>
             <Typography variant="h6" mb={2}>Current Rules</Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={8}
-                  label="Aturan Event"
-                  value={currentRulesText}
-                  onChange={(e) => setCurrentRulesText(e.target.value)}
-                  placeholder="Masukkan aturan event, satu per baris. Contoh:&#10;&#10;Dilarang membawa makanan dari luar&#10;Wajib menggunakan seragam booth&#10;Dilarang merokok di area event"
-                  helperText="Setiap baris akan menjadi satu aturan. Anda dapat mengedit semua aturan sekaligus di sini."
-                  disabled={loading || saving}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button 
-                  variant="contained" 
-                  onClick={handleUpdateRules} 
-                  disabled={loading || saving}
-                >
-                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </Grid>
-            </Grid>
-            {!loading && rules.length === 0 && (
+            {!loading && rules.length === 0 ? (
               <Typography variant="body2" color="textSecondary" mt={2}>
-                Belum ada aturan. Masukkan aturan di atas.
+                No rules yet. Add new rules above.
               </Typography>
+            ) : (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell width="5%">No</TableCell>
+                      <TableCell>Rule</TableCell>
+                      <TableCell width="20%" align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {rules.map((rule, index) => (
+                      <TableRow key={rule.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          {editingId === rule.id ? (
+                            <TextField
+                              fullWidth
+                              size="small"
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              disabled={saving}
+                            />
+                          ) : (
+                            <Typography variant="body2">
+                              {rule.rule_name || rule.rule}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell align="right">
+                          {editingId === rule.id ? (
+                            <>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleSaveEdit(rule.id)}
+                                disabled={saving}
+                                title="Simpan"
+                              >
+                                <SaveIcon />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={handleCancelEdit}
+                                disabled={saving}
+                                title="Batal"
+                              >
+                                <CancelIcon />
+                              </IconButton>
+                            </>
+                          ) : (
+                            <>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleEdit(rule)}
+                                disabled={saving || editingId !== null}
+                                title="Edit"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteRule(rule.id)}
+                                disabled={saving || editingId !== null}
+                                title="Hapus"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
           </Box>
         </CardContent>

@@ -36,12 +36,35 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
   const [password, setPassword] = useState('');
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false); // ✅ Tambah loading state
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+  const validatePassword = (value) => {
+    if (!value) {
+      setPasswordError('Password is required');
+      return false;
+    }
+    if (!passwordRegex.test(value)) {
+      setPasswordError(
+        'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'
+      );
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+     if (!validatePassword(password)) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const params = new URLSearchParams(window.location.search);
@@ -177,9 +200,19 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
             variant="outlined"
             fullWidth
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPassword(value);
+              if (passwordError) {
+                validatePassword(value);
+              }
+            }}
             required
-            inputProps={{ minLength: 6 }}
+            error={!!passwordError}
+            helperText={
+              passwordError ||
+              'Min. 8 characters with uppercase, lowercase, number, and special character'
+            }
           />
 
           {/* Dropdown categories muncul kalau role EO */}

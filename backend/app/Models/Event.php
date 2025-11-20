@@ -18,6 +18,7 @@ class Event extends Model
         'published_end_date',
         'category',
         'booth_capacity',
+        'tenant_capacity',
         'booth_size',
         'banner',
         'insurance_active',
@@ -52,6 +53,11 @@ class Event extends Model
     public function insurancePolicies()
     {
         return $this->hasMany(InsurancePolicy::class);
+    }
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(EventBankAccount::class);
     }
 
     public function getBannerUrlAttribute()

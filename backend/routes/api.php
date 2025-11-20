@@ -6,6 +6,8 @@ use App\Http\Controllers\EO\EventController as EOEventController;
 use App\Http\Controllers\EO\EventRuleController;
 use App\Http\Controllers\EO\DashboardController as EODashboardController;
 use App\Http\Controllers\EO\PayoutController as EOPayoutController;
+use App\Http\Controllers\EO\EventHistoryController;
+use App\Http\Controllers\EO\ClaimController as EOClaimController;
 use App\Http\Controllers\Insurer\ClaimController as InsurerClaimController;
 use App\Http\Controllers\PayoutController;
 use App\Http\Controllers\Tenant\EventController as TenantEventController;
@@ -34,6 +36,8 @@ Route::middleware('jwt.verify')->group(function () {
         Route::get('/dashboard/stats', [EODashboardController::class, 'stats']);
         Route::get('/payouts', [EOPayoutController::class, 'index']);
         Route::post('/payouts/request', [EOPayoutController::class, 'requestPayout']);
+        Route::get('/events/history', [EventHistoryController::class, 'index']);
+        Route::get('/claims', [EOClaimController::class, 'index']);
 
         Route::get('/events', [EOEventController::class, 'index']);
         Route::post('/events', [EOEventController::class, 'store']);

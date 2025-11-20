@@ -45,7 +45,7 @@ class EventController extends Controller
                       ->where('published_end_date', '>=', $now);
                 });
             })
-            ->with('rules')
+            ->with(['rules', 'bankAccounts'])
             ->first();
 
         if (!$event) {

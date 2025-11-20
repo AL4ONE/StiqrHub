@@ -67,7 +67,12 @@ export default function EventDetail() {
     const n = typeof v === 'string' ? parseFloat(v) : v;
     return Number.isFinite(n) ? n : 0;
   };
-  const fmt = (n) => `Rp ${toNumber(n).toLocaleString()}`;
+  const fmt = (n) => {
+    const num = Math.floor(toNumber(n));
+    // Format dengan titik sebagai pemisah ribuan
+    const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `Rp ${formatted}`;
+  };
   const selectedDays = (() => {
     if (!event) return 0;
     if (!isPerDay) return 1;
@@ -217,6 +222,40 @@ export default function EventDetail() {
           <Typography variant="body2" mb={2}>
             Booth Price: {event.booth_price != null ? fmt(event.booth_price) : "Free"}
           </Typography>
+
+          {/* Bank Accounts */}
+          {event.bank_accounts && event.bank_accounts.length > 0 && (
+            <Box mt={2} mb={2}>
+              <Typography variant="subtitle1" mb={1}>
+                Nomor Rekening Pembayaran
+              </Typography>
+              <Stack spacing={1}>
+                {event.bank_accounts.map((account, idx) => (
+                  <Box 
+                    key={idx} 
+                    sx={{ 
+                      p: 1.5, 
+                      border: '1px solid', 
+                      borderColor: account.is_default ? 'primary.main' : 'divider',
+                      borderRadius: 1,
+                      backgroundColor: account.is_default ? 'primary.50' : 'transparent'
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={account.is_default ? 'bold' : 'normal'}>
+                      {account.is_default && <Chip label="Default" size="small" color="primary" sx={{ mr: 1, mb: 0.5 }} />}
+                      <strong>{account.bank_name}</strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      {account.account_number}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      a.n. {account.account_name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          )}
 
           <Box mt={2} mb={2}>
             <Typography variant="subtitle1" mb={1}>

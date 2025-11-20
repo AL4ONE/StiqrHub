@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Helpers\ApiResponse;
 use App\Models\InsurancePolicy;
+use App\Models\EventBankAccount;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +16,11 @@ class EventController extends Controller
     public function index()
     {
         try {
+            // Only show events that haven't ended yet (end_date >= today)
             $events = Event::where('eo_id', Auth::user()->id)
+                ->where('end_date', '>=', now()->format('Y-m-d'))
                 ->withCount('registrations')
+                ->orderBy('start_date', 'asc')
                 ->get();
             return ApiResponse::success($events, "Event list retrieved successfully");
         } catch (\Throwable $e) {
@@ -39,6 +43,17 @@ class EventController extends Controller
                 ]);
             }
 
+            // Normalize bank_accounts is_default boolean values
+            if ($request->has('bank_accounts') && is_array($request->input('bank_accounts'))) {
+                $bankAccountsInput = $request->input('bank_accounts');
+                foreach ($bankAccountsInput as $index => $account) {
+                    if (isset($account['is_default'])) {
+                        $bankAccountsInput[$index]['is_default'] = filter_var($account['is_default'], FILTER_VALIDATE_BOOLEAN);
+                    }
+                }
+                $request->merge(['bank_accounts' => $bankAccountsInput]);
+            }
+
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'location' => 'required|string',
@@ -49,6 +64,7 @@ class EventController extends Controller
                 'published_end_date' => 'nullable|date|after_or_equal:published_start_date',
                 'category' => 'required|in:F&B,Fashion,Automotive,Art & Craft,Snack & Beverage,Wellness,Others',
                 'booth_capacity' => 'required|integer|min:1',
+                'tenant_capacity' => 'nullable|integer|min:1',
                 'booth_size' => 'nullable|string',
                 'booth_price' => 'required|numeric|min:0',
                 'estimated_visitors' => 'nullable|integer|min:0',
@@ -56,6 +72,11 @@ class EventController extends Controller
                 'insurance_active' => 'boolean',
                 'status' => 'nullable|in:DRAFT,ACTIVATED,PUBLISHED',
                 'banner' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+                'bank_accounts' => 'required|array|min:1|max:3',
+                'bank_accounts.*.account_number' => 'required|string|max:255',
+                'bank_accounts.*.account_name' => 'required|string|max:255',
+                'bank_accounts.*.bank_name' => 'required|string|max:255',
+                'bank_accounts.*.is_default' => 'required|boolean',
             ]);
 
             // Validate that published_end_date cannot be later than event end_date
@@ -64,6 +85,30 @@ class EventController extends Controller
                     return ApiResponse::error("Published end date cannot be later than event end date", 422);
                 }
             }
+
+            // Validate bank accounts
+            $bankAccounts = $validated['bank_accounts'] ?? [];
+            if (count($bankAccounts) === 0) {
+                return ApiResponse::error("Minimal harus ada 1 nomor rekening", 422);
+            }
+            if (count($bankAccounts) > 3) {
+                return ApiResponse::error("Maksimal 3 nomor rekening", 422);
+            }
+            $defaultCount = 0;
+            foreach ($bankAccounts as $account) {
+                if (isset($account['is_default']) && filter_var($account['is_default'], FILTER_VALIDATE_BOOLEAN)) {
+                    $defaultCount++;
+                }
+            }
+            if ($defaultCount === 0) {
+                return ApiResponse::error("Harus ada minimal 1 rekening yang ditandai sebagai default", 422);
+            }
+            if ($defaultCount > 1) {
+                return ApiResponse::error("Hanya boleh ada 1 rekening default", 422);
+            }
+
+            // Remove bank_accounts from validated as it's not a field in events table
+            unset($validated['bank_accounts']);
 
             $payload = array_merge($validated, [
                 'eo_id' => Auth::user()->id,
@@ -78,6 +123,17 @@ class EventController extends Controller
             }
 
             $event = Event::create($payload);
+
+            // Create bank accounts
+            foreach ($bankAccounts as $account) {
+                EventBankAccount::create([
+                    'event_id' => $event->id,
+                    'account_number' => $account['account_number'],
+                    'account_name' => $account['account_name'],
+                    'bank_name' => $account['bank_name'],
+                    'is_default' => filter_var($account['is_default'], FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
 
             // ✅ Auto-create insurance policy kalau insurance_active = true
             if ($event->insurance_active) {
@@ -94,11 +150,16 @@ class EventController extends Controller
                 }
             }
 
-            return ApiResponse::success($event->load('insurancePolicies'), "Event created successfully", 201);
+            return ApiResponse::success($event->load(['insurancePolicies', 'bankAccounts']), "Event created successfully", 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error("Validation failed", 422, $e->errors());
         } catch (\Throwable $e) {
-            return ApiResponse::error("Failed to create event", 500, $e->getMessage());
+            // Log the error for debugging
+            \Log::error('Error creating event: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id(),
+            ]);
+            return ApiResponse::error("Gagal membuat event: " . $e->getMessage(), 500);
         }
     }
 
@@ -106,7 +167,7 @@ class EventController extends Controller
     {
         $event = Event::where('id', $id)
             ->where('eo_id', Auth::user()->id)
-            ->with(['rules', 'registrations.tenant'])
+            ->with(['rules', 'registrations.tenant', 'registrations.payment', 'bankAccounts'])
             ->withCount('registrations')
             ->first();
 

@@ -16,11 +16,10 @@ class PayoutController extends Controller
         try {
             $eoId = Auth::user()->id;
             
-            // Get all successful payments for this EO's events
+            // Get all payments (not just SUCCESS) for this EO's events
             $payments = Payment::whereHas('registration.event', function($query) use ($eoId) {
                 $query->where('eo_id', $eoId);
             })
-            ->where('status', 'SUCCESS')
             ->with(['registration.event', 'registration.tenant'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -34,24 +33,42 @@ class PayoutController extends Controller
 
             $payouts = $grouped->map(function($eventPayments, $eventId) use ($payoutRecords) {
                 $event = $eventPayments->first()->registration->event;
-                $totalAmount = $eventPayments->sum('amount');
-                $platformFee = $eventPayments->count() * 5000; // Rp 5,000 per registration
+                
+                // Filter only SUCCESS payments for calculation
+                $successPayments = $eventPayments->where('status', 'SUCCESS');
+                $totalAmount = $successPayments->sum('amount');
+                $platformFee = $successPayments->count() * 5000; // Rp 5,000 per registration
                 $netAmount = $totalAmount - $platformFee;
 
                 $payout = $payoutRecords->get($eventId);
                 $status = $payout ? $payout->status : 'PENDING';
                 $payoutDate = $payout ? $payout->payout_date : null;
 
+                // Get payment details with tenant info
+                $paymentDetails = $eventPayments->map(function($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'tenant_name' => $payment->registration->tenant->name ?? 'N/A',
+                        'tenant_email' => $payment->registration->tenant->email ?? 'N/A',
+                        'amount' => (float) $payment->amount,
+                        'status' => $payment->status,
+                        'payment_date' => $payment->created_at,
+                        'updated_at' => $payment->updated_at,
+                    ];
+                })->values();
+
                 return [
                     'event_id' => $event->id,
                     'event_name' => $event->name,
                     'event_date' => $event->start_date,
                     'total_registrations' => $eventPayments->count(),
+                    'success_payments_count' => $successPayments->count(),
                     'total_amount' => (float) $totalAmount,
                     'platform_fee' => (float) $platformFee,
                     'net_amount' => (float) $netAmount,
                     'status' => $status,
                     'payout_date' => $payoutDate,
+                    'payment_details' => $paymentDetails,
                 ];
             })->values();
             

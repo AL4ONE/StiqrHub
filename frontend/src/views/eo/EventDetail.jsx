@@ -14,7 +14,14 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
@@ -27,6 +34,13 @@ const statusColor = (status) => {
   if (status === 'PUBLISHED') return 'primary';
   if (status === 'DRAFT') return 'default';
   return 'default';
+};
+
+const formatPrice = (price) => {
+  if (price == null) return 'Free';
+  const num = Math.floor(Number(price));
+  const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `Rp ${formatted}`;
 };
 
 export default function EventDetail() {
@@ -44,6 +58,7 @@ export default function EventDetail() {
   const [publishError, setPublishError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [registrationsDialogOpen, setRegistrationsDialogOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -181,6 +196,32 @@ export default function EventDetail() {
   // Check if event can be deleted (DRAFT or ACTIVATED, not PUBLISHED)
   const canDelete = event && (event.status === 'DRAFT' || event.status === 'ACTIVATED');
 
+  // Calculate remaining tenant capacity (total tenant slots vs registered tenants)
+  const boothCapacity = Number(event?.booth_capacity) || 0;
+  const tenantPerBooth = Number(event?.tenant_capacity) || 0;
+  let totalTenantCapacity = 0;
+  if (boothCapacity > 0 && tenantPerBooth > 0) {
+    totalTenantCapacity = boothCapacity * tenantPerBooth;
+  } else if (boothCapacity > 0) {
+    totalTenantCapacity = boothCapacity;
+  } else if (tenantPerBooth > 0) {
+    totalTenantCapacity = tenantPerBooth;
+  }
+  const registeredTenants = event?.registrations_count ?? (event?.registrations?.length ?? 0);
+  const remainingTenantCapacity = Math.max(totalTenantCapacity - registeredTenants, 0);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return formatDateIndonesia(dateString);
+  };
+
+  const getPaymentStatusColor = (status) => {
+    if (status === 'SUCCESS') return 'success';
+    if (status === 'PENDING') return 'warning';
+    if (status === 'FAILED') return 'error';
+    return 'default';
+  };
+
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
   if (!event) return <Typography>Event not found</Typography>;
@@ -256,7 +297,7 @@ export default function EventDetail() {
                 <strong>Booth Size:</strong> {event.booth_size}
               </Typography>
               <Typography variant="body2" mb={1}>
-                <strong>Booth Price:</strong> Rp {event.booth_price?.toLocaleString() || 'Free'}
+                <strong>Booth Price:</strong> {formatPrice(event.booth_price)}
               </Typography>
               <Typography variant="body2" mb={1}>
                 <strong>Payment Method:</strong> {event.payment_method}
@@ -267,6 +308,41 @@ export default function EventDetail() {
               <Typography variant="body2" mb={2}>
                 <strong>Estimated Visitors:</strong> {event.estimated_visitors}
               </Typography>
+              
+              {/* Bank Accounts */}
+              {event.bank_accounts && event.bank_accounts.length > 0 && (
+                <Box mt={2} mb={2}>
+                  <Typography variant="subtitle1" mb={1}>
+                    <strong>Nomor Rekening</strong>
+                  </Typography>
+                  <Stack spacing={1}>
+                    {event.bank_accounts.map((account, idx) => (
+                      <Box 
+                        key={idx} 
+                        sx={{ 
+                          p: 1.5, 
+                          border: '1px solid', 
+                          borderColor: account.is_default ? 'primary.main' : 'divider',
+                          borderRadius: 1,
+                          backgroundColor: account.is_default ? 'primary.50' : 'transparent'
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={account.is_default ? 'bold' : 'normal'}>
+                          {account.is_default && <Chip label="Default" size="small" color="primary" sx={{ mr: 1, mb: 0.5 }} />}
+                          <strong>{account.bank_name}</strong>
+                        </Typography>
+                        <Typography variant="body2">
+                          {account.account_number}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          a.n. {account.account_name}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+              
               <Stack direction="row" spacing={2}>
                 <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}/rules`)}>
                   Manage Rules
@@ -317,9 +393,34 @@ export default function EventDetail() {
             <CardContent>
               <Typography variant="h6" mb={2}>Registrations</Typography>
               <Typography variant="h4" color="primary">{event.registrations_count ?? (event.registrations ? event.registrations.length : 0)}</Typography>
-              <Typography variant="body2" color="textSecondary">
+              <Typography variant="body2" color="textSecondary" mb={2}>
                 Total registrations for this event
               </Typography>
+              {totalTenantCapacity > 0 ? (
+                <Box mb={2}>
+                  <Typography variant="body2">
+                    <strong>Tenant Slots:</strong> {registeredTenants} / {totalTenantCapacity}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color={remainingTenantCapacity > 0 ? 'success.main' : 'error.main'}
+                  >
+                    <strong>Remaining Tenant Slots:</strong> {remainingTenantCapacity}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="textSecondary" mb={2}>
+                  Set tenant capacity to track remaining slots.
+                </Typography>
+              )}
+              <Button 
+                variant="outlined" 
+                size="small" 
+                fullWidth
+                onClick={() => setRegistrationsDialogOpen(true)}
+              >
+                View Registrants
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -419,6 +520,99 @@ export default function EventDetail() {
           </Button>
           <Button onClick={handlePublishSubmit} variant="contained" disabled={saving}>
             {saving ? 'Publishing...' : 'Publish Event'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Registrations Dialog */}
+      <Dialog 
+        open={registrationsDialogOpen} 
+        onClose={() => setRegistrationsDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>Event Registrations</DialogTitle>
+        <DialogContent>
+          {totalTenantCapacity > 0 && (
+            <Alert 
+              severity={remainingTenantCapacity > 0 ? 'info' : 'warning'} 
+              sx={{ 
+                mb: 2,
+                color: '#fff',
+                bgcolor: remainingTenantCapacity > 0 ? 'primary.main' : 'warning.dark',
+                '& .MuiAlert-icon': { color: '#fff' },
+                '& .MuiAlert-message': { color: '#fff' },
+              }}
+            >
+              <Typography variant="body2" sx={{ color: '#fff' }}>
+                <strong>Tenant Slots:</strong> {registeredTenants} / {totalTenantCapacity}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ color: '#fff' }}
+              >
+                <strong>Remaining Tenant Slots:</strong> {remainingTenantCapacity}
+              </Typography>
+            </Alert>
+          )}
+          {event?.registrations && event.registrations.length > 0 ? (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>No</strong></TableCell>
+                    <TableCell><strong>Tenant Name</strong></TableCell>
+                    <TableCell><strong>Email</strong></TableCell>
+                    <TableCell><strong>Registration Status</strong></TableCell>
+                    <TableCell><strong>Payment Status</strong></TableCell>
+                    <TableCell><strong>Payment Date</strong></TableCell>
+                    <TableCell><strong>Payment Amount</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {event.registrations.map((registration, index) => (
+                    <TableRow key={registration.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{registration.tenant?.name || 'N/A'}</TableCell>
+                      <TableCell>{registration.tenant?.email || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={registration.status || 'REGISTERED'} 
+                          size="small"
+                          color={registration.status === 'PAID' || registration.status === 'ACTIVE' ? 'success' : 'default'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {registration.payment ? (
+                          <Chip 
+                            label={registration.payment.status} 
+                            size="small"
+                            color={getPaymentStatusColor(registration.payment.status)}
+                          />
+                        ) : (
+                          <Typography variant="body2" color="textSecondary">No payment</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {registration.payment?.created_at ? formatDate(registration.payment.created_at) : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {registration.payment?.amount ? formatPrice(registration.payment.amount) : 'N/A'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+              No registrations yet for this event.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRegistrationsDialogOpen(false)}>
+            Close
           </Button>
         </DialogActions>
       </Dialog>
