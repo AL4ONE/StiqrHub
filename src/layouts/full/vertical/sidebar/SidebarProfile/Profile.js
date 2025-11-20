@@ -42,7 +42,7 @@ export const Profile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/start';
+    window.location.href = '/';
   };
 
   return (
