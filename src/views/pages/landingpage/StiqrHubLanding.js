@@ -27,6 +27,149 @@ const StiqrHubLanding = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [error, setError] = useState('');
 
+  const renderCarousel = (variant = 'default') => {
+    const isPill = variant === 'pill';
+    const containerPadding = isPill ? { xs: 1.5, md: 2 } : 0;
+    const containerStyles = {
+      position: 'relative',
+      width: '100%',
+      overflow: 'hidden',
+      borderRadius: isPill ? 999 : 0,
+      backgroundColor: isPill ? '#F5F9FF' : 'transparent',
+      border: isPill ? '1px solid rgba(15, 23, 42, 0.08)' : 'none',
+      px: containerPadding,
+      py: containerPadding,
+      boxShadow: isPill ? '0 20px 60px rgba(15, 23, 42, 0.08)' : 'none',
+    };
+    const imageHeight = isPill
+      ? { xs: 140, sm: 180, md: 220 }
+      : { xs: 220, sm: 320, md: 420 };
+
+    if (!events.length) {
+      return (
+        <Box
+          sx={{
+            ...containerStyles,
+            height: imageHeight,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f4f4f4',
+          }}
+        >
+          <Typography color="text.secondary">Belum ada event yang ditampilkan.</Typography>
+        </Box>
+      );
+    }
+
+    const navButtonStyles = {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      backgroundColor: isPill ? 'rgba(15, 23, 42, 0.35)' : 'rgba(0,0,0,0.4)',
+      color: '#fff',
+      '&:hover': {
+        backgroundColor: isPill ? 'rgba(15, 23, 42, 0.55)' : 'rgba(0,0,0,0.6)',
+      },
+      zIndex: 2,
+    };
+
+    return (
+      <Box sx={containerStyles}>
+        <Box
+          component={Link}
+          to={`/auth/register?eventId=${events[currentSlide]?.id}`}
+          sx={{
+            display: 'block',
+            width: '100%',
+            height: imageHeight,
+            position: 'relative',
+            borderRadius: isPill ? 999 : 0,
+            overflow: 'hidden',
+          }}
+        >
+          <img
+            src={events[currentSlide]?.banner_url || `${BACKEND_URL}/storage/${events[currentSlide]?.banner}`}
+            alt={events[currentSlide]?.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+            onError={(e) => {
+              e.currentTarget.src = 'https://via.placeholder.com/1200x500?text=Banner+Unavailable';
+            }}
+          />
+        </Box>
+
+        {events.length > 1 && (
+          <>
+            <IconButton
+              aria-label="previous banner"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
+              }}
+              sx={{
+                ...navButtonStyles,
+                left: { xs: isPill ? 12 : 8, md: isPill ? 24 : 24 },
+              }}
+            >
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+
+            <IconButton
+              aria-label="next banner"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentSlide((prev) => (prev + 1) % events.length);
+              }}
+              sx={{
+                ...navButtonStyles,
+                right: { xs: isPill ? 12 : 8, md: isPill ? 24 : 24 },
+              }}
+            >
+              <ArrowForwardIosIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
+
+        {events.length > 1 && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 1,
+              position: 'absolute',
+              bottom: isPill ? 12 : 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            {events.map((_, idx) => (
+              <Box
+                key={idx}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentSlide(idx);
+                }}
+                sx={{
+                  width: idx === currentSlide ? 18 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: idx === currentSlide ? '#00C68E' : 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer',
+                  transition: 'width 0.2s ease',
+                }}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -59,134 +202,9 @@ const StiqrHubLanding = () => {
         {/* Featured Published Events */}
         <Box sx={{ px: { xs: 0, md: 0 }, mt: 6, mb: 2 }}>
           <Typography variant="h5" sx={{ px: { xs: 2, md: 6 }, mb: 2 }}>Published Events</Typography>
-          <Box
-            sx={{
-              position: 'relative',
-              width: '100%',
-              overflow: 'hidden',
-            }}
-          >
-            {events.length > 0 ? (
-              <>
-                <Box
-                  component={Link}
-                  to={`/auth/register?eventId=${events[currentSlide]?.id}`}
-                  sx={{
-                    display: 'block',
-                    width: '100%',
-                    height: { xs: 220, sm: 320, md: 420 },
-                    position: 'relative',
-                  }}
-                >
-                  <img
-                    src={events[currentSlide]?.banner_url || `${BACKEND_URL}/storage/${events[currentSlide]?.banner}`}
-                    alt={events[currentSlide]?.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://via.placeholder.com/1200x500?text=Banner+Unavailable';
-                    }}
-                  />
-                </Box>
-
-                {events.length > 1 && (
-                  <>
-                    <IconButton
-                      aria-label="previous banner"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: { xs: 8, md: 24 },
-                        transform: 'translateY(-50%)',
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0,0,0,0.6)',
-                        },
-                        zIndex: 2,
-                      }}
-                    >
-                      <ArrowBackIosNewIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton
-                      aria-label="next banner"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentSlide((prev) => (prev + 1) % events.length);
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        right: { xs: 8, md: 24 },
-                        transform: 'translateY(-50%)',
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        color: '#fff',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0,0,0,0.6)',
-                        },
-                        zIndex: 2,
-                      }}
-                    >
-                      <ArrowForwardIosIcon fontSize="small" />
-                    </IconButton>
-                  </>
-                )}
-
-                {events.length > 1 && (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      gap: 1,
-                      position: 'absolute',
-                      bottom: 16,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                    }}
-                  >
-                    {events.map((_, idx) => (
-                      <Box
-                        key={idx}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentSlide(idx);
-                        }}
-                        sx={{
-                          width: idx === currentSlide ? 18 : 8,
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: idx === currentSlide ? '#00C68E' : 'rgba(255,255,255,0.7)',
-                          cursor: 'pointer',
-                          transition: 'width 0.2s ease',
-                        }}
-                      />
-                    ))}
-                  </Box>
-                )}
-              </>
-            ) : (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: { xs: 220, sm: 320, md: 420 },
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#f4f4f4',
-                }}
-              >
-                <Typography color="text.secondary">Belum ada event yang ditampilkan.</Typography>
-              </Box>
-            )}
+          {renderCarousel('default')}
+          <Box sx={{ px: { xs: 2, md: 6 }, mt: 3 }}>
+            {renderCarousel('pill')}
           </Box>
         </Box>
 
