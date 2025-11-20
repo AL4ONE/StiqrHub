@@ -33,7 +33,7 @@ const StiqrHubLanding = () => {
       width: '100%',
       overflow: 'hidden',
     };
-    const imageHeight = { xs: 165, sm: 240, md: 315 };
+    const imageHeight = { xs: 182, sm: 264, md: 347 };
 
     if (!events.length) {
       return (
