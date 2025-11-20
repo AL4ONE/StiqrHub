@@ -39,7 +39,7 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/start';
+        window.location.href = '/';
       }
     } else if (error.request) {
       // Request made but no response

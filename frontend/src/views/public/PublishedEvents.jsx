@@ -41,21 +41,7 @@ const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
   color: '#333333',
 }));
 
-const SignUpButton = styled(Button)(({ theme }) => ({
-  border: '2px solid #00C68E',
-  color: '#00C68E',
-  backgroundColor: '#FFFFFF',
-  borderRadius: '8px',
-  padding: '8px 24px',
-  textTransform: 'none',
-  fontWeight: 600,
-  '&:hover': {
-    border: '2px solid #00AE7D',
-    backgroundColor: '#F0FDF4',
-  },
-}));
-
-const LoginButton = styled(Button)(({ theme }) => ({
+const AuthButton = styled(Button)(({ theme }) => ({
   backgroundColor: '#00C68E',
   color: '#FFFFFF',
   borderRadius: '8px',
@@ -141,12 +127,9 @@ export default function PublishedEventsPublic() {
             <Box flexGrow={1} />
             {lgUp ? (
               <Stack direction="row" spacing={2} alignItems="center">
-                <SignUpButton component={Link} to="/auth/register?role=TENANT">
-                  Daftar
-                </SignUpButton>
-                <LoginButton component={Link} to="/auth/login">
-                  Login
-                </LoginButton>
+                <AuthButton component={Link} to="/start">
+                  Login/Register
+                </AuthButton>
               </Stack>
             ) : (
               <IconButton color="inherit" aria-label="menu" onClick={handleDrawerOpen}>
@@ -170,12 +153,9 @@ export default function PublishedEventsPublic() {
         >
           <Box sx={{ p: 3 }}>
             <Stack direction="column" spacing={2}>
-              <SignUpButton component={Link} to="/auth/register?role=TENANT" fullWidth onClick={toggleDrawer(false)}>
-                Daftar
-              </SignUpButton>
-              <LoginButton component={Link} to="/auth/login" fullWidth onClick={toggleDrawer(false)}>
-                Login
-              </LoginButton>
+              <AuthButton component={Link} to="/start" fullWidth onClick={toggleDrawer(false)}>
+                Login/Register
+              </AuthButton>
             </Stack>
           </Box>
         </Drawer>
@@ -332,39 +312,18 @@ export default function PublishedEventsPublic() {
                       : `Rp. ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
                   </Typography>
                   <Box sx={{ mt: 'auto', pt: 2 }}>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        fullWidth
-                        component={Link}
-                        to="/auth/login"
-                        sx={{
-                          borderColor: '#00C68E',
-                          color: '#00C68E',
-                          '&:hover': {
-                            borderColor: '#00AE7D',
-                            backgroundColor: '#F0FDF4',
-                          },
-                        }}
-                      >
-                        Login
-                      </Button>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        component={Link}
-                        to={`/auth/register?eventId=${ev.id}`}
-                        sx={{
-                          backgroundColor: '#00C68E',
-                          '&:hover': {
-                            backgroundColor: '#00AE7D',
-                          },
-                        }}
-                      >
-                        Daftar
-                      </Button>
-                    </Stack>
+                    <AuthButton
+                      fullWidth
+                      component={Link}
+                      to="/start"
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#00AE7D',
+                        },
+                      }}
+                    >
+                      Login/Register
+                    </AuthButton>
                   </Box>
                 </CardContent>
               </EventCard>
