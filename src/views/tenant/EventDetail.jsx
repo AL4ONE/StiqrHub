@@ -8,6 +8,7 @@ import {
   Box,
   Chip,
   TextField,
+  Divider,
 } from "@mui/material";
 import PageContainer from "src/components/container/PageContainer";
 import { BACKEND_URL } from "src/config/constants";
@@ -63,6 +64,9 @@ export default function EventDetail() {
   // Price preview breakdown (mirrors backend calculation)
   const platformFee = 5000;
   const insuranceFee = event?.insurance_active ? 10000 : 0;
+const WHATSAPP_NUMBER = "+62 821-1838-3415";
+const WHATSAPP_LINK =
+  "https://wa.me/6282118383415?text=Halo%20Stiqr%20Hub%2C%20saya%20ingin%20bergabung%20ke%20komunitas%20WA.";
   const toNumber = (v) => {
     const n = typeof v === 'string' ? parseFloat(v) : v;
     return Number.isFinite(n) ? n : 0;
@@ -316,6 +320,45 @@ export default function EventDetail() {
               </Button>
             )}
           </Stack>
+
+          <Divider sx={{ my: 4 }} />
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: "1px dashed",
+              borderColor: "primary.light",
+              backgroundColor: "primary.50",
+            }}
+          >
+            <Typography variant="h6" mb={0.5}>
+              Gabung WhatsApp Stiqr
+            </Typography>
+            <Typography variant="body2" color="textSecondary" mb={2}>
+              Kalau butuh bantuan onboarding atau mau diskusi event, klik tombol
+              di bawah untuk join grup WA resmi Stiqr.
+            </Typography>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Button
+                component="a"
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="contained"
+                color="success"
+              >
+                Buka WhatsApp
+              </Button>
+              <Box>
+                <Typography variant="caption" color="textSecondary">
+                  Nomor admin Stiqr
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {WHATSAPP_NUMBER}
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
         </CardContent>
       </Card>
     </PageContainer>

@@ -29,6 +29,9 @@ import { apiGet, apiPut, apiDelete } from 'src/utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatDateIndonesia, toIndonesiaDateTimeLocal, fromIndonesiaDateTimeToUTC } from 'src/utils/dateFormat';
 
+const WHATSAPP_NUMBER = '+62 821-1838-3415';
+const WHATSAPP_LINK = 'https://wa.me/6282118383415?text=Halo%20Stiqr%20Hub%2C%20saya%20ingin%20bergabung%20ke%20komunitas%20WA.';
+
 const statusColor = (status) => {
   if (status === 'ACTIVATED') return 'success';
   if (status === 'PUBLISHED') return 'primary';
@@ -384,6 +387,45 @@ export default function EventDetail() {
                   Back to Events
                 </Button>
               </Stack>
+
+              <Divider sx={{ my: 4 }} />
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px dashed',
+                  borderColor: 'primary.light',
+                  backgroundColor: 'primary.50',
+                }}
+              >
+                <Typography variant="h6" mb={0.5}>
+                  Gabung WhatsApp Stiqr
+                </Typography>
+                <Typography variant="body2" color="textSecondary" mb={2}>
+                  EO perlu bantuan publikasi atau ingin koordinasi langsung? Join grup WA
+                  resmi kami lewat tombol ini.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <Button
+                    component="a"
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    color="success"
+                  >
+                    Buka WhatsApp
+                  </Button>
+                  <Box>
+                    <Typography variant="caption" color="textSecondary">
+                      Nomor admin Stiqr
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {WHATSAPP_NUMBER}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
