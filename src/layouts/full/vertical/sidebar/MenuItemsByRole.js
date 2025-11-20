@@ -41,12 +41,12 @@ export const EOMenuItems = [
     icon: IconFileDescription,
     href: '/app/eo/events/create',
   },
-  // {
-  //   id: uniqueId(),
-  //   title: 'Event Rules',
-  //   icon: IconChecklist,
-  //   href: '/eo/events/rules',
-  // },
+  {
+    id: uniqueId(),
+    title: 'Event History',
+    icon: IconChecklist,
+    href: '/app/eo/events/history',
+  },
   {
     navlabel: true,
     subheader: 'Finance',
@@ -56,6 +56,16 @@ export const EOMenuItems = [
     title: 'Payouts & Settlement',
     icon: IconChartLine,
     href: '/app/eo/payouts',
+  },
+  {
+    navlabel: true,
+    subheader: 'Insurance',
+  },
+  {
+    id: uniqueId(),
+    title: 'Claim Insurance',
+    icon: IconShield,
+    href: '/app/eo/claims',
   },
 ];
 

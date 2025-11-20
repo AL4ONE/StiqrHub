@@ -18,6 +18,22 @@ export async function apiPost(url, body, isFormData = false) {
     headers,
     body: isFormData ? body : JSON.stringify(body || {}),
   });
+  
+  // Handle non-JSON responses (like 500 errors)
+  if (!res.ok && res.status >= 500) {
+    const text = await res.text();
+    let errorData;
+    try {
+      errorData = JSON.parse(text);
+    } catch {
+      errorData = { 
+        status: 'error', 
+        message: `Server error (${res.status}): ${text || 'Internal Server Error'}` 
+      };
+    }
+    return errorData;
+  }
+  
   return res.json();
 }
 

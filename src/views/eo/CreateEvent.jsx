@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, Alert, IconButton } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiPost } from 'src/utils/api';
@@ -13,6 +14,11 @@ export default function CreateEvent() {
   const [formData, setFormData] = useState({
     name: '',
     location: '',
+    address: '',
+    rt_rw: '',
+    village: '',
+    district: '',
+    postal_code: '',
     map_link: '',
     start_date: '',
     end_date: '',
@@ -23,12 +29,19 @@ export default function CreateEvent() {
     estimated_visitors: 500,
     payment_method: 'per_event',
     insurance_active: true,
-    status: 'DRAFT'
+    status: 'DRAFT',
+    tenant_capacity: 1,
+    details: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [bannerFile, setBannerFile] = useState(null);
   const [dateErrors, setDateErrors] = useState({ start_date: '', end_date: '' });
+  const [bankAccounts, setBankAccounts] = useState([
+    { account_number: '', account_name: '', bank_name: '', is_default: true }
+  ]);
+  const [rulesText, setRulesText] = useState('');
 
   // Get current date in Indonesia timezone for min attribute
   const getCurrentDateTimeLocal = () => {
@@ -67,7 +80,7 @@ export default function CreateEvent() {
     today.setHours(0, 0, 0, 0);
     
     if (selectedDate < today) {
-      errors[field] = 'Tanggal tidak boleh sebelum hari ini';
+      errors[field] = 'Date cannot be before today';
     } else {
       errors[field] = '';
     }
@@ -76,12 +89,12 @@ export default function CreateEvent() {
     if (field === 'end_date' && formData.start_date) {
       const startDate = new Date(formData.start_date + '+07:00');
       if (selectedDate <= startDate) {
-        errors.end_date = 'Tanggal akhir harus setelah tanggal mulai';
+        errors.end_date = 'End date must be after start date';
       }
     } else if (field === 'start_date' && formData.end_date) {
       const endDate = new Date(formData.end_date + '+07:00');
       if (selectedDate >= endDate) {
-        errors.start_date = 'Tanggal mulai harus sebelum tanggal akhir';
+        errors.start_date = 'Start date must be before end date';
       }
     }
 
@@ -110,27 +123,27 @@ export default function CreateEvent() {
     const errors = { start_date: '', end_date: '' };
     
     if (!formData.start_date) {
-      errors.start_date = 'Tanggal mulai wajib diisi';
+      errors.start_date = 'Start date is required';
       hasErrors = true;
     } else {
       const startDate = new Date(formData.start_date + '+07:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (startDate < today) {
-        errors.start_date = 'Tanggal tidak boleh sebelum hari ini';
+        errors.start_date = 'Date cannot be before today';
         hasErrors = true;
       }
     }
 
     if (!formData.end_date) {
-      errors.end_date = 'Tanggal akhir wajib diisi';
+      errors.end_date = 'End date is required';
       hasErrors = true;
     } else {
       const endDate = new Date(formData.end_date + '+07:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (endDate < today) {
-        errors.end_date = 'Tanggal tidak boleh sebelum hari ini';
+        errors.end_date = 'Date cannot be before today';
         hasErrors = true;
       }
     }
@@ -140,19 +153,67 @@ export default function CreateEvent() {
       const startDate = new Date(formData.start_date + '+07:00');
       const endDate = new Date(formData.end_date + '+07:00');
       if (endDate <= startDate) {
-        errors.end_date = 'Tanggal akhir harus setelah tanggal mulai';
+        errors.end_date = 'End date must be after start date';
         hasErrors = true;
       }
     }
 
     if (hasErrors) {
       setDateErrors(errors);
-      setError('Mohon perbaiki error pada field tanggal');
+      // Create user-friendly error message
+      const errorMessages = [];
+      if (errors.start_date) errorMessages.push(`Start Date: ${errors.start_date}`);
+      if (errors.end_date) errorMessages.push(`End Date: ${errors.end_date}`);
+      setError(errorMessages.length > 0 ? errorMessages.join('. ') : 'Please review your input');
+      return;
+    }
+
+    // Validate location details
+    if (!formData.address.trim()) {
+      setError('Address is required');
+      return;
+    }
+    if (!formData.rt_rw.trim()) {
+      setError('RT/RW is required');
+      return;
+    }
+    if (!formData.village.trim()) {
+      setError('Village / Sub-district is required');
+      return;
+    }
+    if (!formData.district.trim()) {
+      setError('District is required');
+      return;
+    }
+    if (!formData.postal_code.trim()) {
+      setError('Postal code is required');
+      return;
+    }
+
+    if (!formData.tenant_capacity || Number(formData.tenant_capacity) < 1) {
+      setError('Tenant capacity must be at least 1');
+      return;
+    }
+
+    // Validate bank accounts
+    const validBankAccounts = bankAccounts.filter(acc => acc.account_number && acc.account_name && acc.bank_name);
+    if (validBankAccounts.length === 0) {
+      setError('At least one bank account must be filled in completely');
+      return;
+    }
+    const defaultAccounts = validBankAccounts.filter(acc => acc.is_default);
+    if (defaultAccounts.length === 0) {
+      setError('At least one account must be marked as default');
+      return;
+    }
+    if (defaultAccounts.length > 1) {
+      setError('Only one account can be set as default');
       return;
     }
 
     setLoading(true);
     setError('');
+    setFieldErrors({});
     try {
       const fd = new FormData();
       // Convert dates from Indonesia timezone to UTC for backend
@@ -166,49 +227,184 @@ export default function CreateEvent() {
       });
       // Normalize boolean for backend (1/0 strings)
       fd.set('insurance_active', formData.insurance_active ? '1' : '0');
+      fd.set('location', buildLocationString());
       if (bannerFile) fd.append('banner', bannerFile);
+      
+      // Add bank accounts - Laravel expects this format for nested arrays in FormData
+      validBankAccounts.forEach((acc, index) => {
+        fd.append(`bank_accounts[${index}][account_number]`, acc.account_number || '');
+        fd.append(`bank_accounts[${index}][account_name]`, acc.account_name || '');
+        fd.append(`bank_accounts[${index}][bank_name]`, acc.bank_name || '');
+        // Send as string '1' or '0', Laravel will convert to boolean
+        fd.append(`bank_accounts[${index}][is_default]`, acc.is_default ? '1' : '0');
+      });
+      
       const res = await apiPost(BACKEND_URL + '/api/eo/events', fd, true);
+      
+      // Check if response is error (status error or no status field)
+      if (res?.status === 'error' || (!res?.status && res?.message)) {
+        // Handle server errors (500, etc)
+        if (res?.message) {
+          setError(`An error occurred: ${res.message}`);
+        } else if (res?.error) {
+          setError(`An error occurred: ${res.error}`);
+        } else {
+          setError('A server error occurred. Please try again or contact the administrator.');
+        }
+        return;
+      }
+      
       if (res?.status === 'success') {
+        const eventId = res?.data?.id;
+        if (eventId) {
+          await saveInitialRules(eventId);
+        }
+        setRulesText('');
         alert('Event created successfully!');
         navigate('/app/eo/events');
       } else {
         // Handle validation errors from backend
         if (res?.errors && typeof res.errors === 'object') {
-          const fieldErrors = {};
+          const backendFieldErrors = {};
           Object.keys(res.errors).forEach(field => {
             const errorMessages = Array.isArray(res.errors[field]) 
               ? res.errors[field].join(', ') 
               : res.errors[field];
-            fieldErrors[field] = errorMessages;
+            backendFieldErrors[field] = errorMessages;
           });
           
           // Set date errors if any
-          if (fieldErrors.start_date || fieldErrors.end_date) {
+          if (backendFieldErrors.start_date || backendFieldErrors.end_date) {
             setDateErrors({
-              start_date: fieldErrors.start_date || '',
-              end_date: fieldErrors.end_date || ''
+              start_date: backendFieldErrors.start_date || '',
+              end_date: backendFieldErrors.end_date || ''
             });
           }
           
-          // Set general error with field details
-          const errorFields = Object.keys(fieldErrors);
+          // Set field errors for display
+          setFieldErrors(backendFieldErrors);
+          
+          // Create user-friendly error message
+          const errorFields = Object.keys(backendFieldErrors);
           if (errorFields.length > 0) {
             const errorMessages = errorFields.map(field => {
-              const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-              return `${fieldName}: ${fieldErrors[field]}`;
-            }).join('; ');
-            setError(`Validation failed: ${errorMessages}`);
+              // Translate field names to Indonesian
+              const fieldNames = {
+                'name': 'Event Name',
+                'location': 'Location',
+                'start_date': 'Start Date',
+                'end_date': 'End Date',
+                'category': 'Category',
+                'booth_capacity': 'Booth Capacity',
+                'booth_price': 'Booth Price',
+                'payment_method': 'Payment Method',
+                'banner': 'Banner',
+                'bank_accounts': 'Bank Account',
+                'account_number': 'Account Number',
+                'account_name': 'Account Holder',
+                'bank_name': 'Bank Name'
+              };
+              
+              // Handle nested field names (e.g., bank_accounts.0.account_number)
+              let fieldName = field;
+              if (field.includes('bank_accounts')) {
+                const parts = field.split('.');
+                if (parts.length >= 3) {
+                  const subField = parts[2];
+                  const index = parts[1];
+                  fieldName = `Account ${parseInt(index) + 1} - ${fieldNames[subField] || subField}`;
+                } else {
+                  fieldName = fieldNames['bank_accounts'] || 'Bank Account';
+                }
+              } else {
+                fieldName = fieldNames[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              }
+              
+              return `${fieldName}: ${backendFieldErrors[field]}`;
+            }).join('. ');
+            setError(`There are errors in your input. ${errorMessages}`);
           } else {
-            setError(res?.message || 'Failed to create event');
+            setError(res?.message || 'Failed to create event. Please try again.');
           }
         } else {
-          setError(res?.message || 'Failed to create event');
+          setError(res?.message || 'Failed to create event. Please try again.');
         }
       }
     } catch (e) {
-      setError('Failed to create event: ' + (e.message || 'Unknown error'));
+      console.error('Error creating event:', e);
+      setError('Failed to create event: ' + (e.message || 'Unknown error. Please check your connection or contact the administrator.'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBankAccountChange = (index, field) => (e) => {
+    const newAccounts = [...bankAccounts];
+    newAccounts[index][field] = e.target.value;
+    setBankAccounts(newAccounts);
+  };
+
+  const handleDefaultChange = (index) => () => {
+    const newAccounts = bankAccounts.map((acc, i) => ({
+      ...acc,
+      is_default: i === index
+    }));
+    setBankAccounts(newAccounts);
+  };
+
+  const addBankAccount = () => {
+    if (bankAccounts.length < 3) {
+      setBankAccounts([...bankAccounts, { account_number: '', account_name: '', bank_name: '', is_default: false }]);
+    }
+  };
+
+  const removeBankAccount = (index) => {
+    if (bankAccounts.length > 1) {
+      const newAccounts = bankAccounts.filter((_, i) => i !== index);
+      // Ensure at least one default if we removed the default
+      if (newAccounts.length > 0 && !newAccounts.some(acc => acc.is_default)) {
+        newAccounts[0].is_default = true;
+      }
+      setBankAccounts(newAccounts);
+    }
+  };
+
+  const buildLocationString = () => {
+    const detailParts = [
+      formData.address,
+      formData.rt_rw ? `RT/RW ${formData.rt_rw}` : '',
+      formData.village ? `Village ${formData.village}` : '',
+      formData.district ? `District ${formData.district}` : '',
+      formData.postal_code ? `Postal ${formData.postal_code}` : ''
+    ].filter(Boolean);
+
+    if (detailParts.length === 0) {
+      return formData.location;
+    }
+
+    return [formData.location, detailParts.join(', ')].filter(Boolean).join(' - ');
+  };
+
+  const saveInitialRules = async (eventId) => {
+    const lines = rulesText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (!eventId || lines.length === 0) return;
+
+    try {
+      if (lines.length === 1) {
+        await apiPost(`${BACKEND_URL}/api/eo/events/${eventId}/rules`, { rule: lines[0] });
+      } else {
+        const rulesPayload = lines.map(rule => ({
+          rule_name: rule,
+          is_mandatory: true
+        }));
+        await apiPost(`${BACKEND_URL}/api/eo/events/${eventId}/rules/bulk`, { rules: rulesPayload });
+      }
+    } catch (err) {
+      console.error('Failed to save initial rules', err);
     }
   };
 
@@ -219,6 +415,11 @@ export default function CreateEvent() {
           <Typography variant="h6" mb={3}>Create New Event</Typography>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Event Information
+                </Typography>
+              </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -231,7 +432,7 @@ export default function CreateEvent() {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Location"
+                  label="City / Area"
                   value={formData.location}
                   onChange={handleChange('location')}
                   required
@@ -257,7 +458,7 @@ export default function CreateEvent() {
                   inputProps={{ min: minDateTime }}
                   required
                   error={!!dateErrors.start_date}
-                  helperText={dateErrors.start_date || "Waktu Indonesia Barat (WIB)"}
+                  helperText={dateErrors.start_date || "Indonesia Western Time (WIB)"}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -272,7 +473,7 @@ export default function CreateEvent() {
                   inputProps={{ min: formData.start_date || minDateTime }}
                   required
                   error={!!dateErrors.end_date}
-                  helperText={dateErrors.end_date || "Waktu Indonesia Barat (WIB)"}
+                  helperText={dateErrors.end_date || "Indonesia Western Time (WIB)"}
                 />
               </Grid>
               
@@ -297,6 +498,16 @@ export default function CreateEvent() {
                   type="number"
                   value={formData.booth_capacity}
                   onChange={handleChange('booth_capacity')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Tenant Capacity per Booth"
+                  type="number"
+                  value={formData.tenant_capacity}
+                  onChange={handleChange('tenant_capacity')}
                   required
                 />
               </Grid>
@@ -334,6 +545,17 @@ export default function CreateEvent() {
                   </Box>
                 ) : null}
               </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  label="Event Details"
+                  placeholder="Describe your event, highlights, special requirements, etc."
+                  value={formData.details}
+                  onChange={handleChange('details')}
+                />
+              </Grid>
               <Grid item xs={6}>
                 <TextField
                   fullWidth
@@ -356,6 +578,164 @@ export default function CreateEvent() {
                   <option value="per_day">Per Day</option>
                 </TextField>
               </Grid>
+              
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Venue Information
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Venue / Location Name"
+                  value={formData.location}
+                  onChange={handleChange('location')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Address"
+                  value={formData.address}
+                  onChange={handleChange('address')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="RT/RW"
+                  value={formData.rt_rw}
+                  onChange={handleChange('rt_rw')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Postal Code"
+                  value={formData.postal_code}
+                  onChange={handleChange('postal_code')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Village / Sub-district"
+                  value={formData.village}
+                  onChange={handleChange('village')}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="District"
+                  value={formData.district}
+                  onChange={handleChange('district')}
+                  required
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>Bank Accounts</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Maximum 3 accounts, at least 1 account must be marked as default
+                </Typography>
+                {bankAccounts.map((account, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          fullWidth
+                          label="Account Number"
+                          value={account.account_number}
+                          onChange={handleBankAccountChange(index, 'account_number')}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <TextField
+                          fullWidth
+                          label="Account Holder"
+                          value={account.account_name}
+                          onChange={handleBankAccountChange(index, 'account_name')}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <TextField
+                          fullWidth
+                          label="Bank Name"
+                          value={account.bank_name}
+                          onChange={handleBankAccountChange(index, 'bank_name')}
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={1}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Button
+                            variant={account.is_default ? "contained" : "outlined"}
+                            size="small"
+                            onClick={handleDefaultChange(index)}
+                            disabled={account.is_default}
+                          >
+                            Default
+                          </Button>
+                          {bankAccounts.length > 1 && (
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeBankAccount(index)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+                {bankAccounts.length < 3 && (
+                  <Button
+                    startIcon={<AddIcon />}
+                    variant="outlined"
+                    onClick={addBankAccount}
+                    sx={{ mb: 2 }}
+                  >
+                    Add Account
+                  </Button>
+                )}
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Event Rules
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  label="Rules (one per line)"
+                  placeholder={'Example:\nRule 1\nRule 2\nRule 3'}
+                  value={rulesText}
+                  onChange={(e) => setRulesText(e.target.value)}
+                  helperText="Rules entered here will be created automatically after the event is saved."
+                />
+              </Grid>
+
+              {error && (
+                <Grid item xs={12}>
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                  </Alert>
+                </Grid>
+              )}
+
               <Grid item xs={12}>
                 <Box display="flex" gap={2}>
                   <Button type="submit" variant="contained" disabled={loading}>
@@ -367,7 +747,6 @@ export default function CreateEvent() {
                 </Box>
               </Grid>
             </Grid>
-            {error && <Typography color="error" mt={2}>{error}</Typography>}
           </form>
         </CardContent>
       </Card>
