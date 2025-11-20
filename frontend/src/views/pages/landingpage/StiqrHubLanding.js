@@ -27,23 +27,13 @@ const StiqrHubLanding = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [error, setError] = useState('');
 
-  const renderCarousel = (variant = 'default') => {
-    const isPill = variant === 'pill';
-    const containerPadding = isPill ? { xs: 1.5, md: 2 } : 0;
+  const renderCarousel = () => {
     const containerStyles = {
       position: 'relative',
       width: '100%',
       overflow: 'hidden',
-      borderRadius: isPill ? 999 : 0,
-      backgroundColor: isPill ? '#F5F9FF' : 'transparent',
-      border: isPill ? '1px solid rgba(15, 23, 42, 0.08)' : 'none',
-      px: containerPadding,
-      py: containerPadding,
-      boxShadow: isPill ? '0 20px 60px rgba(15, 23, 42, 0.08)' : 'none',
     };
-    const imageHeight = isPill
-      ? { xs: 140, sm: 180, md: 220 }
-      : { xs: 220, sm: 320, md: 420 };
+    const imageHeight = { xs: 165, sm: 240, md: 315 };
 
     if (!events.length) {
       return (
@@ -62,18 +52,6 @@ const StiqrHubLanding = () => {
       );
     }
 
-    const navButtonStyles = {
-      position: 'absolute',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      backgroundColor: isPill ? 'rgba(15, 23, 42, 0.35)' : 'rgba(0,0,0,0.4)',
-      color: '#fff',
-      '&:hover': {
-        backgroundColor: isPill ? 'rgba(15, 23, 42, 0.55)' : 'rgba(0,0,0,0.6)',
-      },
-      zIndex: 2,
-    };
-
     return (
       <Box sx={containerStyles}>
         <Box
@@ -84,7 +62,6 @@ const StiqrHubLanding = () => {
             width: '100%',
             height: imageHeight,
             position: 'relative',
-            borderRadius: isPill ? 999 : 0,
             overflow: 'hidden',
           }}
         >
@@ -112,8 +89,16 @@ const StiqrHubLanding = () => {
                 setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
               }}
               sx={{
-                ...navButtonStyles,
-                left: { xs: isPill ? 12 : 8, md: isPill ? 24 : 24 },
+                position: 'absolute',
+                top: '50%',
+                left: { xs: 8, md: 24 },
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                },
+                zIndex: 2,
               }}
             >
               <ArrowBackIosNewIcon fontSize="small" />
@@ -126,8 +111,16 @@ const StiqrHubLanding = () => {
                 setCurrentSlide((prev) => (prev + 1) % events.length);
               }}
               sx={{
-                ...navButtonStyles,
-                right: { xs: isPill ? 12 : 8, md: isPill ? 24 : 24 },
+                position: 'absolute',
+                top: '50%',
+                right: { xs: 8, md: 24 },
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                },
+                zIndex: 2,
               }}
             >
               <ArrowForwardIosIcon fontSize="small" />
@@ -142,7 +135,7 @@ const StiqrHubLanding = () => {
               justifyContent: 'center',
               gap: 1,
               position: 'absolute',
-              bottom: isPill ? 12 : 16,
+              bottom: 16,
               left: '50%',
               transform: 'translateX(-50%)',
             }}
@@ -202,10 +195,7 @@ const StiqrHubLanding = () => {
         {/* Featured Published Events */}
         <Box sx={{ px: { xs: 0, md: 0 }, mt: 6, mb: 2 }}>
           <Typography variant="h5" sx={{ px: { xs: 2, md: 6 }, mb: 2 }}>Published Events</Typography>
-          {renderCarousel('default')}
-          <Box sx={{ px: { xs: 2, md: 6 }, mt: 3 }}>
-            {renderCarousel('pill')}
-          </Box>
+          {renderCarousel()}
         </Box>
 
         <PlatformBenefits />
