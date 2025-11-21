@@ -201,11 +201,6 @@ class EventController extends Controller
             return ApiResponse::error("Event not found or unauthorized", 404);
         }
 
-        // Prevent deletion of published events
-        if ($event->status === 'PUBLISHED') {
-            return ApiResponse::error("Cannot delete published events", 403);
-        }
-
         try {
             $event->delete();
             return ApiResponse::success(null, "Event deleted successfully");
