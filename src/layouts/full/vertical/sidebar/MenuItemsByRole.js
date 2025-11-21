@@ -11,6 +11,7 @@ import {
   IconChartBar,
   IconBan,
   IconAperture,
+  IconUser,
 } from '@tabler/icons-react';
 
 // EO Menu
@@ -66,6 +67,16 @@ export const EOMenuItems = [
     title: 'Claim Insurance',
     icon: IconShield,
     href: '/app/eo/claims',
+  },
+  {
+    navlabel: true,
+    subheader: 'Settings',
+  },
+  {
+    id: uniqueId(),
+    title: 'Profile',
+    icon: IconUser,
+    href: '/app/eo/profile',
   },
 ];
 
