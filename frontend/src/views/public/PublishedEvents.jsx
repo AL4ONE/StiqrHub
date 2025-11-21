@@ -64,9 +64,13 @@ const EventCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-const WHATSAPP_NUMBER = '6282118383415'; // without +
-const WHATSAPP_MESSAGE = encodeURIComponent('Halo, Saya tertarik dengan event STIQRHub bisa diskusi lebih lanjut?');
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+const WHATSAPP_NUMBER = '6282118383415';
+const buildWhatsAppLink = (eventName = '') => {
+  const safeName = eventName ? `${eventName} ` : '';
+  const message = encodeURIComponent(`Halo, Saya tertarik dengan event ${safeName}STIQRHub bisa diskusi lebih lanjut?`);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+};
+const WHATSAPP_LINK = buildWhatsAppLink();
 
 export default function PublishedEventsPublic() {
   const [events, setEvents] = useState([]);
@@ -326,7 +330,7 @@ export default function PublishedEventsPublic() {
                     <AuthButton
                       fullWidth
                       component="a"
-                      href={WHATSAPP_LINK}
+                      href={buildWhatsAppLink(ev.name)}
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
