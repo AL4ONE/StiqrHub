@@ -15,6 +15,7 @@ export default function EditEvent() {
     name: '',
     location: '',
     map_link: '',
+    details: '',
     start_date: '',
     end_date: '',
     category: 'F&B',
@@ -59,6 +60,7 @@ export default function EditEvent() {
           name: ev.name || '',
           location: ev.location || '',
           map_link: ev.map_link || '',
+          details: ev.details || '',
           start_date: convertedStart,
           end_date: convertedEnd,
           category: ev.category || 'F&B',
@@ -112,6 +114,7 @@ export default function EditEvent() {
           if (formData.name) fd.append('name', formData.name);
           if (formData.location) fd.append('location', formData.location);
           if (formData.map_link) fd.append('map_link', formData.map_link);
+          fd.append('details', formData.details || '');
           const sd = toBackendDate(formData.start_date);
           console.log('EditEvent - Input start_date:', formData.start_date, '-> UTC:', sd);
           if (sd) fd.append('start_date', sd);
@@ -152,6 +155,7 @@ export default function EditEvent() {
           name: formData.name,
           location: formData.location,
           map_link: formData.map_link || null,
+          details: formData.details || null,
           start_date: toBackendDate(formData.start_date),
           end_date: toBackendDate(formData.end_date),
           category: formData.category,
@@ -220,6 +224,18 @@ export default function EditEvent() {
                     label="Map Link (optional)"
                     value={formData.map_link}
                     onChange={handleChange('map_link')}
+                    disabled={disabled}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Event Details"
+                    placeholder="Describe your event, highlights, special requirements, etc."
+                    value={formData.details}
+                    onChange={handleChange('details')}
                     disabled={disabled}
                   />
                 </Grid>

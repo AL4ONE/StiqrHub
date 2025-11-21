@@ -352,9 +352,9 @@ export default function EventDetail() {
                 <Button
                   variant="outlined"
                   onClick={() => navigate(`/app/eo/events/${id}/edit`)}
-                  disabled={event.status !== 'DRAFT'}
+                  disabled={event.status === 'PUBLISHED'}
                   sx={{
-                    ...((event.status !== 'DRAFT') && {
+                    ...((event.status === 'PUBLISHED') && {
                       backgroundColor: 'rgba(0, 0, 0, 0.12)',
                       color: 'rgba(0, 0, 0, 0.26)',
                       '&:hover': {
