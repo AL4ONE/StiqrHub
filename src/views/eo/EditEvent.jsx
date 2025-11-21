@@ -29,7 +29,6 @@ export default function EditEvent() {
   });
   const [bannerFile, setBannerFile] = useState(null);
   const [previewBanner, setPreviewBanner] = useState('');
-  const [status, setStatus] = useState('DRAFT');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +45,6 @@ export default function EditEvent() {
           setLoading(false);
           return;
         }
-        setStatus(ev.status);
         // Convert to datetime-local compatible (Indonesia timezone)
         const convertedStart = toIndonesiaDateTimeLocal(ev.start_date);
         const convertedEnd = toIndonesiaDateTimeLocal(ev.end_date);
@@ -105,11 +103,6 @@ export default function EditEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Allow editing until PUBLISHED status
-    if (status === 'PUBLISHED') {
-      setError('Published events cannot be edited');
-      return;
-    }
     if (!formData.contact_for_price) {
       const hasPrice = formData.booth_price !== '' && formData.booth_price !== null && formData.booth_price !== undefined;
       if (!hasPrice) {
@@ -205,19 +198,11 @@ export default function EditEvent() {
     }
   };
 
-  // Disable editing only when event is PUBLISHED
-  const disabled = status === 'PUBLISHED';
-
   return (
     <PageContainer title="Edit Event">
       <Card>
         <CardContent>
           <Typography variant="h6" mb={3}>Edit Event</Typography>
-          {disabled && (
-            <Typography color="error" mb={2}>
-              Event yang sudah dipublish tidak dapat diedit.
-            </Typography>
-          )}
           {error && <Typography color="error" mb={2}>{error}</Typography>}
           {!loading && (
             <form onSubmit={handleSubmit}>
@@ -229,7 +214,6 @@ export default function EditEvent() {
                     value={formData.name}
                     onChange={handleChange('name')}
                     required
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -239,7 +223,6 @@ export default function EditEvent() {
                     value={formData.location}
                     onChange={handleChange('location')}
                     required
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -248,7 +231,6 @@ export default function EditEvent() {
                     label="Map Link (optional)"
                     value={formData.map_link}
                     onChange={handleChange('map_link')}
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -260,7 +242,6 @@ export default function EditEvent() {
                     placeholder="Describe your event, highlights, special requirements, etc."
                     value={formData.details}
                     onChange={handleChange('details')}
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -272,7 +253,6 @@ export default function EditEvent() {
                     onChange={handleChange('start_date')}
                     InputLabelProps={{ shrink: true }}
                     required
-                    disabled={disabled}
                     helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
@@ -285,7 +265,6 @@ export default function EditEvent() {
                     onChange={handleChange('end_date')}
                     InputLabelProps={{ shrink: true }}
                     required
-                    disabled={disabled}
                     helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
@@ -297,7 +276,6 @@ export default function EditEvent() {
                     value={formData.category}
                     onChange={handleChange('category')}
                     SelectProps={{ native: true }}
-                    disabled={disabled}
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -312,7 +290,6 @@ export default function EditEvent() {
                     value={formData.booth_capacity}
                     onChange={handleChange('booth_capacity')}
                     required
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -321,7 +298,6 @@ export default function EditEvent() {
                     label="Booth Size"
                     value={formData.booth_size}
                     onChange={handleChange('booth_size')}
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -331,7 +307,7 @@ export default function EditEvent() {
                     type="number"
                     value={formData.booth_price}
                     onChange={handleChange('booth_price')}
-                    disabled={disabled || formData.contact_for_price}
+                  disabled={formData.contact_for_price}
                     required={!formData.contact_for_price}
                   />
                   {formData.contact_for_price && (
@@ -346,7 +322,6 @@ export default function EditEvent() {
                       <Checkbox
                         checked={formData.contact_for_price}
                         onChange={handleContactForPriceToggle}
-                        disabled={disabled}
                       />
                     }
                     label="Tandai sebagai 'Hubungi EO untuk harga'"
@@ -367,7 +342,6 @@ export default function EditEvent() {
                           setPreviewBanner(URL.createObjectURL(file));
                         }
                       }}
-                      disabled={disabled}
                     />
                     {previewBanner ? (
                       <Box mt={1}>
@@ -387,7 +361,6 @@ export default function EditEvent() {
                     type="number"
                     value={formData.estimated_visitors}
                     onChange={handleChange('estimated_visitors')}
-                    disabled={disabled}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -398,7 +371,6 @@ export default function EditEvent() {
                     value={formData.payment_method}
                     onChange={handleChange('payment_method')}
                     SelectProps={{ native: true }}
-                    disabled={disabled}
                   >
                     <option value="per_event">Per Event</option>
                     <option value="per_day">Per Day</option>
@@ -406,7 +378,7 @@ export default function EditEvent() {
                 </Grid>
                 <Grid item xs={12}>
                   <Box display="flex" gap={2}>
-                    <Button type="submit" variant="contained" disabled={saving || disabled}>
+                    <Button type="submit" variant="contained" disabled={saving}>
                       {saving ? 'Updating...' : 'Update Event'}
                     </Button>
                     <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}`)}>
