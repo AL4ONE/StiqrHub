@@ -3,8 +3,24 @@ import { Grid, Card, CardContent, Typography, Button, Stack, Box, TextField, Men
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router-dom'; // ✅ ganti dari 'react-router' ke 'react-router-dom'
 import { formatDateIndonesia } from 'src/utils/dateFormat';
+
+const describePrice = (ev = {}) => {
+  const contactForPrice = !!ev.contact_for_price;
+  const rawValue =
+    ev.booth_price !== null && ev.booth_price !== undefined && ev.booth_price !== ''
+      ? Number(ev.booth_price)
+      : 0;
+  const numericValue = Number.isFinite(rawValue) ? rawValue : 0;
+  const isFree = !contactForPrice && numericValue === 0;
+  const label = contactForPrice
+    ? 'Info lanjut'
+    : isFree
+      ? 'Gratis'
+      : `Rp. ${numericValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`;
+  const color = contactForPrice ? '#FF9800' : isFree ? '#2E7D32' : '#00C68E';
+  return { contactForPrice, isFree, label, color };
+};
 
 export default function EventsList() {
   const [events, setEvents] = useState([]);
@@ -35,7 +51,7 @@ export default function EventsList() {
         !q ||
         (ev.name && ev.name.toLowerCase().includes(q)) ||
         (ev.location && ev.location.toLowerCase().includes(q));
-      const isFree = Number(ev.booth_price || 0) === 0;
+      const { isFree } = describePrice(ev);
       const matchesPrice =
         priceFilter === 'ALL' ||
         (priceFilter === 'FREE' && isFree) ||
@@ -111,10 +127,18 @@ export default function EventsList() {
                 <Typography variant="body2" mb={1}>
                   <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
                 </Typography>
-                <Typography variant="body2" mb={1} sx={{ fontWeight: 600, color: Number(ev.booth_price || 0) === 0 ? '#2E7D32' : '#00C68E' }}>
-                  <strong>Harga:</strong> {Number(ev.booth_price || 0) === 0 
-                    ? 'Gratis' 
-                    : `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
+                {(() => {
+                  const priceMeta = describePrice(ev);
+                  return (
+                    <Typography
+                      variant="body2"
+                      mb={1}
+                      sx={{ fontWeight: 600, color: priceMeta.color }}
+                    >
+                      <strong>Harga:</strong> {priceMeta.label}
+                    </Typography>
+                  );
+                })()}
                 </Typography>
                 <Stack direction="row" spacing={1} mt={2}>
                  <Button

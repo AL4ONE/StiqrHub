@@ -517,10 +517,28 @@ const buildWhatsAppLink = (eventName = "") => {
 
           <SectionCard
             title="Action Center"
-            subtitle={hasRegistered ? "Kamu sudah terdaftar di event ini" : "Segera amankan slot kamu"}
+            subtitle={
+              event.contact_for_price
+                ? "Diskusikan langsung via WhatsApp untuk mendapatkan info harga"
+                : hasRegistered
+                  ? "Kamu sudah terdaftar di event ini"
+                  : "Segera amankan slot kamu"
+            }
           >
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              {!hasRegistered ? (
+              {event.contact_for_price ? (
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="large"
+                  component="a"
+                  href={eventWhatsAppLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Hubungi via WhatsApp
+                </Button>
+              ) : !hasRegistered ? (
                 <Button
                   variant="contained"
                   size="large"
