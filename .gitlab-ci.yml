@@ -1,0 +1,41 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: node:20-alpine
+  before_script:
+    - cd frontend
+    - npm install --legacy-peer-deps
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/build
+    expire_in: 1 hour
+  only:
+    - main
+    - master
+    - deployment
+    - on-deployment
+    - on-development
+
+deploy:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd frontend
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  only:
+    - main
+    - master
+    - deployment
+    - on-deployment
+    - on-development
+
