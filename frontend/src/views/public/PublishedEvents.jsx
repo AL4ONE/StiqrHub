@@ -326,7 +326,7 @@ export default function PublishedEventsPublic() {
                   <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: contactForPrice ? '#FF9800' : (isFree ? '#2E7D32' : '#00C68E') }}>
                     💰 <strong>Harga:</strong>{' '}
                     {contactForPrice
-                      ? 'Hubungi EO untuk harga'
+                      ? 'Info lanjut'
                       : isFree
                         ? 'Gratis'
                         : `Rp. ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
