@@ -73,4 +73,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(EoCategory::class, 'eo_id');
     }
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(EoBankAccount::class, 'eo_id');
+    }
 }

@@ -24,11 +24,16 @@ class Event extends Model
         'banner',
         'insurance_active',
         'booth_price',
+        'contact_for_price',
         'estimated_visitors',
         'payment_method',
         'status',
     ];
 
+    protected $casts = [
+        'insurance_active' => 'boolean',
+        'contact_for_price' => 'boolean',
+    ];
     protected $appends = ['banner_url'];
 
     public function eo()

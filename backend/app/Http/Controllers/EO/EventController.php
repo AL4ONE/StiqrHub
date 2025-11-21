@@ -42,6 +42,11 @@ class EventController extends Controller
                     'insurance_active' => filter_var($request->input('insurance_active'), FILTER_VALIDATE_BOOLEAN),
                 ]);
             }
+            if ($request->has('contact_for_price')) {
+                $request->merge([
+                    'contact_for_price' => filter_var($request->input('contact_for_price'), FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
 
             // Normalize bank_accounts is_default boolean values
             if ($request->has('bank_accounts') && is_array($request->input('bank_accounts'))) {
@@ -67,10 +72,11 @@ class EventController extends Controller
                 'booth_capacity' => 'required|integer|min:1',
                 'tenant_capacity' => 'nullable|integer|min:1',
                 'booth_size' => 'nullable|string',
-                'booth_price' => 'required|numeric|min:0',
+                'booth_price' => 'required_without:contact_for_price|nullable|numeric|min:0',
                 'estimated_visitors' => 'nullable|integer|min:0',
                 'payment_method' => 'required|in:per_day,per_event',
                 'insurance_active' => 'boolean',
+                'contact_for_price' => 'nullable|boolean',
                 'status' => 'nullable|in:DRAFT,ACTIVATED,PUBLISHED',
                 'banner' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
                 'bank_accounts' => 'required|array|min:1|max:3',
@@ -114,7 +120,12 @@ class EventController extends Controller
             $payload = array_merge($validated, [
                 'eo_id' => Auth::user()->id,
                 'status' => $validated['status'] ?? 'DRAFT',
+                'contact_for_price' => $validated['contact_for_price'] ?? false,
             ]);
+
+            if ($payload['contact_for_price']) {
+                $payload['booth_price'] = null;
+            }
 
             if ($request->hasFile('banner')) {
                 // Use default disk (can be 'public' or 's3' based on FILESYSTEM_DISK env)
@@ -195,6 +206,11 @@ class EventController extends Controller
                     'insurance_active' => filter_var($request->input('insurance_active'), FILTER_VALIDATE_BOOLEAN),
                 ]);
             }
+            if ($request->has('contact_for_price')) {
+                $request->merge([
+                    'contact_for_price' => filter_var($request->input('contact_for_price'), FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
 
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
@@ -208,10 +224,11 @@ class EventController extends Controller
                 'category' => 'sometimes|in:F&B,Fashion,Automotive,Art & Craft,Snack & Beverage,Wellness,Others',
                 'booth_capacity' => 'sometimes|integer|min:1',
                 'booth_size' => 'nullable|string',
-                'booth_price' => 'sometimes|numeric|min:0',
+                'booth_price' => 'sometimes|nullable|numeric|min:0',
                 'estimated_visitors' => 'nullable|integer|min:0',
                 'payment_method' => 'sometimes|in:per_day,per_event',
                 'insurance_active' => 'boolean',
+                'contact_for_price' => 'sometimes|boolean',
                 'status' => 'sometimes|in:DRAFT,ACTIVATED,PUBLISHED',
                 'banner' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
             ]);
@@ -246,6 +263,13 @@ class EventController extends Controller
             }
 
             $event->update($update);
+
+            if (array_key_exists('contact_for_price', $validated) && $validated['contact_for_price']) {
+                $event->contact_for_price = true;
+                $event->booth_price = null;
+                $event->save();
+            }
+
             return ApiResponse::success($event->fresh(), "Event updated successfully");
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error("Validation failed", 422, $e->errors());

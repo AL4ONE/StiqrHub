@@ -257,7 +257,8 @@ export default function PublishedEventsPublic() {
               // Check if event is free: booth_price is null, undefined, 0, or empty string
               const boothPrice = ev.booth_price;
               const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
-              const isFree = !boothPrice || priceValue === 0 || isNaN(priceValue);
+              const contactForPrice = !!ev.contact_for_price;
+              const isFree = !contactForPrice && (!boothPrice || priceValue === 0 || isNaN(priceValue));
               const matchesPrice =
                 priceFilter === 'ALL' ||
                 (priceFilter === 'FREE' && isFree) ||
@@ -266,10 +267,11 @@ export default function PublishedEventsPublic() {
             });
             return list;
           }, [events, query, priceFilter]).map((ev) => {
-            // Calculate if event is free
+            // Calculate if event is free or requires contact
             const boothPrice = ev.booth_price;
             const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
-            const isFree = !boothPrice || priceValue === 0 || isNaN(priceValue);
+            const contactForPrice = !!ev.contact_for_price;
+            const isFree = !contactForPrice && (!boothPrice || priceValue === 0 || isNaN(priceValue));
             return (
             <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
@@ -321,10 +323,13 @@ export default function PublishedEventsPublic() {
                   <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
                     📅 <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
                   </Typography>
-                  <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: isFree ? '#2E7D32' : '#00C68E' }}>
-                    💰 <strong>Harga:</strong> {isFree 
-                      ? 'Gratis' 
-                      : `Rp. ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
+                  <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: contactForPrice ? '#FF9800' : (isFree ? '#2E7D32' : '#00C68E') }}>
+                    💰 <strong>Harga:</strong>{' '}
+                    {contactForPrice
+                      ? 'Hubungi EO untuk harga'
+                      : isFree
+                        ? 'Gratis'
+                        : `Rp. ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
                   </Typography>
                   <Box sx={{ mt: 'auto', pt: 2 }}>
                     <AuthButton

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, FormControlLabel, Checkbox } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut } from 'src/utils/api';
@@ -25,6 +25,7 @@ export default function EditEvent() {
     estimated_visitors: 500,
     payment_method: 'per_event',
     insurance_active: true,
+    contact_for_price: false,
   });
   const [bannerFile, setBannerFile] = useState(null);
   const [previewBanner, setPreviewBanner] = useState('');
@@ -70,6 +71,7 @@ export default function EditEvent() {
           estimated_visitors: ev.estimated_visitors ?? 500,
           payment_method: ev.payment_method || 'per_event',
           insurance_active: !!ev.insurance_active,
+          contact_for_price: !!ev.contact_for_price,
         });
         if (ev.banner_url) {
           setPreviewBanner(ev.banner_url.startsWith('http') ? ev.banner_url : `${BACKEND_URL}${ev.banner_url}`);
@@ -92,12 +94,28 @@ export default function EditEvent() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleContactForPriceToggle = (event) => {
+    const { checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      contact_for_price: checked,
+      booth_price: checked ? '' : prev.booth_price,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Allow editing until PUBLISHED status
     if (status === 'PUBLISHED') {
       setError('Published events cannot be edited');
       return;
+    }
+    if (!formData.contact_for_price) {
+      const hasPrice = formData.booth_price !== '' && formData.booth_price !== null && formData.booth_price !== undefined;
+      if (!hasPrice) {
+        setError('Booth price is required or mark "Hubungi EO untuk harga".');
+        return;
+      }
     }
     setSaving(true);
     setError('');
@@ -124,10 +142,15 @@ export default function EditEvent() {
           if (formData.category) fd.append('category', formData.category);
           if (formData.booth_capacity != null) fd.append('booth_capacity', String(formData.booth_capacity));
           if (formData.booth_size) fd.append('booth_size', formData.booth_size);
-          if (formData.booth_price != null) fd.append('booth_price', String(formData.booth_price ?? 0));
+          if (formData.contact_for_price) {
+            fd.append('booth_price', '');
+          } else if (formData.booth_price != null && formData.booth_price !== '') {
+            fd.append('booth_price', String(formData.booth_price ?? 0));
+          }
           if (formData.estimated_visitors != null) fd.append('estimated_visitors', String(formData.estimated_visitors));
           if (formData.payment_method) fd.append('payment_method', formData.payment_method);
           fd.append('insurance_active', formData.insurance_active ? '1' : '0');
+          fd.append('contact_for_price', formData.contact_for_price ? '1' : '0');
         fd.append('banner', bannerFile);
         // Use native fetch for PUT multipart
         const token = localStorage.getItem('token');
@@ -161,10 +184,11 @@ export default function EditEvent() {
           category: formData.category,
           booth_capacity: Number(formData.booth_capacity),
           booth_size: formData.booth_size || null,
-          booth_price: Number(formData.booth_price ?? 0),
+          booth_price: formData.contact_for_price ? null : Number(formData.booth_price ?? 0),
           estimated_visitors: formData.estimated_visitors != null ? Number(formData.estimated_visitors) : null,
           payment_method: formData.payment_method,
           insurance_active: !!formData.insurance_active,
+          contact_for_price: !!formData.contact_for_price,
         };
         const res = await apiPut(BACKEND_URL + `/api/eo/events/${id}`, payload);
         if (res?.status === 'success') {
@@ -307,8 +331,29 @@ export default function EditEvent() {
                     type="number"
                     value={formData.booth_price}
                     onChange={handleChange('booth_price')}
-                    disabled={disabled}
+                    disabled={disabled || formData.contact_for_price}
+                    required={!formData.contact_for_price}
                   />
+                  {formData.contact_for_price && (
+                    <Typography variant="caption" color="text.secondary">
+                      Harga akan dibagikan setelah tenant menghubungi EO.
+                    </Typography>
+                  )}
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.contact_for_price}
+                        onChange={handleContactForPriceToggle}
+                        disabled={disabled}
+                      />
+                    }
+                    label="Tandai sebagai 'Hubungi EO untuk harga'"
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Tenant akan diarahkan ke WhatsApp untuk diskusi harga jika opsi ini aktif.
+                  </Typography>
                 </Grid>
                 <Grid item xs={12}>
                   <Box>
