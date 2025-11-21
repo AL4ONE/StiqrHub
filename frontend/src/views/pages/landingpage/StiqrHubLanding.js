@@ -21,6 +21,13 @@ import BonusSection from 'src/components/landingpage/stiqrhub/BonusSection';
 import FAQ from 'src/components/landingpage/stiqrhub/FAQ';
 import FooterCTA from 'src/components/landingpage/stiqrhub/FooterCTA';
 
+const WHATSAPP_BASE = 'https://wa.me/6282118383415';
+const buildWhatsAppLink = (eventName = '') => {
+  const safeName = eventName ? `${eventName} ` : '';
+  const message = encodeURIComponent(`Halo, Saya tertarik dengan event ${safeName}STIQRHub bisa diskusi lebih lanjut?`);
+  return `${WHATSAPP_BASE}?text=${message}`;
+};
+
 const StiqrHubLanding = () => {
   const [events, setEvents] = useState([]);
   const [error, setError] = useState('');
@@ -88,8 +95,10 @@ const StiqrHubLanding = () => {
           {events.map((event) => (
             <Box
               key={event.id}
-              component={Link}
-              to={`/auth/register?eventId=${event.id}`}
+              component="a"
+              href={buildWhatsAppLink(event.name)}
+              target="_blank"
+              rel="noopener noreferrer"
               sx={{
                 flexShrink: 0,
                 width: { xs: '280px', sm: '320px', md: '380px' },
