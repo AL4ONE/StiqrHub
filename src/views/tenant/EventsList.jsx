@@ -87,10 +87,12 @@ export default function EventsList() {
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
-        {filteredEvents.map((ev) => (
-          <Grid item xs={12} md={6} key={ev.id}>
-            <Card>
-              <CardContent>
+        {filteredEvents.map((ev) => {
+          const priceMeta = describePrice(ev);
+          return (
+            <Grid item xs={12} md={6} key={ev.id}>
+              <Card>
+                <CardContent>
                 {(ev.banner_url || ev.banner) && (
                   <Box
                     mb={2}
@@ -127,32 +129,27 @@ export default function EventsList() {
                 <Typography variant="body2" mb={1}>
                   <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
                 </Typography>
-                {(() => {
-                  const priceMeta = describePrice(ev);
-                  return (
-                    <Typography
-                      variant="body2"
-                      mb={1}
-                      sx={{ fontWeight: 600, color: priceMeta.color }}
-                    >
-                      <strong>Harga:</strong> {priceMeta.label}
-                    </Typography>
-                  );
-                })()}
+                <Typography
+                  variant="body2"
+                  mb={1}
+                  sx={{ fontWeight: 600, color: priceMeta.color }}
+                >
+                  <strong>Harga:</strong> {priceMeta.label}
                 </Typography>
                 <Stack direction="row" spacing={1} mt={2}>
-                 <Button
-                            variant="contained"
-                            component="a"
-                           href={`/app/tenant/events/${ev.id}`}
-                          >
-                            View Details
+                  <Button
+                    variant="contained"
+                    component="a"
+                    href={`/app/tenant/events/${ev.id}`}
+                  >
+                    View Details
                   </Button>
                 </Stack>
               </CardContent>
             </Card>
           </Grid>
-        ))}
+          );
+        })}
       </Grid>
     </PageContainer>
   );
