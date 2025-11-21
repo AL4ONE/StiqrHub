@@ -196,8 +196,7 @@ export default function EventDetail() {
     }
   };
 
-  // Check if event can be deleted (DRAFT or ACTIVATED, not PUBLISHED)
-  const canDelete = event && (event.status === 'DRAFT' || event.status === 'ACTIVATED');
+  // Delete button is always enabled
 
   // Calculate remaining tenant capacity (total tenant slots vs registered tenants)
   const boothCapacity = Number(event?.booth_capacity) || 0;
@@ -370,16 +369,7 @@ export default function EventDetail() {
                   variant="outlined" 
                   color="error"
                   onClick={handleDeleteClick}
-                  disabled={!canDelete || deleting}
-                  sx={{
-                    ...(!canDelete && {
-                      backgroundColor: 'rgba(0, 0, 0, 0.12)',
-                      color: 'rgba(0, 0, 0, 0.26)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.12)',
-                      }
-                    })
-                  }}
+                  disabled={deleting}
                 >
                   Delete Event
                 </Button>
