@@ -299,7 +299,8 @@ export default function EventDetail() {
                 <strong>Booth Size:</strong> {event.booth_size}
               </Typography>
               <Typography variant="body2" mb={1}>
-                <strong>Booth Price:</strong> {formatPrice(event.booth_price)}
+                <strong>Booth Price:</strong>{' '}
+                {event.contact_for_price ? 'Hubungi EO untuk harga' : formatPrice(event.booth_price)}
               </Typography>
               <Typography variant="body2" mb={1}>
                 <strong>Payment Method:</strong> {event.payment_method}

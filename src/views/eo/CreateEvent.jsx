@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { Card, CardContent, Typography, Button, TextField, Grid, Box, Alert, IconButton } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, Alert, Checkbox, Chip, Stack, FormControlLabel } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
-import { apiPost } from 'src/utils/api';
+import { apiPost, apiGet } from 'src/utils/api';
 import { useNavigate } from 'react-router-dom';
 import { fromIndonesiaDateTimeToUTC } from 'src/utils/dateFormat';
 
@@ -31,16 +30,18 @@ export default function CreateEvent() {
     insurance_active: true,
     status: 'DRAFT',
     tenant_capacity: 1,
-    details: ''
+    details: '',
+    contact_for_price: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [bannerFile, setBannerFile] = useState(null);
   const [dateErrors, setDateErrors] = useState({ start_date: '', end_date: '' });
-  const [bankAccounts, setBankAccounts] = useState([
-    { account_number: '', account_name: '', bank_name: '', is_default: true }
-  ]);
+  const [bankOptions, setBankOptions] = useState([]);
+  const [selectedBankIds, setSelectedBankIds] = useState([]);
+  const [bankOptionsLoading, setBankOptionsLoading] = useState(true);
+  const [bankOptionsError, setBankOptionsError] = useState('');
   const [rulesText, setRulesText] = useState('');
 
   // Get current date in Indonesia timezone for min attribute
@@ -65,6 +66,38 @@ export default function CreateEvent() {
   };
 
   const [minDateTime] = useState(getCurrentDateTimeLocal());
+
+  useEffect(() => {
+    const fetchBankOptions = async () => {
+      setBankOptionsLoading(true);
+      setBankOptionsError('');
+      try {
+        const res = await apiGet(BACKEND_URL + '/api/eo/profile');
+        if (res?.status === 'success') {
+          const accounts = Array.isArray(res?.data?.bank_accounts) ? res.data.bank_accounts : [];
+          const formatted = accounts.map((account, idx) => ({
+            ...account,
+            _key: account.id ? String(account.id) : `bank-${idx}`,
+          }));
+          setBankOptions(formatted);
+          if (formatted.length > 0) {
+            const defaultSelection = formatted.filter((acc) => acc.is_default).map((acc) => acc._key);
+            setSelectedBankIds(defaultSelection.length > 0 ? defaultSelection : [formatted[0]._key]);
+          } else {
+            setSelectedBankIds([]);
+          }
+        } else {
+          setBankOptionsError(res?.message || 'Gagal memuat rekening EO.');
+        }
+      } catch (err) {
+        setBankOptionsError('Gagal memuat rekening EO. Silakan coba lagi.');
+      } finally {
+        setBankOptionsLoading(false);
+      }
+    };
+
+    fetchBankOptions();
+  }, []);
 
   const validateDate = (field, value) => {
     if (!value) {
@@ -113,6 +146,24 @@ export default function CreateEvent() {
 
   const handleDateBlur = (field) => (e) => {
     validateDate(field, e.target.value);
+  };
+
+  const toggleBankSelection = (key) => () => {
+    setSelectedBankIds((prev) => {
+      if (prev.includes(key)) {
+        return prev.filter((id) => id !== key);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const handleContactForPriceToggle = (event) => {
+    const { checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      contact_for_price: checked,
+      booth_price: checked ? '' : prev.booth_price,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -195,21 +246,42 @@ export default function CreateEvent() {
       return;
     }
 
-    // Validate bank accounts
-    const validBankAccounts = bankAccounts.filter(acc => acc.account_number && acc.account_name && acc.bank_name);
-    if (validBankAccounts.length === 0) {
-      setError('At least one bank account must be filled in completely');
+    if (!formData.contact_for_price) {
+      const priceValue = formData.booth_price;
+      const hasPrice = priceValue !== '' && priceValue !== null && priceValue !== undefined;
+      if (!hasPrice) {
+        setError('Booth price is required or mark "Hubungi EO untuk harga".');
+        return;
+      }
+    }
+
+    if (bankOptionsLoading) {
+      setError('Sedang memuat data rekening pembayaran. Mohon tunggu sebentar.');
       return;
     }
-    const defaultAccounts = validBankAccounts.filter(acc => acc.is_default);
-    if (defaultAccounts.length === 0) {
-      setError('At least one account must be marked as default');
+
+    if (bankOptions.length === 0) {
+      setError('Tambahkan rekening pembayaran di halaman Profil EO terlebih dahulu.');
       return;
     }
-    if (defaultAccounts.length > 1) {
-      setError('Only one account can be set as default');
+
+    const selectedAccounts = bankOptions.filter((account) => selectedBankIds.includes(account._key));
+    if (selectedAccounts.length === 0) {
+      setError('Pilih minimal satu rekening pembayaran untuk event ini.');
       return;
     }
+
+    let defaultIndex = selectedAccounts.findIndex((account) => account.is_default);
+    if (defaultIndex === -1) {
+      defaultIndex = 0;
+    }
+
+    const eventBankAccounts = selectedAccounts.map((account, index) => ({
+      account_number: account.account_number,
+      account_name: account.account_name,
+      bank_name: account.bank_name,
+      is_default: index === defaultIndex,
+    }));
 
     setLoading(true);
     setError('');
@@ -221,6 +293,14 @@ export default function CreateEvent() {
         if (k === 'start_date' || k === 'end_date') {
           const utcDate = fromIndonesiaDateTimeToUTC(v);
           if (utcDate) fd.append(k, utcDate);
+        } else if (k === 'contact_for_price') {
+          fd.append('contact_for_price', v ? '1' : '0');
+        } else if (k === 'booth_price') {
+          if (formData.contact_for_price) {
+            fd.append('booth_price', '');
+          } else if (v !== undefined && v !== null) {
+            fd.append('booth_price', v);
+          }
         } else {
           fd.append(k, v);
         }
@@ -231,7 +311,7 @@ export default function CreateEvent() {
       if (bannerFile) fd.append('banner', bannerFile);
       
       // Add bank accounts - Laravel expects this format for nested arrays in FormData
-      validBankAccounts.forEach((acc, index) => {
+      eventBankAccounts.forEach((acc, index) => {
         fd.append(`bank_accounts[${index}][account_number]`, acc.account_number || '');
         fd.append(`bank_accounts[${index}][account_name]`, acc.account_name || '');
         fd.append(`bank_accounts[${index}][bank_name]`, acc.bank_name || '');
@@ -335,37 +415,6 @@ export default function CreateEvent() {
       setError('Failed to create event: ' + (e.message || 'Unknown error. Please check your connection or contact the administrator.'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleBankAccountChange = (index, field) => (e) => {
-    const newAccounts = [...bankAccounts];
-    newAccounts[index][field] = e.target.value;
-    setBankAccounts(newAccounts);
-  };
-
-  const handleDefaultChange = (index) => () => {
-    const newAccounts = bankAccounts.map((acc, i) => ({
-      ...acc,
-      is_default: i === index
-    }));
-    setBankAccounts(newAccounts);
-  };
-
-  const addBankAccount = () => {
-    if (bankAccounts.length < 3) {
-      setBankAccounts([...bankAccounts, { account_number: '', account_name: '', bank_name: '', is_default: false }]);
-    }
-  };
-
-  const removeBankAccount = (index) => {
-    if (bankAccounts.length > 1) {
-      const newAccounts = bankAccounts.filter((_, i) => i !== index);
-      // Ensure at least one default if we removed the default
-      if (newAccounts.length > 0 && !newAccounts.some(acc => acc.is_default)) {
-        newAccounts[0].is_default = true;
-      }
-      setBankAccounts(newAccounts);
     }
   };
 
@@ -526,7 +575,28 @@ export default function CreateEvent() {
                   type="number"
                   value={formData.booth_price}
                   onChange={handleChange('booth_price')}
+                  required={!formData.contact_for_price}
+                  disabled={formData.contact_for_price}
                 />
+                {formData.contact_for_price && (
+                  <Typography variant="caption" color="text.secondary">
+                    Harga akan dibagikan setelah tenant menghubungi EO.
+                  </Typography>
+                )}
+              </Grid>
+              <Grid item xs={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.contact_for_price}
+                      onChange={handleContactForPriceToggle}
+                    />
+                  }
+                  label="Tandai sebagai 'Hubungi EO untuk harga'"
+                />
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Tenant akan diarahkan ke WhatsApp untuk diskusi harga jika opsi ini aktif.
+                </Typography>
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>Banner (jpg/png)</Typography>
@@ -640,74 +710,84 @@ export default function CreateEvent() {
               </Grid>
               
               <Grid item xs={12}>
-                <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>Bank Accounts</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Maximum 3 accounts, at least 1 account must be marked as default
+                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                  Rekening Pembayaran
                 </Typography>
-                {bankAccounts.map((account, index) => (
-                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          fullWidth
-                          label="Account Number"
-                          value={account.account_number}
-                          onChange={handleBankAccountChange(index, 'account_number')}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <TextField
-                          fullWidth
-                          label="Account Holder"
-                          value={account.account_name}
-                          onChange={handleBankAccountChange(index, 'account_name')}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <TextField
-                          fullWidth
-                          label="Bank Name"
-                          value={account.bank_name}
-                          onChange={handleBankAccountChange(index, 'bank_name')}
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={1}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Button
-                            variant={account.is_default ? "contained" : "outlined"}
-                            size="small"
-                            onClick={handleDefaultChange(index)}
-                            disabled={account.is_default}
-                          >
-                            Default
-                          </Button>
-                          {bankAccounts.length > 1 && (
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => removeBankAccount(index)}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Pilih rekening yang ingin digunakan pada event ini. Atur daftar rekening di halaman Profil EO.
+                </Typography>
+
+                {bankOptionsLoading ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Memuat daftar rekening...
+                  </Typography>
+                ) : bankOptionsError ? (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {bankOptionsError}
+                  </Alert>
+                ) : bankOptions.length === 0 ? (
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    Belum ada rekening yang tersimpan. Tambahkan melalui halaman Profil EO terlebih dahulu.
+                  </Alert>
+                ) : (
+                  <Stack spacing={2} sx={{ mb: 2 }}>
+                    {bankOptions.map((account) => {
+                      const key = account._key;
+                      const checked = selectedBankIds.includes(key);
+                      return (
+                        <Card
+                          key={key}
+                          variant="outlined"
+                          sx={{
+                            borderColor: checked ? 'primary.main' : 'divider',
+                            borderWidth: checked ? 2 : 1,
+                          }}
+                        >
+                          <CardContent>
+                            <Box
+                              display="flex"
+                              justifyContent="space-between"
+                              alignItems="center"
+                              flexWrap="wrap"
+                              gap={2}
+                              mb={1}
                             >
-                              <DeleteIcon />
-                            </IconButton>
-                          )}
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                ))}
-                {bankAccounts.length < 3 && (
-                  <Button
-                    startIcon={<AddIcon />}
-                    variant="outlined"
-                    onClick={addBankAccount}
-                    sx={{ mb: 2 }}
-                  >
-                    Add Account
-                  </Button>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={checked}
+                                    onChange={toggleBankSelection(key)}
+                                    color="primary"
+                                  />
+                                }
+                                label={
+                                  <Box>
+                                    <Typography variant="subtitle1">{account.bank_name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {account.account_number}
+                                    </Typography>
+                                  </Box>
+                                }
+                              />
+                              <Chip
+                                label={account.is_default ? 'Default EO' : 'Opsional'}
+                                color={account.is_default ? 'primary' : 'default'}
+                                size="small"
+                              />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary">
+                              Atas Nama: {account.account_name}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </Stack>
                 )}
+
+                <Button variant="text" onClick={() => navigate('/app/eo/profile')}>
+                  Kelola rekening di halaman Profil EO
+                </Button>
               </Grid>
 
               <Grid item xs={12}>

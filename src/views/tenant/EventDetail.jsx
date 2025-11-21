@@ -67,8 +67,16 @@ export default function EventDetail() {
   const platformFee = 5000;
   const insuranceFee = event?.insurance_active ? 10000 : 0;
 const WHATSAPP_NUMBER = "+62 821-1838-3415";
-const WHATSAPP_LINK =
-  "https://wa.me/6282118383415?text=Halo%20Stiqr%20Hub%2C%20saya%20ingin%20bergabung%20ke%20komunitas%20WA.";
+const WHATSAPP_PHONE = "6282118383415";
+const WHATSAPP_COMMUNITY_LINK =
+"https://wa.me/6282118383415?text=Halo%20Stiqr%20Hub%2C%20saya%20ingin%20bergabung%20ke%20komunitas%20WA.";
+const buildWhatsAppLink = (eventName = "") => {
+  const safeName = eventName ? `${eventName} ` : "";
+  const message = encodeURIComponent(
+    `Halo, Saya tertarik dengan event ${safeName}STIQRHub bisa diskusi lebih lanjut?`
+  );
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${message}`;
+};
   const toNumber = (v) => {
     const n = typeof v === 'string' ? parseFloat(v) : v;
     return Number.isFinite(n) ? n : 0;
@@ -97,6 +105,25 @@ const WHATSAPP_LINK =
     return isPerDay ? unit * (selectedDays || 0) : unit;
   })();
   const totalPreview = toNumber(boothSubtotal) + platformFee + insuranceFee;
+  const eventWhatsAppLink = useMemo(() => buildWhatsAppLink(event?.name || ""), [event?.name]);
+  const totalTenantCapacity = useMemo(() => {
+    const boothCapacity = Number(event?.booth_capacity) || 0;
+    const tenantPerBooth = Number(event?.tenant_capacity) || 0;
+    if (boothCapacity > 0 && tenantPerBooth > 0) {
+      return boothCapacity * tenantPerBooth;
+    }
+    return boothCapacity || tenantPerBooth || 0;
+  }, [event?.booth_capacity, event?.tenant_capacity]);
+  const registeredTenants =
+    Number(event?.registrations_count ?? (Array.isArray(event?.registrations) ? event.registrations.length : 0)) || 0;
+  const remainingTenantCapacity =
+    totalTenantCapacity > 0 ? Math.max(totalTenantCapacity - registeredTenants, 0) : 0;
+  const totalTenantCapacityLabel = totalTenantCapacity ? `${totalTenantCapacity} tenant` : "-";
+  const remainingTenantCapacityLabel = totalTenantCapacity
+    ? `${remainingTenantCapacity} tenant`
+    : registeredTenants
+    ? `${registeredTenants} tenant terdaftar`
+    : "-";
 
   const register = async () => {
     if (!canRegister) return;
@@ -318,6 +345,12 @@ const WHATSAPP_LINK =
             <Grid item xs={12} md={4}>
               <InfoRow label="Kategori" value={event.category || "-"} emphasize />
             </Grid>
+            <Grid item xs={12} md={4}>
+              <InfoRow label="Total Kuota Tenant" value={totalTenantCapacityLabel} emphasize />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <InfoRow label="Sisa Slot Tersedia" value={remainingTenantCapacityLabel} emphasize />
+            </Grid>
           </Grid>
 
           <Box mb={3}>
@@ -391,23 +424,45 @@ const WHATSAPP_LINK =
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <SectionCard title="Estimasi Biaya" subtitle="Simulasi biaya sebelum kamu daftar" highlight>
-                <Stack spacing={0.5}>
-                  <Typography variant="body2">
-                    Booth <strong>{isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}</strong>
+              {event.contact_for_price ? (
+                <SectionCard
+                  title="Hubungi EO untuk Harga"
+                  subtitle="Harga booth akan diinformasikan setelah kamu menghubungi EO"
+                  highlight
+                >
+                  <Typography variant="body2" mb={2}>
+                    Tekan tombol di bawah ini untuk terhubung langsung via WhatsApp dan mendiskusikan paket harga.
                   </Typography>
-                  <Typography variant="h6" color="text.primary" fontWeight={700} mb={1}>
-                    {fmt(boothSubtotal)}
-                  </Typography>
-                  <Divider sx={{ my: 1.5 }} />
-                  <Typography variant="body2">Platform Fee: <strong>{fmt(platformFee)}</strong></Typography>
-                  <Typography variant="body2">Insurance: <strong>{fmt(insuranceFee)}</strong></Typography>
-                  <Divider sx={{ my: 1.5 }} />
-                  <Typography variant="subtitle1" fontWeight={800} color="primary.main">
-                    Total Estimasi: {fmt(totalPreview)}
-                  </Typography>
-                </Stack>
-              </SectionCard>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    component="a"
+                    href={eventWhatsAppLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Hubungi via WhatsApp
+                  </Button>
+                </SectionCard>
+              ) : (
+                <SectionCard title="Estimasi Biaya" subtitle="Simulasi biaya sebelum kamu daftar" highlight>
+                  <Stack spacing={0.5}>
+                    <Typography variant="body2">
+                      Booth <strong>{isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}</strong>
+                    </Typography>
+                    <Typography variant="h6" color="text.primary" fontWeight={700} mb={1}>
+                      {fmt(boothSubtotal)}
+                    </Typography>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Typography variant="body2">Platform Fee: <strong>{fmt(platformFee)}</strong></Typography>
+                    <Typography variant="body2">Insurance: <strong>{fmt(insuranceFee)}</strong></Typography>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Typography variant="subtitle1" fontWeight={800} color="primary.main">
+                      Total Estimasi: {fmt(totalPreview)}
+                    </Typography>
+                  </Stack>
+                </SectionCard>
+              )}
 
               {isPerDay && !hasRegistered && (
                 <SectionCard
@@ -483,6 +538,11 @@ const WHATSAPP_LINK =
                 Kembali
               </Button>
             </Stack>
+            {event.contact_for_price && (
+              <Typography variant="caption" color="text.secondary" mt={1.5} display="block">
+                Harga booth akan dikonfirmasi melalui WhatsApp setelah kamu menghubungi EO.
+              </Typography>
+            )}
           </SectionCard>
 
           <Divider sx={{ my: 4 }} />
@@ -505,7 +565,7 @@ const WHATSAPP_LINK =
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
                 component="a"
-                href={WHATSAPP_LINK}
+                href={WHATSAPP_COMMUNITY_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="contained"

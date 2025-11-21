@@ -11,7 +11,11 @@ import {
   Stack,
   Avatar,
   MenuItem,
+  IconButton,
+  Radio,
+  FormControlLabel,
 } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPost } from 'src/utils/api';
@@ -39,6 +43,9 @@ export default function EOProfile() {
   const [success, setSuccess] = useState('');
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [bankAccounts, setBankAccounts] = useState([
+    { id: null, bank_name: '', account_name: '', account_number: '', is_default: true },
+  ]);
 
   useEffect(() => {
     loadProfile();
@@ -75,6 +82,31 @@ export default function EOProfile() {
           eo_official_email: safeString(profile.eo_official_email),
           eo_address: safeString(profile.eo_address),
         });
+
+        const formatAccount = (account) => ({
+          id: account.id ?? null,
+          bank_name: safeString(account.bank_name),
+          account_name: safeString(account.account_name),
+          account_number: safeString(account.account_number),
+          is_default: Boolean(account.is_default),
+        });
+
+        let profileAccounts = Array.isArray(profile.bank_accounts)
+          ? profile.bank_accounts.map(formatAccount)
+          : [];
+
+        if (profileAccounts.length > 0 && !profileAccounts.some((acc) => acc.is_default)) {
+          profileAccounts = profileAccounts.map((acc, idx) => ({
+            ...acc,
+            is_default: idx === 0,
+          }));
+        }
+
+        setBankAccounts(
+          profileAccounts.length > 0
+            ? profileAccounts
+            : [{ id: null, bank_name: '', account_name: '', account_number: '', is_default: true }],
+        );
 
         // Set logo preview if exists
         if (profile.eo_logo) {
@@ -131,6 +163,71 @@ export default function EOProfile() {
     }
   };
 
+  const handleBankAccountChange = (index, field) => (e) => {
+    const value = e.target.value;
+    setBankAccounts((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleBankDefaultChange = (index) => () => {
+    setBankAccounts((prev) =>
+      prev.map((account, idx) => ({
+        ...account,
+        is_default: idx === index,
+      })),
+    );
+    setError('');
+    setSuccess('');
+  };
+
+  const addBankAccount = () => {
+    setBankAccounts((prev) => {
+      if (prev.length >= 3) return prev;
+      const next = [
+        ...prev,
+        {
+          id: null,
+          bank_name: '',
+          account_name: '',
+          account_number: '',
+          is_default: prev.length === 0,
+        },
+      ];
+      return next;
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const removeBankAccount = (index) => () => {
+    setBankAccounts((prev) => {
+      if (prev.length === 1) {
+        return [
+          {
+            id: null,
+            bank_name: '',
+            account_name: '',
+            account_number: '',
+            is_default: true,
+          },
+        ];
+      }
+
+      const updated = prev.filter((_, idx) => idx !== index);
+      if (!updated.some((acc) => acc.is_default) && updated.length > 0) {
+        updated[0] = { ...updated[0], is_default: true };
+      }
+      return updated;
+    });
+    setError('');
+    setSuccess('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -143,6 +240,32 @@ export default function EOProfile() {
         setError('Nama EO harus diisi');
         setSaving(false);
         return;
+      }
+
+      const sanitizedBanks = bankAccounts
+        .map((account) => ({
+          ...account,
+          bank_name: (account.bank_name || '').trim(),
+          account_name: (account.account_name || '').trim(),
+          account_number: (account.account_number || '').trim(),
+        }))
+        .filter((account) => account.bank_name || account.account_name || account.account_number);
+
+      if (sanitizedBanks.length > 0) {
+        const incompleteAccount = sanitizedBanks.find(
+          (acc) => !acc.bank_name || !acc.account_name || !acc.account_number,
+        );
+        if (incompleteAccount) {
+          setError('Mohon lengkapi Nama Bank, Nama Pemilik, dan Nomor Rekening untuk setiap rekening yang aktif.');
+          setSaving(false);
+          return;
+        }
+
+        if (!sanitizedBanks.some((acc) => acc.is_default)) {
+          setError('Pilih salah satu rekening sebagai default.');
+          setSaving(false);
+          return;
+        }
       }
 
       const fd = new FormData();
@@ -176,6 +299,20 @@ export default function EOProfile() {
       if (logoFile) {
         fd.append('eo_logo', logoFile);
       }
+
+      fd.append(
+        'bank_accounts',
+        JSON.stringify(
+          sanitizedBanks.map((account, index) => ({
+            bank_name: account.bank_name,
+            account_name: account.account_name,
+            account_number: account.account_number,
+            is_default: sanitizedBanks.some((acc) => acc.is_default)
+              ? account.is_default
+              : index === 0,
+          })),
+        ),
+      );
 
       // Use POST instead of PUT for FormData (Laravel handles FormData better with POST)
       const res = await apiPost(BACKEND_URL + '/api/eo/profile', fd, true);
@@ -455,6 +592,85 @@ export default function EOProfile() {
                       helperText={`${(formData.eo_address || '').length}/500 characters`}
                       inputProps={{ maxLength: 500 }}
                     />
+                  </Grid>
+
+                  {/* Bank Accounts */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" mb={1}>
+                      Rekening Pembayaran EO
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                      Data rekening ini akan tersedia saat membuat event baru. Tandai salah satu sebagai default.
+                    </Typography>
+
+                    <Stack spacing={2}>
+                      {bankAccounts.map((account, index) => (
+                        <Card key={`bank-account-${index}`} variant="outlined">
+                          <CardContent>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                              <Typography variant="subtitle1">Rekening {index + 1}</Typography>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={removeBankAccount(index)}
+                                disabled={bankAccounts.length === 1 && !account.bank_name && !account.account_name && !account.account_number}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} md={4}>
+                                <TextField
+                                  fullWidth
+                                  label="Nama Bank"
+                                  value={account.bank_name}
+                                  onChange={handleBankAccountChange(index, 'bank_name')}
+                                />
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <TextField
+                                  fullWidth
+                                  label="Nama Pemilik Rekening"
+                                  value={account.account_name}
+                                  onChange={handleBankAccountChange(index, 'account_name')}
+                                />
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <TextField
+                                  fullWidth
+                                  label="Nomor Rekening"
+                                  value={account.account_number}
+                                  onChange={handleBankAccountChange(index, 'account_number')}
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <FormControlLabel
+                                  control={
+                                    <Radio
+                                      checked={account.is_default}
+                                      onChange={handleBankDefaultChange(index)}
+                                      color="primary"
+                                    />
+                                  }
+                                  label="Jadikan default untuk pembayaran"
+                                />
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </Stack>
+
+                    <Button
+                      variant="outlined"
+                      startIcon={<AddIcon />}
+                      sx={{ mt: 2 }}
+                      onClick={addBankAccount}
+                      disabled={bankAccounts.length >= 3}
+                    >
+                      Tambah Rekening
+                    </Button>
                   </Grid>
 
                   {/* Submit Button */}
