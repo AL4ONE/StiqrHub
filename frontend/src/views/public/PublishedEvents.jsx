@@ -64,6 +64,10 @@ const EventCard = styled(Card)(({ theme }) => ({
   },
 }));
 
+const WHATSAPP_NUMBER = '6282118383415'; // without +
+const WHATSAPP_MESSAGE = encodeURIComponent('Halo, Saya tertarik dengan event STIQRHub bisa diskusi lebih lanjut?');
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+
 export default function PublishedEventsPublic() {
   const [events, setEvents] = useState([]);
   const [query, setQuery] = useState('');
@@ -127,8 +131,8 @@ export default function PublishedEventsPublic() {
             <Box flexGrow={1} />
             {lgUp ? (
               <Stack direction="row" spacing={2} alignItems="center">
-                <AuthButton component={Link} to="/start">
-                  Login/Register
+                <AuthButton component="a" href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                  Hubungi via WhatsApp
                 </AuthButton>
               </Stack>
             ) : (
@@ -153,8 +157,15 @@ export default function PublishedEventsPublic() {
         >
           <Box sx={{ p: 3 }}>
             <Stack direction="column" spacing={2}>
-              <AuthButton component={Link} to="/start" fullWidth onClick={toggleDrawer(false)}>
-                Login/Register
+              <AuthButton
+                component="a"
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+                onClick={toggleDrawer(false)}
+              >
+                Hubungi via WhatsApp
               </AuthButton>
             </Stack>
           </Box>
@@ -314,15 +325,17 @@ export default function PublishedEventsPublic() {
                   <Box sx={{ mt: 'auto', pt: 2 }}>
                     <AuthButton
                       fullWidth
-                      component={Link}
-                      to="/start"
+                      component="a"
+                      href={WHATSAPP_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       sx={{
                         '&:hover': {
                           backgroundColor: '#00AE7D',
                         },
                       }}
                     >
-                      Login/Register
+                      Hubungi via WhatsApp
                     </AuthButton>
                   </Box>
                 </CardContent>

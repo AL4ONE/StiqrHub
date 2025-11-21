@@ -12,6 +12,7 @@ class Event extends Model
         'name',
         'location',
         'map_link',
+        'details',
         'start_date',
         'end_date',
         'published_start_date',

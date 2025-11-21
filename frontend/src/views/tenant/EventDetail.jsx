@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,6 +9,8 @@ import {
   Chip,
   TextField,
   Divider,
+  Grid,
+  Paper,
 } from "@mui/material";
 import PageContainer from "src/components/container/PageContainer";
 import { BACKEND_URL } from "src/config/constants";
@@ -134,6 +136,99 @@ const WHATSAPP_LINK =
     return <Chip label={value} color={color} />;
   };
 
+  const SectionCard = ({ title, subtitle, children, highlight }) => (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2.5,
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: highlight ? "primary.light" : "grey.200",
+        backgroundColor: highlight ? "primary.50" : "#fcfcfc",
+      }}
+    >
+      <Typography variant="subtitle1" fontWeight={700} color="text.primary" mb={subtitle ? 0.5 : 1}>
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography variant="body2" color="text.secondary" mb={1.5}>
+          {subtitle}
+        </Typography>
+      )}
+      {children}
+    </Paper>
+  );
+
+  const InfoRow = ({ label, value, emphasize }) => (
+    <Stack spacing={0.5}>
+      <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+        {label}
+      </Typography>
+      {typeof value === "string" || typeof value === "number" ? (
+        <Typography variant="body1" fontWeight={emphasize ? 700 : 500} color={emphasize ? "text.primary" : "text.secondary"}>
+          {value}
+        </Typography>
+      ) : (
+        value
+      )}
+    </Stack>
+  );
+
+  const eventDateRange = useMemo(() => {
+    const parse = (date) => {
+      if (!date) return null;
+      const d = new Date(date);
+      if (Number.isNaN(d.getTime())) return null;
+      // Return YYYY-MM-DD
+      return d.toISOString().split("T")[0];
+    };
+    return {
+      start: parse(event?.start_date),
+      end: parse(event?.end_date),
+    };
+  }, [event?.start_date, event?.end_date]);
+
+  const clampDateToRange = (value) => {
+    if (!value) return value;
+    const { start, end } = eventDateRange;
+    const val = new Date(value);
+    if (Number.isNaN(val.getTime())) return value;
+    if (start) {
+      const min = new Date(start);
+      if (val < min) return start;
+    }
+    if (end) {
+      const max = new Date(end);
+      if (val > max) return end;
+    }
+    return value;
+  };
+
+  useEffect(() => {
+    if (!isPerDay) return;
+    if (startDate) {
+      setStartDate((prev) => {
+        if (!prev) return prev;
+        const clamped = clampDateToRange(prev);
+        return clamped !== prev ? clamped : prev;
+      });
+    }
+  }, [eventDateRange.start, eventDateRange.end, isPerDay]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!isPerDay) return;
+    if (endDate) {
+      setEndDate((prev) => {
+        if (!prev) return prev;
+        let clamped = clampDateToRange(prev);
+        if (startDate && clamped && new Date(clamped) < new Date(startDate)) {
+          clamped = startDate;
+        }
+        return clamped !== prev ? clamped : prev;
+      });
+    }
+  }, [eventDateRange.start, eventDateRange.end, startDate, isPerDay]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading)
     return (
       <PageContainer title="Event Detail">
@@ -152,6 +247,13 @@ const WHATSAPP_LINK =
         <Typography>Event not found</Typography>
       </PageContainer>
     );
+
+  const eventDescription =
+    event?.details ||
+    event?.description ||
+    event?.short_description ||
+    event?.detail ||
+    "";
 
   return (
     <PageContainer title="Event Detail">
@@ -194,132 +296,194 @@ const WHATSAPP_LINK =
               <Chip label="Insurance Active" color="info" />
             )}
           </Box>
-          <Typography variant="body1" color="textSecondary" mb={2}>
-            {event.location}
-          </Typography>
-          <Typography variant="body2" mb={2}>
-            {formatDateIndonesia(event.start_date)} → {formatDateIndonesia(event.end_date)}
-          </Typography>
-          <Typography variant="body2" mb={2}>
-            Category: {event.category}
-          </Typography>
+          <Grid container spacing={2} mb={3}>
+            <Grid item xs={12} md={4}>
+              <InfoRow label="Lokasi" value={event.location || "-"} emphasize />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <InfoRow
+                label="Periode Event"
+                value={
+                  <Stack spacing={0.3}>
+                    <Typography variant="body1" fontWeight={700} color="text.primary">
+                      Start: {formatDateIndonesia(event.start_date)}
+                    </Typography>
+                    <Typography variant="body1" fontWeight={700} color="text.primary">
+                      End: {formatDateIndonesia(event.end_date)}
+                    </Typography>
+                  </Stack>
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <InfoRow label="Kategori" value={event.category || "-"} emphasize />
+            </Grid>
+          </Grid>
 
-          <Box mt={2} mb={2}>
-            <Typography variant="subtitle1" mb={1}>
-              Event Rules
-            </Typography>
-            {Array.isArray(event.rules) && event.rules.length > 0 ? (
-              <Stack spacing={0.5}>
-                {event.rules.map((r, idx) => (
-                  <Typography key={idx} variant="body2">
-                    • {r.rule_name}
+          <Box mb={3}>
+            <SectionCard title="Detail Event" subtitle="Informasi dari EO mengenai event ini">
+              {eventDescription ? (
+                <Typography variant="body2" color="text.primary" lineHeight={1.7}>
+                  {eventDescription}
+                </Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Belum ada deskripsi yang dibagikan oleh EO.
+                </Typography>
+              )}
+            </SectionCard>
+          </Box>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <SectionCard title="Informasi Aturan Event" subtitle="Pastikan kamu mengikuti semua ketentuan EO">
+                {Array.isArray(event.rules) && event.rules.length > 0 ? (
+                  <Stack spacing={0.75}>
+                    {event.rules.map((r, idx) => (
+                      <Typography key={idx} variant="body2" color="text.primary">
+                        • <strong>{r.rule_name}</strong>
+                      </Typography>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Tidak ada aturan khusus untuk event ini.
                   </Typography>
-                ))}
-              </Stack>
-            ) : (
-              <Typography variant="body2" color="textSecondary">
-                No rules for this event
-              </Typography>
-            )}
-          </Box>
+                )}
+              </SectionCard>
 
-          <Typography variant="body2" mb={2}>
-            Booth Price: {event.booth_price != null ? fmt(event.booth_price) : "Free"}
-          </Typography>
+              {event.bank_accounts && event.bank_accounts.length > 0 && (
+                <SectionCard
+                  title="Rekening Pembayaran"
+                  subtitle="Gunakan rekening berikut ketika dihubungi EO"
+                >
+                  <Stack spacing={1.5}>
+                    {event.bank_accounts.map((account, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1.5,
+                          border: "1px solid",
+                          borderColor: account.is_default ? "primary.main" : "grey.300",
+                          backgroundColor: account.is_default ? "primary.50" : "grey.50",
+                        }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="subtitle2">
+                            {account.bank_name}
+                          </Typography>
+                          {account.is_default && (
+                            <Chip label="Default" size="small" color="primary" />
+                          )}
+                        </Stack>
+                        <Typography variant="body2" fontWeight={600}>
+                          {account.account_number}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          a.n. {account.account_name}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </SectionCard>
+              )}
+            </Grid>
 
-          {/* Bank Accounts */}
-          {event.bank_accounts && event.bank_accounts.length > 0 && (
-            <Box mt={2} mb={2}>
-              <Typography variant="subtitle1" mb={1}>
-                Nomor Rekening Pembayaran
-              </Typography>
-              <Stack spacing={1}>
-                {event.bank_accounts.map((account, idx) => (
-                  <Box 
-                    key={idx} 
-                    sx={{ 
-                      p: 1.5, 
-                      border: '1px solid', 
-                      borderColor: account.is_default ? 'primary.main' : 'divider',
-                      borderRadius: 1,
-                      backgroundColor: account.is_default ? 'primary.50' : 'transparent'
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={account.is_default ? 'bold' : 'normal'}>
-                      {account.is_default && <Chip label="Default" size="small" color="primary" sx={{ mr: 1, mb: 0.5 }} />}
-                      <strong>{account.bank_name}</strong>
-                    </Typography>
-                    <Typography variant="body2">
-                      {account.account_number}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      a.n. {account.account_name}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-          )}
+            <Grid item xs={12} md={6}>
+              <SectionCard title="Estimasi Biaya" subtitle="Simulasi biaya sebelum kamu daftar" highlight>
+                <Stack spacing={0.5}>
+                  <Typography variant="body2">
+                    Booth <strong>{isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}</strong>
+                  </Typography>
+                  <Typography variant="h6" color="text.primary" fontWeight={700} mb={1}>
+                    {fmt(boothSubtotal)}
+                  </Typography>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="body2">Platform Fee: <strong>{fmt(platformFee)}</strong></Typography>
+                  <Typography variant="body2">Insurance: <strong>{fmt(insuranceFee)}</strong></Typography>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="primary.main">
+                    Total Estimasi: {fmt(totalPreview)}
+                  </Typography>
+                </Stack>
+              </SectionCard>
 
-          <Box mt={2} mb={2}>
-            <Typography variant="subtitle1" mb={1}>
-              Estimated Cost
-            </Typography>
-            <Stack spacing={0.5}>
-              <Typography variant="body2">
-                Booth: {fmt(boothSubtotal)} {isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}
-              </Typography>
-              <Typography variant="body2">Platform Fee: {fmt(platformFee)}</Typography>
-              <Typography variant="body2">Insurance: {fmt(insuranceFee)}</Typography>
-              <Typography variant="subtitle2">Total: {fmt(totalPreview)}</Typography>
+              {isPerDay && !hasRegistered && (
+                <SectionCard
+                  title="Pilih Jadwal Booth"
+                  subtitle="Tanggal harus berada dalam rentang event"
+                >
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <TextField
+                      label="Start Date"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        const value = clampDateToRange(e.target.value);
+                        setStartDate(value);
+                        if (endDate && value && new Date(value) > new Date(endDate)) {
+                          setEndDate(value);
+                        }
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{
+                        min: eventDateRange.start || undefined,
+                        max: eventDateRange.end || undefined,
+                      }}
+                      fullWidth
+                    />
+                    <TextField
+                      label="End Date"
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => {
+                        let value = clampDateToRange(e.target.value);
+                        if (startDate && value && new Date(value) < new Date(startDate)) {
+                          value = startDate;
+                        }
+                        setEndDate(value);
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{
+                        min: startDate || eventDateRange.start || undefined,
+                        max: eventDateRange.end || undefined,
+                      }}
+                      fullWidth
+                    />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+                  </Typography>
+                </SectionCard>
+              )}
+            </Grid>
+          </Grid>
+
+          <SectionCard
+            title="Action Center"
+            subtitle={hasRegistered ? "Kamu sudah terdaftar di event ini" : "Segera amankan slot kamu"}
+          >
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+              {!hasRegistered ? (
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={register}
+                  disabled={registering || !canRegister}
+                >
+                  {registering ? "Registering..." : "Daftar Sekarang"}
+                </Button>
+              ) : (
+                <Button variant="contained" color="success" size="large" onClick={handleClaim}>
+                  Ajukan Klaim
+                </Button>
+              )}
+              <Button variant="outlined" size="large" color="inherit" onClick={() => window.history.back()}>
+                Kembali
+              </Button>
             </Stack>
-          </Box>
-
-          {isPerDay && !hasRegistered && (
-            <Box mt={2} mb={1}>
-              <Typography variant="subtitle1" mb={1}>
-                Select your dates
-              </Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  label="Start Date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                />
-                <TextField
-                  label="End Date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                />
-              </Stack>
-              <Typography variant="caption" color="textSecondary">
-                Dates must be within event range: {formatDateIndonesia(event.start_date)} to{" "}
-                {formatDateIndonesia(event.end_date)}
-              </Typography>
-            </Box>
-          )}
-
-          <Stack direction="row" spacing={1} mt={3}>
-            {!hasRegistered ? (
-              <Button
-                variant="contained"
-                onClick={register}
-                disabled={registering || !canRegister}
-              >
-                {registering ? "Registering..." : "Register"}
-              </Button>
-            ) : (
-              <Button variant="contained" color="success" onClick={handleClaim}>
-                Claim
-              </Button>
-            )}
-          </Stack>
+          </SectionCard>
 
           <Divider sx={{ my: 4 }} />
           <Box
