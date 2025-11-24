@@ -1,16 +1,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
+  Box,
+  Button,
   Card,
   CardContent,
-  Typography,
-  Button,
-  Stack,
-  Box,
   Chip,
-  TextField,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   Grid,
   Paper,
+  Radio,
+  RadioGroup,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import PageContainer from "src/components/container/PageContainer";
 import { BACKEND_URL } from "src/config/constants";
@@ -29,6 +40,12 @@ export default function EventDetail() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [hasRegistered, setHasRegistered] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [dialogStep, setDialogStep] = useState("review");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bank_transfer");
+  const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState(null);
+  const [paymentSummary, setPaymentSummary] = useState(null);
+  const [registrationError, setRegistrationError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -106,6 +123,15 @@ const buildWhatsAppLink = (eventName = "") => {
   })();
   const totalPreview = toNumber(boothSubtotal) + platformFee + insuranceFee;
   const eventWhatsAppLink = useMemo(() => buildWhatsAppLink(event?.name || ""), [event?.name]);
+  const tenantProfile = useMemo(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const stored = window.localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  }, []);
   const totalTenantCapacity = useMemo(() => {
     const boothCapacity = Number(event?.booth_capacity) || 0;
     const tenantPerBooth = Number(event?.tenant_capacity) || 0;
@@ -124,11 +150,60 @@ const buildWhatsAppLink = (eventName = "") => {
     : registeredTenants
     ? `${registeredTenants} tenant terdaftar`
     : "-";
+  const registrationDateRangeLabel = useMemo(() => {
+    if (isPerDay && startDate && endDate) {
+      return `${formatDateIndonesia(startDate)} - ${formatDateIndonesia(endDate)}`;
+    }
+    if (!isPerDay) {
+      return `${formatDateIndonesia(event?.start_date)} - ${formatDateIndonesia(event?.end_date)}`;
+    }
+    return "-";
+  }, [endDate, event?.end_date, event?.start_date, isPerDay, startDate]);
+  const qrisPreviewUrl = useMemo(() => {
+    const qrData = `StiqrHub|Event:${event?.name || ""}|Tenant:${tenantProfile?.name || ""}|Total:${totalPreview}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrData)}`;
+  }, [event?.name, tenantProfile?.name, totalPreview]);
+  const effectivePaymentSummary = paymentSummary || {
+    booth_price: boothSubtotal,
+    platform_fee: platformFee,
+    insurance_fee: insuranceFee,
+    total: totalPreview,
+  };
+  const activePaymentMethod =
+    dialogStep === "result"
+      ? confirmedPaymentMethod || selectedPaymentMethod
+      : selectedPaymentMethod;
+  const paymentMethodLabel =
+    activePaymentMethod === "qris"
+      ? "QRIS"
+      : activePaymentMethod === "bank_transfer"
+      ? "Transfer Bank"
+      : activePaymentMethod || "-";
 
-  const register = async () => {
+  const openRegisterConfirmation = () => {
+    if (!canRegister) return;
+    setRegistrationError("");
+    setPaymentSummary(null);
+    setDialogStep("review");
+    setConfirmedPaymentMethod(null);
+    setSelectedPaymentMethod("bank_transfer");
+    setConfirmationOpen(true);
+  };
+
+  const closeRegisterConfirmation = () => {
+    if (registering) return;
+    setConfirmationOpen(false);
+    setDialogStep("review");
+    setPaymentSummary(null);
+    setRegistrationError("");
+  };
+
+  const submitRegistration = async () => {
     if (!canRegister) return;
     try {
       setRegistering(true);
+      setRegistrationError("");
+      setConfirmedPaymentMethod(selectedPaymentMethod);
       const body = isPerDay
         ? { start_date: startDate, end_date: endDate }
         : undefined;
@@ -137,13 +212,14 @@ const buildWhatsAppLink = (eventName = "") => {
         body
       );
       if (res?.status === "success") {
-        alert("Registered successfully! Payment pending.");
         setHasRegistered(true);
+        setPaymentSummary(res?.data?.payment || null);
+        setDialogStep("result");
       } else {
-        alert(res?.message || "Failed to register");
+        setRegistrationError(res?.message || "Failed to register");
       }
     } catch (e) {
-      alert("Failed to register");
+      setRegistrationError("Failed to register");
     } finally {
       setRegistering(false);
     }
@@ -163,7 +239,7 @@ const buildWhatsAppLink = (eventName = "") => {
     return <Chip label={value} color={color} />;
   };
 
-  const SectionCard = ({ title, subtitle, children, highlight }) => (
+  const SectionCard = ({ title, subtitle, children, highlight, sx }) => (
     <Paper
       elevation={0}
       sx={{
@@ -172,6 +248,8 @@ const buildWhatsAppLink = (eventName = "") => {
         border: "1px solid",
         borderColor: highlight ? "primary.light" : "grey.200",
         backgroundColor: highlight ? "primary.50" : "#fcfcfc",
+        mb: 2,
+        ...sx,
       }}
     >
       <Typography variant="subtitle1" fontWeight={700} color="text.primary" mb={subtitle ? 0.5 : 1}>
@@ -356,7 +434,12 @@ const buildWhatsAppLink = (eventName = "") => {
           <Box mb={3}>
             <SectionCard title="Detail Event" subtitle="Informasi dari EO mengenai event ini">
               {eventDescription ? (
-                <Typography variant="body2" color="text.primary" lineHeight={1.7}>
+                <Typography
+                  variant="body2"
+                  color="text.primary"
+                  lineHeight={1.7}
+                  sx={{ wordBreak: "break-word", whiteSpace: "pre-line" }}
+                >
                   {eventDescription}
                 </Typography>
               ) : (
@@ -542,7 +625,7 @@ const buildWhatsAppLink = (eventName = "") => {
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={register}
+                  onClick={openRegisterConfirmation}
                   disabled={registering || !canRegister}
                 >
                   {registering ? "Registering..." : "Daftar Sekarang"}
@@ -603,6 +686,284 @@ const buildWhatsAppLink = (eventName = "") => {
           </Box>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={confirmationOpen}
+        onClose={closeRegisterConfirmation}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>
+          {dialogStep === "review" ? "Konfirmasi Pendaftaran" : "Berhasil Terdaftar"}
+        </DialogTitle>
+        <DialogContent dividers>
+          {registrationError && dialogStep === "review" && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {registrationError}
+            </Alert>
+          )}
+
+          {dialogStep === "result" && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
+            </Alert>
+          )}
+
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "grey.200",
+            }}
+          >
+            <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1}>
+              Detail Registrasi
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <InfoRow label="Nama Tenant" value={tenantProfile?.name || "-"} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <InfoRow label="Email" value={tenantProfile?.email || "-"} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <InfoRow label="Event" value={event?.name || "-"} emphasize />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <InfoRow label="Periode Registrasi" value={registrationDateRangeLabel} />
+              </Grid>
+              {isPerDay && (
+                <Grid item xs={12} md={6}>
+                  <InfoRow
+                    label="Jumlah Hari"
+                    value={selectedDays ? `${selectedDays} hari` : "-"}
+                  />
+                </Grid>
+              )}
+              <Grid item xs={12} md={6}>
+                <InfoRow
+                  label="Metode Pembayaran"
+                  value={paymentMethodLabel}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "grey.200",
+            }}
+          >
+            <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1}>
+              Rincian Biaya
+            </Typography>
+            <Stack spacing={0.75}>
+              <Typography variant="body2">
+                Booth: <strong>{fmt(effectivePaymentSummary.booth_price)}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Platform Fee: <strong>{fmt(effectivePaymentSummary.platform_fee)}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Insurance: <strong>{fmt(effectivePaymentSummary.insurance_fee)}</strong>
+              </Typography>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="subtitle1" fontWeight={800} color="primary.main">
+                Total: {fmt(effectivePaymentSummary.total)}
+              </Typography>
+            </Stack>
+          </Box>
+
+          {dialogStep === "review" ? (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "grey.200",
+              }}
+            >
+              <FormControl component="fieldset" fullWidth>
+                <FormLabel component="legend">Pilih Metode Pembayaran</FormLabel>
+                <RadioGroup
+                  row
+                  value={selectedPaymentMethod}
+                  onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                >
+                  <FormControlLabel
+                    value="bank_transfer"
+                    control={<Radio />}
+                    label="Transfer Bank"
+                  />
+                  <FormControlLabel value="qris" control={<Radio />} label="QRIS" />
+                </RadioGroup>
+              </FormControl>
+              {selectedPaymentMethod === "bank_transfer" ? (
+                <Box mt={2}>
+                  <Typography variant="body2" color="text.secondary" mb={1}>
+                    Gunakan salah satu rekening EO berikut untuk transfer manual.
+                  </Typography>
+                  {event?.bank_accounts?.length ? (
+                    <Stack spacing={1.5}>
+                      {event.bank_accounts.map((account, idx) => (
+                        <Box
+                          key={`${account.account_number}-${idx}`}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            border: "1px solid",
+                            borderColor: account.is_default ? "primary.main" : "grey.300",
+                            backgroundColor: account.is_default ? "primary.50" : "grey.50",
+                          }}
+                        >
+                          <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Typography variant="subtitle2">
+                              {account.bank_name}
+                            </Typography>
+                            {account.is_default && (
+                              <Chip label="Utama" size="small" color="primary" />
+                            )}
+                          </Stack>
+                          <Typography variant="body2" fontWeight={700}>
+                            {account.account_number}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            a.n. {account.account_name}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      EO belum membagikan detail rekening di event ini.
+                    </Typography>
+                  )}
+                </Box>
+              ) : (
+                <Box
+                  mt={2}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Scan QRIS berikut dan pastikan nominal transfer sama dengan total tagihan.
+                  </Typography>
+                  <Box
+                    component="img"
+                    src={qrisPreviewUrl}
+                    alt="Kode QRIS StiqrHub"
+                    sx={{
+                      width: 220,
+                      height: 220,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "grey.200",
+                      backgroundColor: "#fff",
+                      objectFit: "contain",
+                    }}
+                  />
+                  <Typography variant="subtitle2">
+                    Total yang harus dibayar: {fmt(effectivePaymentSummary.total)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "grey.200",
+                backgroundColor: "grey.50",
+              }}
+            >
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={700} mb={1}>
+                Instruksi Pembayaran ({paymentMethodLabel})
+              </Typography>
+              {activePaymentMethod === "bank_transfer" ? (
+                <>
+                  <Typography variant="body2" mb={1}>
+                    Transfer sesuai nominal ke salah satu rekening di bawah, lalu unggah bukti bayar saat diminta EO.
+                  </Typography>
+                  {event?.bank_accounts?.length ? (
+                    <Stack spacing={1}>
+                      {event.bank_accounts.map((account, idx) => (
+                        <Typography key={`${account.account_number}-${idx}`} variant="body2">
+                          {account.bank_name} - {account.account_number} ({account.account_name})
+                        </Typography>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      EO belum menambahkan rekening. Hubungi EO untuk konfirmasi pembayaran.
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Typography variant="body2" mb={1}>
+                    Scan QRIS di bawah menggunakan aplikasi pembayaran favoritmu.
+                  </Typography>
+                  <Box
+                    component="img"
+                    src={qrisPreviewUrl}
+                    alt="QRIS Pembayaran"
+                    sx={{
+                      width: 220,
+                      height: 220,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "grey.200",
+                      backgroundColor: "#fff",
+                      objectFit: "contain",
+                      display: "block",
+                      mx: "auto",
+                    }}
+                  />
+                  <Typography variant="subtitle2" align="center" mt={1}>
+                    Nominal: {fmt(effectivePaymentSummary.total)}
+                  </Typography>
+                </>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {dialogStep === "review" ? (
+            <>
+              <Button onClick={closeRegisterConfirmation} disabled={registering}>
+                Batal
+              </Button>
+              <Button
+                variant="contained"
+                onClick={submitRegistration}
+                disabled={registering}
+              >
+                {registering ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  "Konfirmasi & Daftar"
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button variant="contained" onClick={closeRegisterConfirmation}>
+              Selesai
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 }

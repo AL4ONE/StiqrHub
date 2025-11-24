@@ -202,7 +202,8 @@ class EventController extends Controller
                 $query->where('tenant_id', $user->id);
             })
             ->with(['registrations' => function ($query) use ($user) {
-                $query->where('tenant_id', $user->id);
+                $query->where('tenant_id', $user->id)
+                    ->with('payment');
             }])
             ->get();
 
@@ -225,12 +226,20 @@ class EventController extends Controller
                 $booth = $ev->booth_price ?? 0;
             }
 
+            $payment = $registration?->payment;
+
             $ev->setAttribute('payment_summary', [
                 'booth_price' => $booth,
                 'platform_fee' => $platformFee,
                 'insurance_fee' => $insuranceFee,
                 'total' => $booth + $platformFee + $insuranceFee,
             ]);
+
+            $ev->setAttribute('payment_status', strtoupper($payment->status ?? 'PENDING'));
+            if ($payment) {
+                $ev->setAttribute('payment_latest_amount', $payment->amount);
+                $ev->setAttribute('payment_last_updated_at', $payment->updated_at);
+            }
         }
 
         return ApiResponse::success($events, "Your active events retrieved successfully");
