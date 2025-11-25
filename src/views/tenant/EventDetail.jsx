@@ -466,9 +466,14 @@ const buildWhatsAppLink = (eventName = "") => {
             </Box>
           )}
 
-          <Typography variant="h4" mb={2}>
+          <Typography variant="h4" mb={1}>
             {event.name}
           </Typography>
+          {event.eo && event.eo.name && (
+            <Typography variant="subtitle1" color="primary.main" fontWeight={600} mb={2}>
+              <strong>Penyelenggara:</strong> {event.eo.name}
+            </Typography>
+          )}
           <Box display="flex" gap={1} mb={2} alignItems="center">
             <StatusChip value={event.status} />
             <Chip label={event.payment_method} variant="outlined" />
@@ -698,14 +703,14 @@ const buildWhatsAppLink = (eventName = "") => {
                 </Button>
               ) : !hasRegistered ? (
                 <>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={openRegisterConfirmation}
-                    disabled={registering || !canRegister}
-                  >
-                    {registering ? "Registering..." : "Daftar Sekarang"}
-                  </Button>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={openRegisterConfirmation}
+                  disabled={registering || !canRegister}
+                >
+                  {registering ? "Registering..." : "Daftar Sekarang"}
+                </Button>
                   {event.insurance_active && (
                     <Alert 
                       severity="info" 
@@ -733,9 +738,9 @@ const buildWhatsAppLink = (eventName = "") => {
                 </>
               ) : (
                 <>
-                  <Button variant="contained" color="success" size="large" onClick={handleClaim}>
-                    Ajukan Klaim
-                  </Button>
+                <Button variant="contained" color="success" size="large" onClick={handleClaim}>
+                  Ajukan Klaim
+                </Button>
                   {event.insurance_active && (
                     <Alert 
                       severity="info" 
@@ -871,8 +876,8 @@ const buildWhatsAppLink = (eventName = "") => {
 
           {dialogStep === "result" && (
             <>
-              <Alert severity="success" sx={{ mb: 2 }}>
-                Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
               </Alert>
               {event?.insurance_active && (
                 <Alert 
@@ -895,8 +900,8 @@ const buildWhatsAppLink = (eventName = "") => {
                   <Typography variant="body2" sx={{ color: '#ffffff' }}>
                     Setelah pembayaran berhasil, kamu dapat mengajukan klaim asuransi jika terjadi kejadian yang tidak diinginkan selama event berlangsung.
                   </Typography>
-                </Alert>
-              )}
+            </Alert>
+          )}
             </>
           )}
 
