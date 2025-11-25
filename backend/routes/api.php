@@ -60,6 +60,10 @@ Route::middleware('jwt.verify')->group(function () {
     // ================== TENANT ==================
     Route::prefix('tenant')->middleware('role:TENANT')->group(function () {
         Route::get('/dashboard/stats', [TenantDashboardController::class, 'stats']);
+        Route::get('/dashboard/active-events', [TenantDashboardController::class, 'activeEventsDetail']);
+        Route::get('/dashboard/pending-claims', [TenantDashboardController::class, 'pendingClaimsDetail']);
+        Route::get('/dashboard/total-registrations', [TenantDashboardController::class, 'totalRegistrationsDetail']);
+        Route::get('/dashboard/pending-payments', [TenantDashboardController::class, 'pendingPaymentsDetail']);
         Route::get('/events/active', [TenantEventController::class, 'activeEvents']);
         Route::get('/events/{id}', [TenantEventController::class, 'show']);
         Route::get('/events', [TenantEventController::class, 'index']);

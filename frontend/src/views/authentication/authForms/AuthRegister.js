@@ -11,7 +11,10 @@ import {
   Select,
   OutlinedInput,
   Chip,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import CustomTextField from '../../../components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
@@ -37,9 +40,25 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false); // ✅ Tambah loading state
+  const [showPassword, setShowPassword] = useState(false);
 
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validateEmail = (value) => {
+    if (!value) {
+      setEmailError('Email is required');
+      return false;
+    }
+    if (!emailRegex.test(value)) {
+      setEmailError('Format email tidak valid. Contoh: nama@domain.com');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
 
   const validatePassword = (value) => {
     if (!value) {
@@ -61,7 +80,12 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
     setError('');
     setLoading(true);
 
-     if (!validatePassword(password)) {
+    if (!validateEmail(email)) {
+      setLoading(false);
+      return;
+    }
+
+    if (!validatePassword(password)) {
       setLoading(false);
       return;
     }
@@ -189,14 +213,23 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
             variant="outlined"
             fullWidth
             value={email}
-            onChange={(e) => setEmail(e.target.value.toLowerCase())}
+            onChange={(e) => {
+              const value = e.target.value.toLowerCase();
+              setEmail(value);
+              if (emailError) {
+                validateEmail(value);
+              }
+            }}
+            onBlur={() => validateEmail(email)}
             required
+            error={!!emailError}
+            helperText={emailError || 'Masukkan email yang valid'}
           />
 
           <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
           <CustomTextField
             id="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             variant="outlined"
             fullWidth
             value={password}
@@ -207,12 +240,26 @@ const AuthRegister = ({ title, subtitle, subtext }) => {
                 validatePassword(value);
               }
             }}
+            onBlur={() => validatePassword(password)}
             required
             error={!!passwordError}
             helperText={
               passwordError ||
               'Min. 8 characters with uppercase, lowercase, number, and special character'
             }
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
 
           {/* Dropdown categories muncul kalau role EO */}
