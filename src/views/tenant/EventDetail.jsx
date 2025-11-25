@@ -22,6 +22,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Checkbox,
 } from "@mui/material";
 import PageContainer from "src/components/container/PageContainer";
 import { BACKEND_URL } from "src/config/constants";
@@ -41,11 +42,16 @@ export default function EventDetail() {
   const [endDate, setEndDate] = useState("");
   const [hasRegistered, setHasRegistered] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [dialogStep, setDialogStep] = useState("review");
+  const [dialogStep, setDialogStep] = useState("review"); // review -> terms -> payment
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bank_transfer");
   const [confirmedPaymentMethod, setConfirmedPaymentMethod] = useState(null);
   const [paymentSummary, setPaymentSummary] = useState(null);
   const [registrationError, setRegistrationError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [conflictWarningOpen, setConflictWarningOpen] = useState(false);
+  const [conflictEvents, setConflictEvents] = useState([]);
+  const [paymentProof, setPaymentProof] = useState(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -180,13 +186,55 @@ const buildWhatsAppLink = (eventName = "") => {
       ? "Transfer Bank"
       : activePaymentMethod || "-";
 
-  const openRegisterConfirmation = () => {
+  const checkEventConflict = async () => {
+    try {
+      // Get active events to check for conflicts
+      const active = await apiGet(`${BACKEND_URL}/api/tenant/events/active`);
+      const activeList = Array.isArray(active) ? active : active?.data || [];
+      
+      const selectedStart = isPerDay ? startDate : event?.start_date;
+      const selectedEnd = isPerDay ? endDate : event?.end_date;
+      
+      if (!selectedStart || !selectedEnd) return false;
+      
+      const conflicts = activeList.filter((ev) => {
+        if (String(ev.id) === String(id)) return false;
+        const evStart = ev.start_date ? new Date(ev.start_date) : null;
+        const evEnd = ev.end_date ? new Date(ev.end_date) : null;
+        const selStart = new Date(selectedStart);
+        const selEnd = new Date(selectedEnd);
+        
+        if (!evStart || !evEnd) return false;
+        return (evStart <= selEnd && evEnd >= selStart);
+      });
+      
+      if (conflicts.length > 0) {
+        setConflictEvents(conflicts);
+        setConflictWarningOpen(true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Error checking conflicts:", e);
+      return false;
+    }
+  };
+
+  const openRegisterConfirmation = async () => {
     if (!canRegister) return;
+    
+    // Check for conflicts first
+    const hasConflict = await checkEventConflict();
+    if (hasConflict) return;
+    
     setRegistrationError("");
     setPaymentSummary(null);
     setDialogStep("review");
     setConfirmedPaymentMethod(null);
     setSelectedPaymentMethod("bank_transfer");
+    setTermsAccepted(false);
+    setPaymentProof(null);
+    setPaymentProofPreview(null);
     setConfirmationOpen(true);
   };
 
@@ -196,30 +244,57 @@ const buildWhatsAppLink = (eventName = "") => {
     setDialogStep("review");
     setPaymentSummary(null);
     setRegistrationError("");
+    setTermsAccepted(false);
+    setPaymentProof(null);
+    setPaymentProofPreview(null);
   };
 
   const submitRegistration = async () => {
     if (!canRegister) return;
+    if (selectedPaymentMethod === "bank_transfer" && !paymentProof) {
+      setRegistrationError("Harap upload bukti transfer terlebih dahulu");
+      return;
+    }
+    
     try {
       setRegistering(true);
       setRegistrationError("");
       setConfirmedPaymentMethod(selectedPaymentMethod);
+      
       const body = isPerDay
         ? { start_date: startDate, end_date: endDate }
         : undefined;
+      
       const res = await apiPost(
         `${BACKEND_URL}/api/tenant/events/${id}/register`,
         body
       );
+      
       if (res?.status === "success") {
         setHasRegistered(true);
         setPaymentSummary(res?.data?.payment || null);
+        
+        // If bank transfer with proof, upload proof
+        if (selectedPaymentMethod === "bank_transfer" && paymentProof && res?.data?.payment?.id) {
+          try {
+            const formData = new FormData();
+            formData.append('payment_proof', paymentProof);
+            // Upload payment proof - you may need to create this endpoint
+            // await apiPost(`${BACKEND_URL}/api/tenant/payments/${res.data.payment.id}/proof`, formData);
+          } catch (uploadError) {
+            console.error("Error uploading proof:", uploadError);
+            // Don't fail registration if proof upload fails
+          }
+        }
+        
         setDialogStep("result");
       } else {
         setRegistrationError(res?.message || "Failed to register");
       }
     } catch (e) {
-      setRegistrationError("Failed to register");
+      console.error("Registration error:", e);
+      const errorMsg = e?.response?.data?.message || e?.message || "Failed to register";
+      setRegistrationError(errorMsg);
     } finally {
       setRegistering(false);
     }
@@ -266,7 +341,7 @@ const buildWhatsAppLink = (eventName = "") => {
 
   const InfoRow = ({ label, value, emphasize }) => (
     <Stack spacing={0.5}>
-      <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+      <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight={700}>
         {label}
       </Typography>
       {typeof value === "string" || typeof value === "number" ? (
@@ -411,10 +486,10 @@ const buildWhatsAppLink = (eventName = "") => {
                 value={
                   <Stack spacing={0.3}>
                     <Typography variant="body1" fontWeight={700} color="text.primary">
-                      Start: {formatDateIndonesia(event.start_date)}
+                      <strong>Start:</strong> {formatDateIndonesia(event.start_date)}
                     </Typography>
                     <Typography variant="body1" fontWeight={700} color="text.primary">
-                      End: {formatDateIndonesia(event.end_date)}
+                      <strong>End:</strong> {formatDateIndonesia(event.end_date)}
                     </Typography>
                   </Stack>
                 }
@@ -432,7 +507,7 @@ const buildWhatsAppLink = (eventName = "") => {
           </Grid>
 
           <Box mb={3}>
-            <SectionCard title="Detail Event" subtitle="Informasi dari EO mengenai event ini">
+            <SectionCard title={<strong>Detail Event</strong>} subtitle="Informasi dari EO mengenai event ini">
               {eventDescription ? (
                 <Typography
                   variant="body2"
@@ -452,7 +527,7 @@ const buildWhatsAppLink = (eventName = "") => {
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <SectionCard title="Informasi Aturan Event" subtitle="Pastikan kamu mengikuti semua ketentuan EO">
+              <SectionCard title={<strong>Informasi Aturan Event</strong>} subtitle="Pastikan kamu mengikuti semua ketentuan EO">
                 {Array.isArray(event.rules) && event.rules.length > 0 ? (
                   <Stack spacing={0.75}>
                     {event.rules.map((r, idx) => (
@@ -470,7 +545,7 @@ const buildWhatsAppLink = (eventName = "") => {
 
               {event.bank_accounts && event.bank_accounts.length > 0 && (
                 <SectionCard
-                  title="Rekening Pembayaran"
+                  title={<strong>Rekening Pembayaran</strong>}
                   subtitle="Gunakan rekening berikut ketika dihubungi EO"
                 >
                   <Stack spacing={1.5}>
@@ -509,7 +584,7 @@ const buildWhatsAppLink = (eventName = "") => {
             <Grid item xs={12} md={6}>
               {event.contact_for_price ? (
                 <SectionCard
-                  title="Hubungi EO untuk Harga"
+                  title={<strong>Hubungi EO untuk Harga</strong>}
                   subtitle="Harga booth akan diinformasikan setelah kamu menghubungi EO"
                   highlight
                 >
@@ -528,7 +603,7 @@ const buildWhatsAppLink = (eventName = "") => {
                   </Button>
                 </SectionCard>
               ) : (
-                <SectionCard title="Estimasi Biaya" subtitle="Simulasi biaya sebelum kamu daftar" highlight>
+                <SectionCard title={<strong>Estimasi Biaya</strong>} subtitle="Simulasi biaya sebelum kamu daftar" highlight>
                   <Stack spacing={0.5}>
                     <Typography variant="body2">
                       Booth <strong>{isPerDay && selectedDays ? `( ${selectedDays} hari )` : ""}</strong>
@@ -549,7 +624,7 @@ const buildWhatsAppLink = (eventName = "") => {
 
               {isPerDay && !hasRegistered && (
                 <SectionCard
-                  title="Pilih Jadwal Booth"
+                  title={<strong>Pilih Jadwal Booth</strong>}
                   subtitle="Tanggal harus berada dalam rentang event"
                 >
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -599,7 +674,7 @@ const buildWhatsAppLink = (eventName = "") => {
           </Grid>
 
           <SectionCard
-            title="Action Center"
+            title={<strong>Action Center</strong>}
             subtitle={
               event.contact_for_price
                 ? "Diskusikan langsung via WhatsApp untuk mendapatkan info harga"
@@ -622,18 +697,42 @@ const buildWhatsAppLink = (eventName = "") => {
                   Hubungi via WhatsApp
                 </Button>
               ) : !hasRegistered ? (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={openRegisterConfirmation}
-                  disabled={registering || !canRegister}
-                >
-                  {registering ? "Registering..." : "Daftar Sekarang"}
-                </Button>
+                <>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={openRegisterConfirmation}
+                    disabled={registering || !canRegister}
+                  >
+                    {registering ? "Registering..." : "Daftar Sekarang"}
+                  </Button>
+                  {event.insurance_active && (
+                    <Alert severity="info" sx={{ mt: 1.5, width: '100%' }}>
+                      <Typography variant="body2" fontWeight={600} mb={0.5}>
+                        Klaim Asuransi Tersedia untuk Event: <strong>{event.name}</strong>
+                      </Typography>
+                      <Typography variant="body2">
+                        Setelah mendaftar dan menyelesaikan pembayaran, kamu dapat mengajukan klaim asuransi jika terjadi kejadian yang tidak diinginkan.
+                      </Typography>
+                    </Alert>
+                  )}
+                </>
               ) : (
-                <Button variant="contained" color="success" size="large" onClick={handleClaim}>
-                  Ajukan Klaim
-                </Button>
+                <>
+                  <Button variant="contained" color="success" size="large" onClick={handleClaim}>
+                    Ajukan Klaim
+                  </Button>
+                  {event.insurance_active && (
+                    <Alert severity="info" sx={{ mt: 1.5, width: '100%' }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        Event: <strong>{event.name}</strong> - Klaim Asuransi Tersedia
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.5 }}>
+                        Pastikan kamu sudah menyelesaikan pembayaran sebelum mengajukan klaim.
+                      </Typography>
+                    </Alert>
+                  )}
+                </>
               )}
               <Button variant="outlined" size="large" color="inherit" onClick={() => window.history.back()}>
                 Kembali
@@ -687,6 +786,41 @@ const buildWhatsAppLink = (eventName = "") => {
         </CardContent>
       </Card>
 
+      {/* Conflict Warning Dialog */}
+      <Dialog open={conflictWarningOpen} onClose={() => setConflictWarningOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <strong>Peringatan: Tabrakan Event</strong>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="body2" fontWeight={600} mb={1}>
+              Kamu sudah terdaftar di event lain pada tanggal yang sama!
+            </Typography>
+            <Typography variant="body2">
+              Event yang bertabrakan:
+            </Typography>
+            <Stack spacing={1} sx={{ mt: 1 }}>
+              {conflictEvents.map((ev) => (
+                <Box key={ev.id} sx={{ p: 1.5, bgcolor: 'warning.50', borderRadius: 1 }}>
+                  <Typography variant="body2" fontWeight={600}>
+                    <strong>{ev.name}</strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDateIndonesia(ev.start_date)} - {formatDateIndonesia(ev.end_date)}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              Kamu tidak dapat mendaftar ke event ini karena tanggalnya bertabrakan dengan event di atas.
+            </Typography>
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConflictWarningOpen(false)}>Mengerti</Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={confirmationOpen}
         onClose={closeRegisterConfirmation}
@@ -694,19 +828,310 @@ const buildWhatsAppLink = (eventName = "") => {
         maxWidth="md"
       >
         <DialogTitle>
-          {dialogStep === "review" ? "Konfirmasi Pendaftaran" : "Berhasil Terdaftar"}
+          <strong>
+            {dialogStep === "review" ? "Detail Event & Informasi Pendaftaran" : 
+             dialogStep === "terms" ? "Syarat dan Ketentuan" :
+             "Halaman Pembayaran"}
+          </strong>
         </DialogTitle>
         <DialogContent dividers>
-          {registrationError && dialogStep === "review" && (
+          {registrationError && (dialogStep === "review" || dialogStep === "terms" || dialogStep === "payment") && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {registrationError}
             </Alert>
           )}
 
           {dialogStep === "result" && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
-            </Alert>
+            <>
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
+              </Alert>
+              {event?.insurance_active && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="body2" fontWeight={600} mb={0.5}>
+                    Informasi Klaim Asuransi untuk Event: <strong>{event?.name || 'Event ini'}</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    Setelah pembayaran berhasil, kamu dapat mengajukan klaim asuransi jika terjadi kejadian yang tidak diinginkan selama event berlangsung.
+                  </Typography>
+                </Alert>
+              )}
+            </>
+          )}
+
+          {/* Step 1: Review - Detail Event, Harga, Peraturan */}
+          {dialogStep === "review" && (
+            <>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" fontWeight={700} mb={2}>
+                  <strong>Informasi Event</strong>
+                </Typography>
+                <Grid container spacing={2} mb={2}>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow label="Nama Event" value={event?.name || "-"} emphasize />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow label="Lokasi" value={event?.location || "-"} emphasize />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow label="Periode Event" value={registrationDateRangeLabel} emphasize />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <InfoRow label="Kategori" value={event?.category || "-"} emphasize />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" fontWeight={700} mb={2}>
+                  <strong>Rincian Biaya</strong>
+                </Typography>
+                <Stack spacing={0.75}>
+                  <Typography variant="body2">
+                    Booth: <strong>{fmt(boothSubtotal)}</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    Platform Fee: <strong>{fmt(platformFee)}</strong>
+                  </Typography>
+                  <Typography variant="body2">
+                    Insurance: <strong>{fmt(insuranceFee)}</strong>
+                  </Typography>
+                  <Divider sx={{ my: 1 }} />
+                  <Typography variant="subtitle1" fontWeight={800} color="primary.main">
+                    Total: {fmt(totalPreview)}
+                  </Typography>
+                </Stack>
+              </Box>
+
+              {Array.isArray(event?.rules) && event.rules.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" fontWeight={700} mb={2}>
+                    <strong>Peraturan Event</strong>
+                  </Typography>
+                  <Stack spacing={0.75}>
+                    {event.rules.map((r, idx) => (
+                      <Typography key={idx} variant="body2" color="text.primary">
+                        • <strong>{r.rule_name}</strong>
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </>
+          )}
+
+          {/* Step 2: Terms - Checkbox Syarat dan Ketentuan */}
+          {dialogStep === "terms" && (
+            <Box>
+              <Typography variant="h6" fontWeight={700} mb={2}>
+                <strong>Syarat dan Ketentuan</strong>
+              </Typography>
+              <Box sx={{ 
+                p: 2, 
+                borderRadius: 2, 
+                border: "1px solid", 
+                borderColor: "grey.300",
+                bgcolor: "grey.50",
+                mb: 2,
+                maxHeight: 300,
+                overflow: "auto"
+              }}>
+                <Typography variant="body2" component="div" sx={{ whiteSpace: "pre-line" }}>
+                  <strong>1. Pembayaran</strong><br />
+                  • Pembayaran harus dilakukan sesuai dengan nominal yang tertera<br />
+                  • Pembayaran melalui Transfer Bank atau QRIS<br />
+                  • Bukti pembayaran harus diunggah setelah melakukan transfer<br />
+                  <br />
+                  <strong>2. Pembatalan</strong><br />
+                  • Pembatalan dapat dilakukan sebelum event dimulai<br />
+                  • Biaya yang sudah dibayar tidak dapat dikembalikan<br />
+                  <br />
+                  <strong>3. Kehadiran</strong><br />
+                  • Tenant wajib hadir sesuai dengan jadwal yang telah ditentukan<br />
+                  • Keterlambatan atau ketidakhadiran menjadi tanggung jawab tenant<br />
+                  <br />
+                  <strong>4. Asuransi</strong><br />
+                  • Klaim asuransi dapat diajukan setelah pembayaran berhasil<br />
+                  • Klaim harus diajukan sesuai dengan ketentuan yang berlaku<br />
+                  <br />
+                  <strong>5. Ketentuan Umum</strong><br />
+                  • Tenant wajib mengikuti semua peraturan event yang telah ditetapkan oleh EO<br />
+                  • Pelanggaran terhadap peraturan dapat mengakibatkan pembatalan partisipasi
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    required
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    Saya telah membaca dan menyetujui <strong>syarat dan ketentuan</strong> di atas
+                  </Typography>
+                }
+              />
+            </Box>
+          )}
+
+          {/* Step 3: Payment - Pilihan TF atau QRIS */}
+          {dialogStep === "payment" && (
+            <Box>
+              <Typography variant="h6" fontWeight={700} mb={2}>
+                <strong>Pilih Metode Pembayaran</strong>
+              </Typography>
+              
+              <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
+                <FormLabel component="legend">
+                  <strong>Metode Pembayaran</strong>
+                </FormLabel>
+                <RadioGroup
+                  row
+                  value={selectedPaymentMethod}
+                  onChange={(e) => {
+                    setSelectedPaymentMethod(e.target.value);
+                    setPaymentProof(null);
+                    setPaymentProofPreview(null);
+                  }}
+                >
+                  <FormControlLabel
+                    value="bank_transfer"
+                    control={<Radio />}
+                    label={<strong>Transfer Bank</strong>}
+                  />
+                  <FormControlLabel 
+                    value="qris" 
+                    control={<Radio />} 
+                    label={<strong>QRIS</strong>} 
+                  />
+                </RadioGroup>
+              </FormControl>
+
+              {selectedPaymentMethod === "bank_transfer" ? (
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={700} mb={1}>
+                    <strong>Rekening Pembayaran</strong>
+                  </Typography>
+                  {event?.bank_accounts?.length ? (
+                    <Stack spacing={1.5} mb={3}>
+                      {event.bank_accounts.map((account, idx) => (
+                        <Box
+                          key={`${account.account_number}-${idx}`}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            border: "1px solid",
+                            borderColor: account.is_default ? "primary.main" : "grey.300",
+                            backgroundColor: account.is_default ? "primary.50" : "grey.50",
+                          }}
+                        >
+                          <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              {account.bank_name}
+                            </Typography>
+                            {account.is_default && (
+                              <Chip label="Utama" size="small" color="primary" />
+                            )}
+                          </Stack>
+                          <Typography variant="body2" fontWeight={700}>
+                            {account.account_number}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            a.n. {account.account_name}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" mb={3}>
+                      EO belum membagikan detail rekening di event ini.
+                    </Typography>
+                  )}
+
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700} mb={1}>
+                      <strong>Upload Bukti Transfer</strong>
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      component="label"
+                      fullWidth
+                      sx={{ mb: 1 }}
+                    >
+                      {paymentProof ? "Ganti File" : "Pilih File Bukti Transfer"}
+                      <input 
+                        type="file" 
+                        hidden 
+                        accept="image/*,.pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setPaymentProof(file);
+                            if (file.type.startsWith('image/')) {
+                              setPaymentProofPreview(URL.createObjectURL(file));
+                            } else {
+                              setPaymentProofPreview(null);
+                            }
+                          }
+                        }} 
+                      />
+                    </Button>
+                    {paymentProofPreview && (
+                      <Box
+                        component="img"
+                        src={paymentProofPreview}
+                        alt="Preview bukti transfer"
+                        sx={{
+                          width: '100%',
+                          maxHeight: 200,
+                          objectFit: 'contain',
+                          borderRadius: 1,
+                          border: '1px solid #ddd',
+                          mt: 1
+                        }}
+                      />
+                    )}
+                    {paymentProof && !paymentProofPreview && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        File terpilih: {paymentProof.name}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" mb={1}>
+                    Scan QRIS berikut dan pastikan nominal transfer sama dengan total tagihan.
+                  </Typography>
+                  <Box
+                    component="img"
+                    src={qrisPreviewUrl}
+                    alt="Kode QRIS StiqrHub"
+                    sx={{
+                      width: 280,
+                      height: 280,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "grey.200",
+                      backgroundColor: "#fff",
+                      objectFit: "contain",
+                    }}
+                  />
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Total yang harus dibayar: {fmt(effectivePaymentSummary.total)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           )}
 
           <Box
@@ -789,6 +1214,14 @@ const buildWhatsAppLink = (eventName = "") => {
                 borderColor: "grey.200",
               }}
             >
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight={600} mb={0.5}>
+                  Informasi Penting
+                </Typography>
+                <Typography variant="body2">
+                  Setelah mendaftar, kamu harus menyelesaikan pembayaran terlebih dahulu sebelum dapat mengajukan klaim asuransi. Pastikan nominal pembayaran sesuai dengan total yang tertera.
+                </Typography>
+              </Alert>
               <FormControl component="fieldset" fullWidth>
                 <FormLabel component="legend">Pilih Metode Pembayaran</FormLabel>
                 <RadioGroup
@@ -947,8 +1380,34 @@ const buildWhatsAppLink = (eventName = "") => {
               </Button>
               <Button
                 variant="contained"
-                onClick={submitRegistration}
+                onClick={() => setDialogStep("terms")}
                 disabled={registering}
+              >
+                Lanjutkan
+              </Button>
+            </>
+          ) : dialogStep === "terms" ? (
+            <>
+              <Button onClick={() => setDialogStep("review")} disabled={registering}>
+                Kembali
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => setDialogStep("payment")}
+                disabled={registering || !termsAccepted}
+              >
+                Setuju & Lanjutkan
+              </Button>
+            </>
+          ) : dialogStep === "payment" ? (
+            <>
+              <Button onClick={() => setDialogStep("terms")} disabled={registering}>
+                Kembali
+              </Button>
+              <Button
+                variant="contained"
+                onClick={submitRegistration}
+                disabled={registering || (selectedPaymentMethod === "bank_transfer" && !paymentProof)}
               >
                 {registering ? (
                   <CircularProgress size={20} color="inherit" />

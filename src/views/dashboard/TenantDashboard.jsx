@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
+import { 
+  Grid, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Box, 
+  Button, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions,
+  Chip,
+  Stack
+} from '@mui/material';
 import { IconCalendar, IconShoppingCart, IconShield } from '@tabler/icons-react';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
 import { Link } from 'react-router-dom';
+import { formatDateIndonesia } from 'src/utils/dateFormat';
 
 export default function TenantDashboard() {
   const [stats, setStats] = useState({
@@ -16,6 +30,10 @@ export default function TenantDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState(null);
+  const [dialogData, setDialogData] = useState([]);
+  const [dialogLoading, setDialogLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -32,11 +50,65 @@ export default function TenantDashboard() {
     })();
   }, []);
 
+  const handleCardClick = async (type) => {
+    setDialogType(type);
+    setDialogOpen(true);
+    setDialogLoading(true);
+    setDialogData([]);
+
+    try {
+      let endpoint = '';
+      switch (type) {
+        case 'active_events':
+          endpoint = '/api/tenant/dashboard/active-events';
+          break;
+        case 'pending_claims':
+          endpoint = '/api/tenant/dashboard/pending-claims';
+          break;
+        case 'total_registrations':
+          endpoint = '/api/tenant/dashboard/total-registrations';
+          break;
+        case 'pending_payments':
+          endpoint = '/api/tenant/dashboard/pending-payments';
+          break;
+        default:
+          return;
+      }
+      const data = await apiGet(BACKEND_URL + endpoint);
+      setDialogData(data?.data || []);
+    } catch (e) {
+      setError('Failed to load details');
+    } finally {
+      setDialogLoading(false);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setDialogType(null);
+    setDialogData([]);
+  };
+
+  const getDialogTitle = () => {
+    switch (dialogType) {
+      case 'active_events':
+        return 'Active Events (Sudah Regist & Dibayar)';
+      case 'pending_claims':
+        return 'Pending Claims';
+      case 'total_registrations':
+        return 'Total Registrations';
+      case 'pending_payments':
+        return 'Pending Payments';
+      default:
+        return 'Details';
+    }
+  };
+
   return (
     <PageContainer title="Tenant Dashboard">
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('active_events')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -49,7 +121,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('pending_claims')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -62,7 +134,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_registrations')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -75,7 +147,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('pending_payments')}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -114,6 +186,73 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
       </Grid>
+
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>{getDialogTitle()}</DialogTitle>
+        <DialogContent>
+          {dialogLoading ? (
+            <Typography>Loading...</Typography>
+          ) : dialogData.length === 0 ? (
+            <Typography color="textSecondary">Tidak ada data</Typography>
+          ) : (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              {dialogType === 'active_events' && dialogData.map((event) => (
+                <Card key={event.id} variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6">{event.name}</Typography>
+                    <Typography variant="body2" color="textSecondary">{event.location}</Typography>
+                    <Typography variant="body2">
+                      {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+                    </Typography>
+                    {event.payment_status && (
+                      <Chip label={`Payment: ${event.payment_status}`} color="success" size="small" sx={{ mt: 1 }} />
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+              {dialogType === 'pending_claims' && dialogData.map((claim) => (
+                <Card key={claim.id} variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6">{claim.insurance_policy?.event?.name || 'Event'}</Typography>
+                    <Typography variant="body2" color="textSecondary">{claim.description}</Typography>
+                    <Typography variant="body2">Tanggal Kejadian: {formatDateIndonesia(claim.incident_date)}</Typography>
+                    <Chip label={claim.status} color="warning" size="small" sx={{ mt: 1 }} />
+                  </CardContent>
+                </Card>
+              ))}
+              {dialogType === 'total_registrations' && dialogData.map((reg) => (
+                <Card key={reg.id} variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6">{reg.event?.name || 'Event'}</Typography>
+                    <Typography variant="body2" color="textSecondary">{reg.event?.location || '-'}</Typography>
+                    <Typography variant="body2">
+                      {formatDateIndonesia(reg.event?.start_date)} - {formatDateIndonesia(reg.event?.end_date)}
+                    </Typography>
+                    <Chip label={reg.status} size="small" sx={{ mt: 1 }} />
+                  </CardContent>
+                </Card>
+              ))}
+              {dialogType === 'pending_payments' && dialogData.map((payment) => (
+                <Card key={payment.id} variant="outlined">
+                  <CardContent>
+                    <Typography variant="h6">{payment.registration?.event?.name || 'Event'}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Amount: Rp {payment.amount?.toLocaleString('id-ID') || '0'}
+                    </Typography>
+                    <Typography variant="body2">
+                      {formatDateIndonesia(payment.registration?.event?.start_date)} - {formatDateIndonesia(payment.registration?.event?.end_date)}
+                    </Typography>
+                    <Chip label={payment.status} color="warning" size="small" sx={{ mt: 1 }} />
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Tutup</Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 }

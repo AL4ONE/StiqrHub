@@ -191,21 +191,26 @@ const ClaimForm = () => {
               sx={{ 
                 mb: 2,
                 ...(message.type === 'error' && {
-                  backgroundColor: 'rgba(211, 47, 47, 0.8)',
-                  color: 'white !important',
+                  backgroundColor: 'rgba(211, 47, 47, 0.9)',
+                  color: '#ffffff !important',
+                  fontWeight: 600,
                   '& .MuiAlert-icon': {
-                    color: 'white !important',
+                    color: '#ffffff !important',
                   },
                   '& .MuiAlert-message': {
-                    color: 'white !important',
+                    color: '#ffffff !important',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
                   },
                   '& .MuiAlert-action': {
-                    color: 'white !important',
+                    color: '#ffffff !important',
                   }
                 })
               }}
             >
-              {message.text}
+              <Typography sx={{ fontWeight: 600, color: message.type === 'error' ? '#ffffff' : 'inherit' }}>
+                {message.text}
+              </Typography>
             </Alert>
           )}
 
