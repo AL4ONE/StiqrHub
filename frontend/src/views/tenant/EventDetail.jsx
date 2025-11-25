@@ -707,11 +707,25 @@ const buildWhatsAppLink = (eventName = "") => {
                     {registering ? "Registering..." : "Daftar Sekarang"}
                   </Button>
                   {event.insurance_active && (
-                    <Alert severity="info" sx={{ mt: 1.5, width: '100%' }}>
-                      <Typography variant="body2" fontWeight={600} mb={0.5}>
-                        Klaim Asuransi Tersedia untuk Event: <strong>{event.name}</strong>
+                    <Alert 
+                      severity="info" 
+                      sx={{ 
+                        mt: 1.5, 
+                        width: '100%',
+                        backgroundColor: 'info.main',
+                        color: '#ffffff',
+                        '& .MuiAlert-icon': {
+                          color: '#ffffff',
+                        },
+                        '& .MuiAlert-message': {
+                          color: '#ffffff',
+                        }
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={600} mb={0.5} sx={{ color: '#ffffff' }}>
+                        Klaim Asuransi Tersedia untuk Event: <strong style={{ color: '#ffffff' }}>{event.name}</strong>
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography variant="body2" sx={{ color: '#ffffff' }}>
                         Setelah mendaftar dan menyelesaikan pembayaran, kamu dapat mengajukan klaim asuransi jika terjadi kejadian yang tidak diinginkan.
                       </Typography>
                     </Alert>
@@ -723,11 +737,25 @@ const buildWhatsAppLink = (eventName = "") => {
                     Ajukan Klaim
                   </Button>
                   {event.insurance_active && (
-                    <Alert severity="info" sx={{ mt: 1.5, width: '100%' }}>
-                      <Typography variant="body2" fontWeight={600}>
-                        Event: <strong>{event.name}</strong> - Klaim Asuransi Tersedia
+                    <Alert 
+                      severity="info" 
+                      sx={{ 
+                        mt: 1.5, 
+                        width: '100%',
+                        backgroundColor: 'info.main',
+                        color: '#ffffff',
+                        '& .MuiAlert-icon': {
+                          color: '#ffffff',
+                        },
+                        '& .MuiAlert-message': {
+                          color: '#ffffff',
+                        }
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={600} sx={{ color: '#ffffff' }}>
+                        Event: <strong style={{ color: '#ffffff' }}>{event.name}</strong> - Klaim Asuransi Tersedia
                       </Typography>
-                      <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      <Typography variant="body2" sx={{ mt: 0.5, color: '#ffffff' }}>
                         Pastikan kamu sudah menyelesaikan pembayaran sebelum mengajukan klaim.
                       </Typography>
                     </Alert>
@@ -847,11 +875,24 @@ const buildWhatsAppLink = (eventName = "") => {
                 Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
               </Alert>
               {event?.insurance_active && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2" fontWeight={600} mb={0.5}>
-                    Informasi Klaim Asuransi untuk Event: <strong>{event?.name || 'Event ini'}</strong>
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    mb: 2,
+                    backgroundColor: 'info.main',
+                    color: '#ffffff',
+                    '& .MuiAlert-icon': {
+                      color: '#ffffff',
+                    },
+                    '& .MuiAlert-message': {
+                      color: '#ffffff',
+                    }
+                  }}
+                >
+                  <Typography variant="body2" fontWeight={600} mb={0.5} sx={{ color: '#ffffff' }}>
+                    Informasi Klaim Asuransi untuk Event: <strong style={{ color: '#ffffff' }}>{event?.name || 'Event ini'}</strong>
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ color: '#ffffff' }}>
                     Setelah pembayaran berhasil, kamu dapat mengajukan klaim asuransi jika terjadi kejadian yang tidak diinginkan selama event berlangsung.
                   </Typography>
                 </Alert>
@@ -1214,11 +1255,24 @@ const buildWhatsAppLink = (eventName = "") => {
                 borderColor: "grey.200",
               }}
             >
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="body2" fontWeight={600} mb={0.5}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'info.main',
+                  color: '#ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                  },
+                  '& .MuiAlert-message': {
+                    color: '#ffffff',
+                  }
+                }}
+              >
+                <Typography variant="body2" fontWeight={600} mb={0.5} sx={{ color: '#ffffff' }}>
                   Informasi Penting
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ color: '#ffffff' }}>
                   Setelah mendaftar, kamu harus menyelesaikan pembayaran terlebih dahulu sebelum dapat mengajukan klaim asuransi. Pastikan nominal pembayaran sesuai dengan total yang tertera.
                 </Typography>
               </Alert>
