@@ -45,7 +45,7 @@ class EventController extends Controller
                       ->where('published_end_date', '>=', $now);
                 });
             })
-            ->with(['rules', 'bankAccounts'])
+            ->with(['rules', 'bankAccounts', 'eo'])
             ->first();
 
         if (!$event) {
@@ -77,7 +77,7 @@ class EventController extends Controller
             return ApiResponse::error('Registration period has ended', 403);
         }
 
-        $userId = auth()->user()->id;
+        $userId = Auth::user()->id;
 
         $existing = Registration::where('tenant_id', $userId)
             ->where('event_id', $id)
@@ -192,7 +192,7 @@ class EventController extends Controller
 
     public function activeEvents()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if (!$user) {
             return ApiResponse::error('Unauthorized', 401);
         }
