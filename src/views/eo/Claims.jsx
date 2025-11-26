@@ -107,12 +107,40 @@ export default function Claims() {
                       <TableCell>{claim.tenant_name}</TableCell>
                       <TableCell>{claim.tenant_email}</TableCell>
                       <TableCell>
-                        {claim.event_name}
-                        {claim.event_id && (
-                          <Typography variant="caption" display="block" color="textSecondary">
-                            ID: {claim.event_id}
-                          </Typography>
-                        )}
+                        <Box display="flex" alignItems="center" gap={1}>
+                          {(claim.event_banner_url || claim.event_banner) && (
+                            <Box
+                              component="img"
+                              src={
+                                claim.event_banner_url
+                                  ? (claim.event_banner_url.startsWith('http') ? claim.event_banner_url : `${BACKEND_URL}${claim.event_banner_url}`)
+                                  : `${BACKEND_URL}/storage/${claim.event_banner}`
+                              }
+                              alt={claim.event_name}
+                              sx={{
+                                width: 50,
+                                height: 50,
+                                objectFit: 'cover',
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider'
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>
+                              {claim.event_name}
+                            </Typography>
+                            {claim.event_id && (
+                              <Typography variant="caption" display="block" color="textSecondary">
+                                ID: {claim.event_id}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
                       </TableCell>
                       <TableCell>
                         {claim.event_start_date && claim.event_end_date ? (
@@ -184,13 +212,46 @@ export default function Claims() {
 
       {/* Claim Details Dialog */}
       <Dialog open={!!selectedClaim} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>Claim Details</DialogTitle>
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            📋 Detail Klaim Asuransi
+          </Typography>
+        </DialogTitle>
         <DialogContent>
           {selectedClaim && (
             <Box>
+              {/* Event Banner */}
+              {(selectedClaim.event_banner_url || selectedClaim.event_banner) && (
+                <Box mb={3}>
+                  <Typography variant="body2" color="textSecondary" mb={1}>
+                    Banner Event
+                  </Typography>
+                  <Box
+                    component="img"
+                    src={
+                      selectedClaim.event_banner_url
+                        ? (selectedClaim.event_banner_url.startsWith('http') ? selectedClaim.event_banner_url : `${BACKEND_URL}${selectedClaim.event_banner_url}`)
+                        : `${BACKEND_URL}/storage/${selectedClaim.event_banner}`
+                    }
+                    alt={selectedClaim.event_name}
+                    sx={{
+                      width: '100%',
+                      maxHeight: 200,
+                      objectFit: 'cover',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </Box>
+              )}
+
               <Grid container spacing={2} mb={2}>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Tenant Name</Typography>
+                  <Typography variant="body2" color="textSecondary">Nama Tenant</Typography>
                   <Typography variant="body1" fontWeight="bold">{selectedClaim.tenant_name}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -198,11 +259,11 @@ export default function Claims() {
                   <Typography variant="body1">{selectedClaim.tenant_email}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Event Name</Typography>
+                  <Typography variant="body2" color="textSecondary">Nama Event</Typography>
                   <Typography variant="body1" fontWeight="bold">{selectedClaim.event_name}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Event Date</Typography>
+                  <Typography variant="body2" color="textSecondary">Tanggal Event</Typography>
                   <Typography variant="body1">
                     {selectedClaim.event_start_date && selectedClaim.event_end_date ? (
                       `${formatDateIndonesia(selectedClaim.event_start_date)} - ${formatDateIndonesia(selectedClaim.event_end_date)}`
@@ -210,17 +271,17 @@ export default function Claims() {
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Policy Number</Typography>
+                  <Typography variant="body2" color="textSecondary">Nomor Polis</Typography>
                   <Typography variant="body1">{selectedClaim.policy_number}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Incident Date</Typography>
+                  <Typography variant="body2" color="textSecondary">Tanggal Kejadian</Typography>
                   <Typography variant="body1">
                     {selectedClaim.incident_date ? formatDateIndonesia(selectedClaim.incident_date) : 'N/A'}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="textSecondary">Claim Amount</Typography>
+                  <Typography variant="body2" color="textSecondary">Jumlah Klaim</Typography>
                   <Typography variant="body1" fontWeight="bold" color="primary.main">
                     {formatPrice(selectedClaim.claim_amount)}
                   </Typography>
@@ -234,31 +295,84 @@ export default function Claims() {
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary" mb={1}>Description</Typography>
+                  <Typography variant="body2" color="textSecondary" mb={1}>Deskripsi</Typography>
                   <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {selectedClaim.description || 'No description provided'}
+                    {selectedClaim.description || 'Tidak ada deskripsi'}
                   </Typography>
                 </Grid>
                 {selectedClaim.reason && (
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary" mb={1}>Reason</Typography>
+                    <Typography variant="body2" color="textSecondary" mb={1}>Alasan</Typography>
                     <Typography variant="body1" color={selectedClaim.status === 'REJECTED' ? 'error.main' : 'text.primary'}>
                       {selectedClaim.reason}
                     </Typography>
                   </Grid>
                 )}
                 <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary">Submitted Date</Typography>
+                  <Typography variant="body2" color="textSecondary">Tanggal Submit</Typography>
                   <Typography variant="body1">
                     {selectedClaim.created_at ? formatDateIndonesia(selectedClaim.created_at) : 'N/A'}
                   </Typography>
                 </Grid>
+                
+                {/* Foto Dokumen Klaim */}
+                {selectedClaim.document_path && (
+                  <Grid item xs={12}>
+                    <Typography variant="body2" color="textSecondary" mb={1}>
+                      📎 Dokumen Bukti Klaim
+                    </Typography>
+                    <Box
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        backgroundColor: 'grey.50'
+                      }}
+                    >
+                      {selectedClaim.document_path.toLowerCase().endsWith('.pdf') ? (
+                        <Box p={2} textAlign="center">
+                          <Typography variant="body2" mb={1}>
+                            File PDF
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            href={`${BACKEND_URL}/storage/${selectedClaim.document_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Buka PDF
+                          </Button>
+                        </Box>
+                      ) : (
+                        <Box
+                          component="img"
+                          src={`${BACKEND_URL}/storage/${selectedClaim.document_path}`}
+                          alt="Dokumen Bukti Klaim"
+                          sx={{
+                            width: '100%',
+                            maxHeight: 400,
+                            objectFit: 'contain',
+                            display: 'block'
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Gagal memuat gambar</div>';
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Grid>
+                )}
               </Grid>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Close</Button>
+          <Button onClick={handleCloseDialog} variant="contained">
+            Tutup
+          </Button>
         </DialogActions>
       </Dialog>
     </PageContainer>
