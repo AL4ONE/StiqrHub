@@ -1,30 +1,69 @@
-# Stage 1: Build the React app
-FROM harbor-regs.wachid.web.id/library/node:20-alpine AS build
-RUN apk add --no-cache curl
-WORKDIR /app
-COPY . .
-ARG VITE_BACKEND_URL
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-RUN npm install react-router-dom && \
-    npm install --legacy-peer-deps
+# ============================================================
+# 🏗️ TAHAP 1: BUILD STAGE
+# ------------------------------------------------------------
+# Tujuan: Membangun aplikasi frontend menggunakan Node.js
+# Basis image: Node 20 Alpine (ringan & cepat)
+# ============================================================
+FROM dns-regx.dnstech.co.id/library/node:20.17.0-alpine AS img-builder
 
-# Pastikan env tersedia saat build React
-RUN export VITE_BACKEND_URL=${VITE_BACKEND_URL} && npm run build
-    
-# Generate build version file
-RUN echo $(date +%y%m%d%H%M%S) > /app/build/version.txt
+# 🌱 Set environment untuk build
+ENV NODE_ENV=development
 
-# Stage 2: Use nginx to serve the production build
-FROM harbor-regs.wachid.web.id/library/nginx:alpine AS production
-RUN apk add --no-cache curl
+# 📁 Tentukan direktori kerja di dalam container
 WORKDIR /app
-# Copy build output to nginx html folder
-COPY --from=build /app/build /usr/share/nginx/html
-# Copy custom nginx config
+
+# 🔒 Pastikan direktori dimiliki oleh user "node" agar aman
+RUN chown node:node /app
+
+# � Jalankan perintah sebagai user non-root (node)
+USER node
+
+# �📦 Salin file package.json & package-lock.json untuk caching layer dependensi
+# Pastikan ownership untuk user node
+COPY --chown=node:node package*.json ./
+
+# 📥 Install semua dependensi (termasuk devDependencies untuk build)
+# Menggunakan --legacy-peer-deps untuk mengatasi konflik dependency React v19
+RUN npm install --legacy-peer-deps
+
+# 📂 Salin seluruh source code aplikasi ke container
+COPY --chown=node:node . .
+
+# 🔧 Salin .env.docker ke .env untuk build environment variables
+COPY --chown=node:node .env.docker .env
+
+# ⚙️ Jalankan build frontend
+RUN npm run build
+
+# 🧾 (Opsional) Debug hasil build: tampilkan isi direktori build
+RUN pwd && ls -alsh build
+
+
+# ============================================================
+# 🚀 TAHAP 2: PRODUCTION STAGE
+# ------------------------------------------------------------
+# Tujuan: Menjalankan hasil build menggunakan NGINX
+# Basis image: nginx:1.25-alpine (ringan & stabil)
+# ============================================================
+FROM nginx:1.25-alpine
+
+# 📦 Salin hasil build dari tahap pertama ke direktori web NGINX
+COPY --from=img-builder /app/build /usr/share/nginx/html
+
+# ⚙️ Ganti konfigurasi default NGINX dengan file custom
 COPY docker-config/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
-# Fix permission for nginx cache and run folders
-RUN mkdir -p /var/cache/nginx && chown -R nginx:nginx /var/cache/nginx \
-    && mkdir -p /run && chown -R nginx:nginx /run
-USER nginx
+
+# 🧰 Tambahkan entrypoint script untuk dynamic runtime replacement
+COPY docker-config/entrypoint.sh /entrypoint.sh
+
+# 🔐 Pastikan entrypoint script dapat dieksekusi
+RUN chmod +x /entrypoint.sh && ls -l /
+
+# 🚀 Gunakan entrypoint script sebagai eksekusi awal container
+ENTRYPOINT ["/entrypoint.sh"]
+
+# 🌐 Buka port 80 untuk akses HTTP
+EXPOSE 80
+
+# 🧠 Jalankan NGINX di foreground (agar container tetap hidup)
 CMD ["nginx", "-g", "daemon off;"]
