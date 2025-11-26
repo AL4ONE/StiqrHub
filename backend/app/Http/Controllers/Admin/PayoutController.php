@@ -11,34 +11,74 @@ use Illuminate\Support\Facades\DB;
 
 class PayoutController extends Controller
 {
-    // Simple H+1 tracking report: total successful payments per event with last payment date = yesterday
+    // H+1 Settlement Tracking: Shows events with successful payments that are ready for settlement
+    // Settlement date = payment date + 1 day (H+1)
     public function settlementTracking()
     {
         try {
-            $yesterday = date('Y-m-d', strtotime('-1 day'));
+            // Get all successful payments grouped by event
+            $payments = Payment::where('status', 'SUCCESS')
+                ->with(['registration.event', 'registration.tenant'])
+                ->orderBy('updated_at', 'desc')
+                ->get();
 
-            $rows = Payment::where('status', 'SUCCESS')
-                ->whereDate('updated_at', $yesterday)
-                ->select(DB::raw('registration_id'))
-                ->with(['registration.event'])
-                ->get()
-                ->groupBy(fn($p) => optional($p->registration->event)->id)
-                ->map(function ($group, $eventId) {
-                    $total = 0;
-                    foreach ($group as $p) {
-                        $total += $p->amount;
-                    }
-                    return [
-                        'event_id' => $eventId,
-                        'event_name' => optional(optional($group->first()->registration)->event)->name,
-                        'total_amount' => $total,
-                        'payments_count' => $group->count(),
-                        'settlement_date' => date('Y-m-d', strtotime('+1 day', strtotime($group->first()->updated_at)))
-                    ];
-                })
-                ->values();
+            // Group by event and calculate settlement info
+            $eventGroups = $payments->groupBy(function ($payment) {
+                return optional(optional($payment->registration)->event)->id;
+            })->filter(function ($group, $eventId) {
+                return $eventId !== null; // Filter out null event IDs
+            });
 
-            return ApiResponse::success($rows, 'Settlement H+1 tracking generated');
+            $rows = $eventGroups->map(function ($group, $eventId) {
+                $event = optional($group->first()->registration)->event;
+                if (!$event) {
+                    return null;
+                }
+
+                // Calculate totals
+                $totalAmount = $group->sum('amount');
+                $paymentsCount = $group->count();
+                
+                // Get the latest payment date for this event
+                $latestPaymentDate = $group->max(function ($p) {
+                    return $p->updated_at ? $p->updated_at->format('Y-m-d') : null;
+                });
+                
+                // Settlement date is H+1 (payment date + 1 day)
+                $settlementDate = $latestPaymentDate ? date('Y-m-d', strtotime($latestPaymentDate . ' +1 day')) : null;
+                
+                // Check if there's already a payout record for this event
+                $existingPayout = Payout::where('event_id', $eventId)
+                    ->where('payout_date', $settlementDate)
+                    ->first();
+                
+                // Determine status: if settlement date is today or past, it's ready for settlement
+                $today = date('Y-m-d');
+                $status = 'PENDING';
+                if ($existingPayout) {
+                    $status = $existingPayout->status === 'COMPLETED' ? 'COMPLETED' : 'PENDING';
+                } else if ($settlementDate && $settlementDate <= $today) {
+                    $status = 'READY';
+                }
+
+                return [
+                    'event_id' => $eventId,
+                    'event_name' => $event->name,
+                    'total_amount' => (float) $totalAmount,
+                    'payments_count' => $paymentsCount,
+                    'success_count' => $paymentsCount, // Alias for frontend compatibility
+                    'settlement_date' => $settlementDate,
+                    'date' => $settlementDate, // Alias for frontend compatibility
+                    'latest_payment_date' => $latestPaymentDate,
+                    'status' => $status,
+                    'payout_id' => $existingPayout ? $existingPayout->id : null,
+                ];
+            })
+            ->filter() // Remove null entries
+            ->values()
+            ->sortByDesc('settlement_date'); // Sort by settlement date, newest first
+
+            return ApiResponse::success($rows, 'Settlement tracking data retrieved successfully');
         } catch (\Throwable $e) {
             return ApiResponse::error('Failed to build payout tracking', 500, $e->getMessage());
         }

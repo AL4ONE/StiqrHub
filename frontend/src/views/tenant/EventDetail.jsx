@@ -279,8 +279,7 @@ const buildWhatsAppLink = (eventName = "") => {
           try {
             const formData = new FormData();
             formData.append('payment_proof', paymentProof);
-            // Upload payment proof - you may need to create this endpoint
-            // await apiPost(`${BACKEND_URL}/api/tenant/payments/${res.data.payment.id}/proof`, formData);
+            await apiPost(`${BACKEND_URL}/api/tenant/payments/${res.data.payment.id}/proof`, formData, true);
           } catch (uploadError) {
             console.error("Error uploading proof:", uploadError);
             // Don't fail registration if proof upload fails

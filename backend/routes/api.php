@@ -73,6 +73,8 @@ Route::middleware('jwt.verify')->group(function () {
         Route::get('/claims/{id}', [TenantClaimController::class, 'show']);
         Route::post('/events/{eventId}/claims', [TenantClaimController::class, 'submit']);
         Route::get('/events/{eventId}/claims', [TenantClaimController::class, 'byEvent']);
+        
+        Route::post('/payments/{id}/proof', [\App\Http\Controllers\Tenant\PaymentController::class, 'uploadProof']);
     });
 
     // ================== INSURER ==================
