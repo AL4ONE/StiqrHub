@@ -825,25 +825,25 @@ const buildWhatsAppLink = (eventName = "") => {
         </DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            <Typography variant="body2" fontWeight={600} mb={1}>
+            <Typography variant="body2" fontWeight={600} mb={1} sx={{ color: 'white' }}>
               Kamu sudah terdaftar di event lain pada tanggal yang sama!
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ color: 'white' }}>
               Event yang bertabrakan:
             </Typography>
             <Stack spacing={1} sx={{ mt: 1 }}>
               {conflictEvents.map((ev) => (
                 <Box key={ev.id} sx={{ p: 1.5, bgcolor: 'warning.50', borderRadius: 1 }}>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" fontWeight={600} sx={{ color: 'white' }}>
                     <strong>{ev.name}</strong>
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: 'white' }}>
                     {formatDateIndonesia(ev.start_date)} - {formatDateIndonesia(ev.end_date)}
                   </Typography>
                 </Box>
               ))}
             </Stack>
-            <Typography variant="body2" sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ mt: 2, color: 'white' }}>
               Kamu tidak dapat mendaftar ke event ini karena tanggalnya bertabrakan dengan event di atas.
             </Typography>
           </Alert>

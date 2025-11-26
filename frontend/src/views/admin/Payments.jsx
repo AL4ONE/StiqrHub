@@ -81,9 +81,9 @@ export default function Payments() {
                     <Typography variant="body2" color="textSecondary" mb={1}>Tenant: {p?.registration?.tenant?.name || '-'}</Typography>
                     {p.payment_proof_url && (
                       <Box mb={2}>
-                        <Button 
-                          size="small" 
-                          variant="outlined" 
+                        <Button
+                          size="small"
+                          variant="outlined"
                           onClick={() => openProofDialog(p)}
                           sx={{ mb: 1 }}
                         >
@@ -103,8 +103,8 @@ export default function Payments() {
         </CardContent>
       </Card>
 
-      <Dialog 
-        open={proofDialogOpen} 
+      <Dialog
+        open={proofDialogOpen}
         onClose={closeProofDialog}
         maxWidth="md"
         fullWidth

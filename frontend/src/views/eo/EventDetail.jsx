@@ -61,6 +61,7 @@ export default function EventDetail() {
   const [publishError, setPublishError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [registrationsDialogOpen, setRegistrationsDialogOpen] = useState(false);
 
   const load = async () => {
@@ -175,10 +176,15 @@ export default function EventDetail() {
   };
 
   const handleDeleteClick = () => {
+    setDeleteConfirmationText('');
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
+    if (deleteConfirmationText !== 'Delete') {
+      return;
+    }
+    
     setDeleting(true);
     try {
       const res = await apiDelete(BACKEND_URL + `/api/eo/events/${id}`);
@@ -188,11 +194,20 @@ export default function EventDetail() {
         alert(res?.message || 'Failed to delete event');
         setDeleting(false);
         setDeleteDialogOpen(false);
+        setDeleteConfirmationText('');
       }
     } catch (e) {
       alert('Failed to delete event');
       setDeleting(false);
       setDeleteDialogOpen(false);
+      setDeleteConfirmationText('');
+    }
+  };
+
+  const handleDeleteDialogClose = () => {
+    if (!deleting) {
+      setDeleteDialogOpen(false);
+      setDeleteConfirmationText('');
     }
   };
 
@@ -229,36 +244,70 @@ export default function EventDetail() {
   if (!event) return <Typography>Event not found</Typography>;
 
   return (
-    <PageContainer title="Event Details">
+    <PageContainer title="Detail Event">
       <Grid container spacing={3}>
+        {/* Header Section */}
         <Grid item xs={12}>
           <Card>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                <Typography variant="h4">{event.name}</Typography>
-                <Chip label={event.status} color={statusColor(event.status)} />
+              {/* Event Header */}
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+                <Box flex={1}>
+                  <Typography variant="h4" fontWeight={700} mb={1}>
+                    {event.name}
+                  </Typography>
+                  <Box display="flex" gap={1} alignItems="center" mb={2}>
+                    <Chip label={event.status} color={statusColor(event.status)} size="small" />
+                    {event.insurance_active && (
+                      <Chip label="Insurance Aktif" color="info" size="small" />
+                    )}
+                    <Chip 
+                      label={event.payment_method === 'per_day' ? 'Harian' : 'Per Event'} 
+                      variant="outlined" 
+                      size="small" 
+                    />
+                  </Box>
+                </Box>
               </Box>
+
+              {/* Banner */}
               {(event.banner_url || event.banner) && (
-                <Box mb={2}>
+                <Box 
+                  mb={3}
+                  sx={{
+                    width: '100%',
+                    height: { xs: 200, md: 400 },
+                    overflow: 'hidden',
+                    borderRadius: 2,
+                    backgroundColor: '#f5f5f5',
+                  }}
+                >
                   <img
                     src={
                       event.banner_url
                         ? (event.banner_url.startsWith('http') ? event.banner_url : `${BACKEND_URL}${event.banner_url}`)
                         : `${BACKEND_URL}/storage/${event.banner}`
                     }
-                    alt="event banner"
-                    style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 8 }}
+                    alt="Banner Event"
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
                   />
                 </Box>
               )}
-              <Box display="flex" gap={1} mb={1}>
+
+              {/* Action Buttons */}
+              <Box display="flex" gap={1} flexWrap="wrap" mb={3}>
                 {event.status === 'ACTIVATED' || event.status === 'PUBLISHED' ? (
                   <Button variant="contained" color="success" size="small" disabled>
-                    Activated
+                    Event Diaktifkan
                   </Button>
                 ) : (
                   <Button variant="outlined" size="small" disabled>
-                    Activate (admin only)
+                    Aktifkan (Admin Only)
                   </Button>
                 )}
                 <Button 
@@ -267,91 +316,18 @@ export default function EventDetail() {
                   disabled={saving || event.status !== 'ACTIVATED'}
                   onClick={handlePublishClick}
                 >
-                  {event.status !== 'ACTIVATED' ? 'Publish (after activated)' : 'Publish'}
+                  {event.status !== 'ACTIVATED' ? 'Publish (Setelah Diaktifkan)' : 'Atur Publish'}
                 </Button>
-              </Box>
-              {event.status === 'DRAFT' && (
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  Event harus di-activate oleh admin sebelum bisa dipublish (estimasi approval 3-5 x 24 jam).
-                </Typography>
-              )}
-              {event.published_start_date && event.published_end_date && (
-                <Box mb={2}>
-                  <Typography variant="body2" color="textSecondary">
-                    <strong>Published Period:</strong> {formatDateIndonesia(event.published_start_date)} sampai {formatDateIndonesia(event.published_end_date)}
-                  </Typography>
-                </Box>
-              )}
-              <Typography variant="body1" color="textSecondary" mb={2}>{event.location}</Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Start:</strong> {formatDateIndonesia(event.start_date)}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>End:</strong> {formatDateIndonesia(event.end_date)}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Category:</strong> {event.category}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Booth Capacity:</strong> {event.booth_capacity}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Booth Size:</strong> {event.booth_size}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Booth Price:</strong>{' '}
-                {event.contact_for_price ? 'Hubungi EO untuk harga' : formatPrice(event.booth_price)}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Payment Method:</strong> {event.payment_method}
-              </Typography>
-              <Typography variant="body2" mb={1}>
-                <strong>Insurance:</strong> {event.insurance_active ? 'Active' : 'Inactive'}
-              </Typography>
-              <Typography variant="body2" mb={2}>
-                <strong>Estimated Visitors:</strong> {event.estimated_visitors}
-              </Typography>
-              
-              {/* Bank Accounts */}
-              {event.bank_accounts && event.bank_accounts.length > 0 && (
-                <Box mt={2} mb={2}>
-                  <Typography variant="subtitle1" mb={1}>
-                    <strong>Nomor Rekening</strong>
-                  </Typography>
-                  <Stack spacing={1}>
-                    {event.bank_accounts.map((account, idx) => (
-                      <Box 
-                        key={idx} 
-                        sx={{ 
-                          p: 1.5, 
-                          border: '1px solid', 
-                          borderColor: account.is_default ? 'primary.main' : 'divider',
-                          borderRadius: 1,
-                          backgroundColor: account.is_default ? 'primary.50' : 'transparent'
-                        }}
-                      >
-                        <Typography variant="body2" fontWeight={account.is_default ? 'bold' : 'normal'}>
-                          {account.is_default && <Chip label="Default" size="small" color="primary" sx={{ mr: 1, mb: 0.5 }} />}
-                          <strong>{account.bank_name}</strong>
-                        </Typography>
-                        <Typography variant="body2">
-                          {account.account_number}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          a.n. {account.account_name}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-              
-              <Stack direction="row" spacing={2}>
-                <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}/rules`)}>
-                  Manage Rules
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  onClick={() => navigate(`/app/eo/events/${id}/rules`)}
+                >
+                  Kelola Aturan
                 </Button>
                 <Button
                   variant="outlined"
+                  size="small"
                   onClick={() => navigate(`/app/eo/events/${id}/edit`)}
                 >
                   Edit Event
@@ -359,134 +335,548 @@ export default function EventDetail() {
                 <Button 
                   variant="outlined" 
                   color="error"
+                  size="small"
                   onClick={handleDeleteClick}
                   disabled={deleting}
                 >
-                  Delete Event
+                  Hapus Event
                 </Button>
-                <Button variant="outlined" onClick={() => navigate('/app/eo/events')}>
-                  Back to Events
-                </Button>
-              </Stack>
-
-              <Divider sx={{ my: 4 }} />
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: '1px dashed',
-                  borderColor: 'primary.light',
-                  backgroundColor: 'primary.50',
-                }}
-              >
-                <Typography variant="h6" mb={0.5}>
-                  Gabung WhatsApp Stiqr
-                </Typography>
-                <Typography variant="body2" color="textSecondary" mb={2}>
-                  EO perlu bantuan publikasi atau ingin koordinasi langsung? Join grup WA
-                  resmi kami lewat tombol ini.
-                </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <Button
-                    component="a"
-                    href={WHATSAPP_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="contained"
-                    color="success"
-                  >
-                    Buka WhatsApp
-                  </Button>
-                  <Box>
-                    <Typography variant="caption" color="textSecondary">
-                      Nomor admin Stiqr
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {WHATSAPP_NUMBER}
-                    </Typography>
-                  </Box>
-                </Stack>
               </Box>
+
+              {/* Status Info */}
+              {event.status === 'DRAFT' && (
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    mb: 3,
+                    '& .MuiAlert-message': { color: 'text.primary' },
+                    '& .MuiTypography-root': { color: 'text.primary' }
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                    <strong>Status Draft:</strong> Event harus diaktifkan oleh admin sebelum bisa dipublish. 
+                    Estimasi waktu approval: 3-5 x 24 jam.
+                  </Typography>
+                </Alert>
+              )}
+              {event.published_start_date && event.published_end_date && (
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 3,
+                    '& .MuiAlert-message': { color: 'text.primary' },
+                    '& .MuiTypography-root': { color: 'text.primary' }
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                    <strong>Periode Publish:</strong> {formatDateIndonesia(event.published_start_date)} 
+                    {' '}sampai {formatDateIndonesia(event.published_end_date)}
+                  </Typography>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" mb={2}>Registrations</Typography>
-              <Typography variant="h4" color="primary">{event.registrations_count ?? (event.registrations ? event.registrations.length : 0)}</Typography>
-              <Typography variant="body2" color="textSecondary" mb={2}>
-                Total registrations for this event
-              </Typography>
-              {totalTenantCapacity > 0 ? (
-                <Box mb={2}>
-                  <Typography variant="body2">
-                    <strong>Tenant Slots:</strong> {registeredTenants} / {totalTenantCapacity}
+
+        {/* Main Information Section */}
+        <Grid item xs={12} md={8}>
+          <Stack spacing={3}>
+            {/* Deskripsi Event */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={2} color="primary">
+                  📝 Deskripsi Event
+                </Typography>
+                {event.short_description ? (
+                  <Typography variant="body1" paragraph sx={{ lineHeight: 1.8, color: 'text.primary' }}>
+                    {event.short_description}
                   </Typography>
+                ) : null}
+                {event.detail ? (
                   <Typography 
                     variant="body2" 
-                    color={remainingTenantCapacity > 0 ? 'success.main' : 'error.main'}
+                    sx={{ 
+                      lineHeight: 1.8, 
+                      color: 'text.secondary',
+                      whiteSpace: 'pre-line',
+                      wordBreak: 'break-word'
+                    }}
                   >
-                    <strong>Remaining Tenant Slots:</strong> {remainingTenantCapacity}
+                    {event.detail}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                    Belum ada deskripsi detail untuk event ini.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Informasi Dasar Event */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={3} color="primary">
+                  📅 Informasi Dasar Event
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Tanggal Mulai
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {formatDateIndonesia(event.start_date)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Tanggal Selesai
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {formatDateIndonesia(event.end_date)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Lokasi Event
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.location || 'Lokasi belum ditentukan'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Kategori
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.category || 'Tidak ada kategori'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Estimasi Pengunjung
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.estimated_visitors ? `${event.estimated_visitors.toLocaleString('id-ID')} orang` : 'Belum ditentukan'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+
+            {/* Informasi Booth & Harga */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={3} color="primary">
+                  💰 Informasi Booth & Harga
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Kapasitas Booth
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.booth_capacity ? `${event.booth_capacity} booth` : 'Tidak ditentukan'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Ukuran Booth
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.booth_size || 'Tidak ditentukan'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Harga Booth
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500} color="primary">
+                        {event.contact_for_price 
+                          ? 'Hubungi EO untuk harga' 
+                          : formatPrice(event.booth_price)
+                        }
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Metode Pembayaran
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {event.payment_method === 'per_day' ? 'Per Hari' : 'Per Event'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box mb={2}>
+                      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                        Status Asuransi
+                      </Typography>
+                      <Chip 
+                        label={event.insurance_active ? 'Aktif' : 'Tidak Aktif'} 
+                        color={event.insurance_active ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+            {/* Bank Accounts */}
+            {event.bank_accounts && event.bank_accounts.length > 0 && (
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={3} color="primary">
+                    🏦 Informasi Rekening Bank
+                  </Typography>
+                  <Stack spacing={2}>
+                    {event.bank_accounts.map((account, idx) => (
+                      <Box 
+                        key={idx} 
+                        sx={{ 
+                          p: 2, 
+                          border: '2px solid', 
+                          borderColor: account.is_default ? 'primary.main' : 'divider',
+                          borderRadius: 2,
+                          backgroundColor: account.is_default ? 'primary.50' : 'grey.50',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: 2,
+                          }
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1} mb={1}>
+                          {account.is_default && (
+                            <Chip 
+                              label="Rekening Utama" 
+                              size="small" 
+                              color="primary" 
+                            />
+                          )}
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {account.bank_name}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body1" fontWeight={500} mb={0.5}>
+                          {account.account_number}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Atas nama: {account.account_name}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* WhatsApp Support */}
+            <Card>
+              <CardContent>
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    border: '2px dashed',
+                    borderColor: 'success.light',
+                    backgroundColor: 'success.50',
+                  }}
+                >
+                  <Typography variant="h6" fontWeight={600} mb={1} color="success.dark">
+                    💬 Butuh Bantuan?
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    EO perlu bantuan publikasi atau ingin koordinasi langsung? 
+                    Bergabunglah dengan grup WhatsApp resmi StiqrHub.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                    <Button
+                      component="a"
+                      href={WHATSAPP_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="contained"
+                      color="success"
+                      size="large"
+                    >
+                      Buka WhatsApp
+                    </Button>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Nomor Admin StiqrHub
+                      </Typography>
+                      <Typography variant="body1" fontWeight={600}>
+                        {WHATSAPP_NUMBER}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Grid>
+
+        {/* Sidebar */}
+        <Grid item xs={12} md={4}>
+          <Stack spacing={3}>
+            {/* Registrations Summary */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={2} color="primary">
+                  👥 Pendaftaran
+                </Typography>
+                <Box textAlign="center" mb={2}>
+                  <Typography variant="h3" color="primary" fontWeight={700}>
+                    {event.registrations_count ?? (event.registrations ? event.registrations.length : 0)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Pendaftar
                   </Typography>
                 </Box>
-              ) : (
-                <Typography variant="body2" color="textSecondary" mb={2}>
-                  Set tenant capacity to track remaining slots.
-                </Typography>
-              )}
-              <Button 
-                variant="outlined" 
-                size="small" 
-                fullWidth
-                onClick={() => setRegistrationsDialogOpen(true)}
-              >
-                View Registrants
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" mb={2}>Rules</Typography>
-              {event.rules && event.rules.length > 0 ? (
-                <Stack spacing={1}>
-                  {event.rules.map((rule, index) => (
-                    <Typography key={index} variant="body2">
-                      • {rule.rule_name}
+                {totalTenantCapacity > 0 ? (
+                  <Box 
+                    sx={{ 
+                      p: 2, 
+                      borderRadius: 2, 
+                      backgroundColor: remainingTenantCapacity > 0 ? 'success.50' : 'error.50',
+                      border: `1px solid ${remainingTenantCapacity > 0 ? 'success.main' : 'error.main'}`
+                    }}
+                  >
+                    <Typography variant="body2" mb={1}>
+                      <strong>Slot Tenant:</strong> {registeredTenants} / {totalTenantCapacity}
                     </Typography>
-                  ))}
-                </Stack>
-              ) : (
-                <Typography variant="body2" color="textSecondary">
-                  No rules set for this event
+                    <Typography 
+                      variant="body1" 
+                      fontWeight={600}
+                      color={remainingTenantCapacity > 0 ? 'success.dark' : 'error.dark'}
+                    >
+                      Sisa Slot: {remainingTenantCapacity}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Alert 
+                    severity="info" 
+                    sx={{ 
+                      mt: 2,
+                      '& .MuiAlert-message': { color: 'text.primary' },
+                      '& .MuiTypography-root': { color: 'text.primary' }
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                      Setel kapasitas tenant untuk melacak slot yang tersedia.
+                    </Typography>
+                  </Alert>
+                )}
+                <Button 
+                  variant="contained" 
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={() => setRegistrationsDialogOpen(true)}
+                >
+                  Lihat Detail Pendaftar
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Rules Summary */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={2} color="primary">
+                  📋 Aturan Event
                 </Typography>
-              )}
-            </CardContent>
-          </Card>
+                {event.rules && event.rules.length > 0 ? (
+                  <Stack spacing={1.5}>
+                    {event.rules.map((rule, index) => (
+                      <Box 
+                        key={index}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1,
+                          backgroundColor: 'grey.50',
+                          borderLeft: '3px solid',
+                          borderColor: 'primary.main'
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={500}>
+                          {rule.rule_name}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Alert 
+                    severity="warning"
+                    sx={{
+                      '& .MuiAlert-message': { color: 'text.primary' },
+                      '& .MuiTypography-root': { color: 'text.primary' }
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                      Belum ada aturan yang ditetapkan untuk event ini.
+                    </Typography>
+                  </Alert>
+                )}
+                <Button 
+                  variant="outlined" 
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={() => navigate(`/app/eo/events/${id}/rules`)}
+                >
+                  Kelola Aturan
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight={600} mb={2} color="primary">
+                  ⚡ Tindakan Cepat
+                </Typography>
+                <Stack spacing={1.5}>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => navigate(`/app/eo/events/${id}/edit`)}
+                  >
+                    ✏️ Edit Event
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    color="error"
+                    fullWidth
+                    onClick={handleDeleteClick}
+                    disabled={deleting}
+                  >
+                    🗑️ Hapus Event
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    fullWidth
+                    onClick={() => navigate('/app/eo/events')}
+                  >
+                    ← Kembali ke Daftar Event
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
       </Grid>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => !deleting && setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Event</DialogTitle>
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleDeleteDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600} color="error">
+            ⚠️ Hapus Event
+          </Typography>
+        </DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete this event? This action cannot be undone.
-          </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-            Event: <strong>{event?.name}</strong>
-          </Typography>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              '& .MuiAlert-message': { color: '#fff' },
+              '& .MuiTypography-root': { color: '#fff' }
+            }}
+          >
+            <Typography variant="body1" fontWeight={600} mb={1} sx={{ color: '#fff' }}>
+              Peringatan: Tindakan ini tidak dapat dibatalkan!
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#fff' }}>
+              Event yang dihapus tidak dapat dikembalikan. Semua data terkait event ini akan hilang permanen.
+            </Typography>
+          </Alert>
+
+          <Box mb={3}>
+            <Typography variant="body1" mb={1}>
+              <strong>Event yang akan dihapus:</strong>
+            </Typography>
+            <Box 
+              sx={{ 
+                p: 2, 
+                borderRadius: 2, 
+                backgroundColor: 'grey.100',
+                border: '1px solid',
+                borderColor: 'error.main'
+              }}
+            >
+              <Typography variant="h6" fontWeight={600}>
+                {event?.name}
+              </Typography>
+              {event?.location && (
+                <Typography variant="body2" color="text.secondary" mt={0.5}>
+                  📍 {event.location}
+                </Typography>
+              )}
+              {event?.start_date && (
+                <Typography variant="body2" color="text.secondary">
+                  📅 {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
+          <Box mb={2}>
+            <Typography variant="body1" fontWeight={600} mb={1}>
+              Konfirmasi Penghapusan
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Untuk mengonfirmasi penghapusan, ketik <strong>"Delete"</strong> di bawah ini:
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="Ketik 'Delete' untuk konfirmasi"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              error={deleteConfirmationText !== '' && deleteConfirmationText !== 'Delete'}
+              helperText={
+                deleteConfirmationText !== '' && deleteConfirmationText !== 'Delete'
+                  ? 'Teks yang diketik harus persis "Delete"'
+                  : ''
+              }
+              disabled={deleting}
+              autoFocus
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
-            Cancel
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button 
+            onClick={handleDeleteDialogClose} 
+            disabled={deleting}
+            variant="outlined"
+          >
+            Batal
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
-            {deleting ? 'Deleting...' : 'Delete'}
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained" 
+            disabled={deleting || deleteConfirmationText !== 'Delete'}
+            sx={{ minWidth: 120 }}
+          >
+            {deleting ? 'Menghapus...' : 'Hapus Event'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -495,18 +885,34 @@ export default function EventDetail() {
       <Dialog open={publishDialogOpen} onClose={() => !saving && setPublishDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Set Publish Dates</DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="body2">
+          <Alert 
+            severity="info" 
+            sx={{ 
+              mb: 2,
+              '& .MuiAlert-message': { color: 'text.primary' },
+              '& .MuiTypography-root': { color: 'text.primary' }
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
               <strong>Event Period:</strong> {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
             </Typography>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
+            <Typography variant="body2" sx={{ mt: 0.5, color: 'text.primary' }}>
               Published end date cannot exceed event end date.
             </Typography>
           </Alert>
 
           {publishError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {publishError}
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 2,
+                '& .MuiAlert-message': { color: '#fff' },
+                '& .MuiTypography-root': { color: '#fff' }
+              }}
+            >
+              <Typography variant="body2" sx={{ color: '#fff' }}>
+                {publishError}
+              </Typography>
             </Alert>
           )}
 
@@ -554,27 +960,28 @@ export default function EventDetail() {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Event Registrations</DialogTitle>
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            📋 Daftar Pendaftar Event
+          </Typography>
+        </DialogTitle>
         <DialogContent>
           {totalTenantCapacity > 0 && (
             <Alert 
               severity={remainingTenantCapacity > 0 ? 'info' : 'warning'} 
               sx={{ 
-                mb: 2,
+                mb: 3,
                 color: '#fff',
                 bgcolor: remainingTenantCapacity > 0 ? 'primary.main' : 'warning.dark',
                 '& .MuiAlert-icon': { color: '#fff' },
                 '& .MuiAlert-message': { color: '#fff' },
               }}
             >
-              <Typography variant="body2" sx={{ color: '#fff' }}>
-                <strong>Tenant Slots:</strong> {registeredTenants} / {totalTenantCapacity}
+              <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
+                Slot Tenant: {registeredTenants} / {totalTenantCapacity}
               </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ color: '#fff' }}
-              >
-                <strong>Remaining Tenant Slots:</strong> {remainingTenantCapacity}
+              <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
+                Sisa Slot: {remainingTenantCapacity}
               </Typography>
             </Alert>
           )}
@@ -582,25 +989,39 @@ export default function EventDetail() {
             <TableContainer component={Paper} sx={{ mt: 2 }}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell><strong>No</strong></TableCell>
-                    <TableCell><strong>Tenant Name</strong></TableCell>
-                    <TableCell><strong>Email</strong></TableCell>
-                    <TableCell><strong>Registration Status</strong></TableCell>
-                    <TableCell><strong>Payment Status</strong></TableCell>
-                    <TableCell><strong>Payment Date</strong></TableCell>
-                    <TableCell><strong>Payment Amount</strong></TableCell>
+                  <TableRow sx={{ backgroundColor: 'primary.main' }}>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>No</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Nama Tenant</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Email</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Status Pendaftaran</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Status Pembayaran</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Tanggal Pembayaran</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Jumlah Pembayaran</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {event.registrations.map((registration, index) => (
-                    <TableRow key={registration.id}>
+                    <TableRow 
+                      key={registration.id}
+                      sx={{ 
+                        '&:nth-of-type(odd)': { backgroundColor: 'grey.50' },
+                        '&:hover': { backgroundColor: 'primary.50' }
+                      }}
+                    >
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>{registration.tenant?.name || 'N/A'}</TableCell>
-                      <TableCell>{registration.tenant?.email || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={500}>
+                          {registration.tenant?.name || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {registration.tenant?.email || 'N/A'}
+                        </Typography>
+                      </TableCell>
                       <TableCell>
                         <Chip 
-                          label={registration.status || 'REGISTERED'} 
+                          label={registration.status === 'PAID' ? 'Lunas' : registration.status === 'REGISTERED' ? 'Terdaftar' : registration.status || 'Terdaftar'} 
                           size="small"
                           color={registration.status === 'PAID' || registration.status === 'ACTIVE' ? 'success' : 'default'}
                         />
@@ -608,19 +1029,30 @@ export default function EventDetail() {
                       <TableCell>
                         {registration.payment ? (
                           <Chip 
-                            label={registration.payment.status} 
+                            label={
+                              registration.payment.status === 'SUCCESS' ? 'Berhasil' :
+                              registration.payment.status === 'PENDING' ? 'Menunggu' :
+                              registration.payment.status === 'FAILED' ? 'Gagal' :
+                              registration.payment.status
+                            } 
                             size="small"
                             color={getPaymentStatusColor(registration.payment.status)}
                           />
                         ) : (
-                          <Typography variant="body2" color="textSecondary">No payment</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Belum ada pembayaran
+                          </Typography>
                         )}
                       </TableCell>
                       <TableCell>
-                        {registration.payment?.created_at ? formatDate(registration.payment.created_at) : 'N/A'}
+                        <Typography variant="body2">
+                          {registration.payment?.created_at ? formatDate(registration.payment.created_at) : '-'}
+                        </Typography>
                       </TableCell>
                       <TableCell>
-                        {registration.payment?.amount ? formatPrice(registration.payment.amount) : 'N/A'}
+                        <Typography variant="body2" fontWeight={500}>
+                          {registration.payment?.amount ? formatPrice(registration.payment.amount) : '-'}
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -628,14 +1060,19 @@ export default function EventDetail() {
               </Table>
             </TableContainer>
           ) : (
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
-              No registrations yet for this event.
-            </Typography>
+            <Box textAlign="center" py={4}>
+              <Typography variant="h6" color="text.secondary" mb={1}>
+                Belum Ada Pendaftar
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Belum ada tenant yang mendaftar ke event ini.
+              </Typography>
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRegistrationsDialogOpen(false)}>
-            Close
+          <Button onClick={() => setRegistrationsDialogOpen(false)} variant="contained">
+            Tutup
           </Button>
         </DialogActions>
       </Dialog>
