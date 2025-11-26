@@ -15,10 +15,12 @@ class CorsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $origin = $this->getAllowedOrigin($request);
+        
         // Handle preflight requests
         if ($request->isMethod('OPTIONS')) {
             return response('', 200)
-                ->header('Access-Control-Allow-Origin', $this->getAllowedOrigin($request))
+                ->header('Access-Control-Allow-Origin', $origin)
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
                 ->header('Access-Control-Allow-Credentials', 'true')
@@ -28,8 +30,13 @@ class CorsMiddleware
         $response = $next($request);
 
         // Add CORS headers to response
+        // Ensure response is a Response object
+        if (!$response instanceof Response) {
+            $response = response($response);
+        }
+
         return $response
-            ->header('Access-Control-Allow-Origin', $this->getAllowedOrigin($request))
+            ->header('Access-Control-Allow-Origin', $origin)
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
             ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
             ->header('Access-Control-Allow-Credentials', 'true');
@@ -54,7 +61,8 @@ class CorsMiddleware
             return $origin;
         }
 
-        // Default to first allowed origin if no match
+        // If no origin header or not in allowed list, return the production origin
+        // This allows the frontend to work even if Origin header is missing
         return $allowedOrigins[0];
     }
 }
