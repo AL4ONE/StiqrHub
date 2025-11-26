@@ -9,7 +9,6 @@ import {
   IconUserCheck,
   IconAlertCircle,
   IconChartBar,
-  IconBan,
   IconAperture,
   IconUser,
 } from '@tabler/icons-react';
@@ -161,12 +160,6 @@ export const AdminMenuItems = [
     title: 'Event Audit',
     icon: IconAlertCircle,
     href: '/app/admin/events',
-  },
-  {
-    id: uniqueId(),
-    title: 'Fraud Detection',
-    icon: IconBan,
-    href: '/app/admin/fraud',
   },
   {
     id: uniqueId(),

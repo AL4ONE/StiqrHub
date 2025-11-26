@@ -163,7 +163,6 @@ const EOProfile = Loadable(lazy(() => import('../views/eo/EOProfile')));
 const AdminPayments = Loadable(lazy(() => import('../views/admin/Payments')));
 const AdminVerifyEOs = Loadable(lazy(() => import('../views/admin/VerifyEOs')));
 const AdminEventAudit = Loadable(lazy(() => import('../views/admin/EventAudit')));
-const AdminFraud = Loadable(lazy(() => import('../views/admin/Fraud')));
 const AdminPayouts = Loadable(lazy(() => import('../views/admin/Payouts')));
 const AdminAnalytics = Loadable(lazy(() => import('../views/admin/Analytics')));
 const InsurerClaimsInbox = Loadable(lazy(() => import('../views/insurer/ClaimsInbox')));
@@ -222,7 +221,6 @@ const Router = [
       { path: 'admin/payments', element: <ProtectedRoute><AdminPayments /></ProtectedRoute> },
       { path: 'admin/eos', element: <ProtectedRoute><AdminVerifyEOs /></ProtectedRoute> },
       { path: 'admin/events', element: <ProtectedRoute><AdminEventAudit /></ProtectedRoute> },
-      { path: 'admin/fraud', element: <ProtectedRoute><AdminFraud /></ProtectedRoute> },
       { path: 'admin/payouts', element: <ProtectedRoute><AdminPayouts /></ProtectedRoute> },
       { path: 'admin/analytics', element: <ProtectedRoute><AdminAnalytics /></ProtectedRoute> },
       { path: 'insurer/dashboard', element: <ProtectedRoute><InsurerDashboard /></ProtectedRoute> },
