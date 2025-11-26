@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Grid, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Box, 
-  Button, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+import {
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   DialogActions,
   Chip,
   Stack,
@@ -53,9 +53,9 @@ function EventList() {
         <Typography variant="body2" color="text.secondary">
           Belum ada event aktif
         </Typography>
-        <Button 
-          variant="outlined" 
-          size="small" 
+        <Button
+          variant="outlined"
+          size="small"
           sx={{ mt: 2 }}
           component={Link}
           to="/app/tenant/events"
@@ -69,10 +69,10 @@ function EventList() {
   return (
     <Stack spacing={2}>
       {events.map((event) => (
-        <Card 
-          key={event.id} 
+        <Card
+          key={event.id}
           variant="outlined"
-          sx={{ 
+          sx={{
             cursor: 'pointer',
             '&:hover': { boxShadow: 2, borderColor: 'primary.main' },
             transition: 'all 0.2s'
@@ -92,8 +92,8 @@ function EventList() {
                   📅 {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
                 </Typography>
               </Box>
-              <Chip 
-                label={event.registration?.payment?.status === 'SUCCESS' ? 'Lunas' : 'Menunggu Pembayaran'} 
+              <Chip
+                label={event.registration?.payment?.status === 'SUCCESS' ? 'Lunas' : 'Menunggu Pembayaran'}
                 color={event.registration?.payment?.status === 'SUCCESS' ? 'success' : 'warning'}
                 size="small"
               />

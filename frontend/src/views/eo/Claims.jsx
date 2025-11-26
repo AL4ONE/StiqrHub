@@ -75,7 +75,7 @@ export default function Claims() {
       <Card>
         <CardContent>
           <Typography variant="h6" mb={3}>Insurance Claims</Typography>
-          
+
           {claims.length === 0 ? (
             <Box textAlign="center" py={4}>
               <Typography variant="body1" color="textSecondary">
@@ -161,8 +161,8 @@ export default function Claims() {
                       </TableCell>
                       <TableCell>{formatPrice(claim.claim_amount)}</TableCell>
                       <TableCell>
-                        <Chip 
-                          label={claim.status || 'PENDING'} 
+                        <Chip
+                          label={claim.status || 'PENDING'}
                           size="small"
                           color={claimStatusColor(claim.status)}
                         />
@@ -288,8 +288,8 @@ export default function Claims() {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="body2" color="textSecondary">Status</Typography>
-                  <Chip 
-                    label={selectedClaim.status || 'PENDING'} 
+                  <Chip
+                    label={selectedClaim.status || 'PENDING'}
                     size="small"
                     color={claimStatusColor(selectedClaim.status)}
                   />
@@ -314,7 +314,7 @@ export default function Claims() {
                     {selectedClaim.created_at ? formatDateIndonesia(selectedClaim.created_at) : 'N/A'}
                   </Typography>
                 </Grid>
-                
+
                 {/* Foto Dokumen Klaim */}
                 {selectedClaim.document_path && (
                   <Grid item xs={12}>

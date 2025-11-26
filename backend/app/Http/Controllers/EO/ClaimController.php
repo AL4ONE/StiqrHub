@@ -14,7 +14,7 @@ class ClaimController extends Controller
     {
         try {
             $eoId = Auth::user()->id;
-            
+
             // Get all claims from events owned by this EO
             $claims = Claim::whereHas('insurancePolicy.event', function($query) use ($eoId) {
                 $query->where('eo_id', $eoId);
@@ -25,7 +25,7 @@ class ClaimController extends Controller
             ])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
             $claimsWithDetails = $claims->map(function($claim) {
                 $event = $claim->insurancePolicy->event ?? null;
                 return [
@@ -48,7 +48,7 @@ class ClaimController extends Controller
                     'policy_number' => $claim->insurancePolicy->policy_number ?? 'N/A',
                 ];
             });
-            
+
             return ApiResponse::success($claimsWithDetails, "Claims retrieved successfully");
         } catch (\Throwable $e) {
             return ApiResponse::error("Failed to load claims", 500, $e->getMessage());
