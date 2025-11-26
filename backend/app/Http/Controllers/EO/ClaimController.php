@@ -27,16 +27,20 @@ class ClaimController extends Controller
             ->get();
             
             $claimsWithDetails = $claims->map(function($claim) {
+                $event = $claim->insurancePolicy->event ?? null;
                 return [
                     'id' => $claim->id,
                     'tenant_name' => $claim->tenant->name ?? 'N/A',
                     'tenant_email' => $claim->tenant->email ?? 'N/A',
-                    'event_id' => $claim->insurancePolicy->event->id ?? null,
-                    'event_name' => $claim->insurancePolicy->event->name ?? 'N/A',
-                    'event_start_date' => $claim->insurancePolicy->event->start_date ?? null,
-                    'event_end_date' => $claim->insurancePolicy->event->end_date ?? null,
+                    'event_id' => $event->id ?? null,
+                    'event_name' => $event->name ?? 'N/A',
+                    'event_banner' => $event->banner ?? null,
+                    'event_banner_url' => $event->banner_url ?? null,
+                    'event_start_date' => $event->start_date ?? null,
+                    'event_end_date' => $event->end_date ?? null,
                     'incident_date' => $claim->incident_date,
                     'description' => $claim->description,
+                    'document_path' => $claim->document_path ?? null,
                     'claim_amount' => (float) ($claim->claim_amount ?? 0),
                     'status' => $claim->status,
                     'reason' => $claim->reason,

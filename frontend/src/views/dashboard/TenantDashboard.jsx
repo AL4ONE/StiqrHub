@@ -11,14 +11,99 @@ import {
   DialogContent, 
   DialogActions,
   Chip,
-  Stack
+  Stack,
+  Divider
 } from '@mui/material';
 import { IconCalendar, IconShoppingCart, IconShield } from '@tabler/icons-react';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDateIndonesia } from 'src/utils/dateFormat';
+
+// Component untuk list events
+function EventList() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const resp = await apiGet(BACKEND_URL + '/api/tenant/events/active');
+        const data = Array.isArray(resp?.data) ? resp.data : resp;
+        // Ambil maksimal 5 event terbaru
+        setEvents(data.slice(0, 5));
+      } catch (e) {
+        console.error('Failed to load events:', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) {
+    return <Typography color="text.secondary">Memuat event...</Typography>;
+  }
+
+  if (events.length === 0) {
+    return (
+      <Box textAlign="center" py={3}>
+        <Typography variant="body2" color="text.secondary">
+          Belum ada event aktif
+        </Typography>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          sx={{ mt: 2 }}
+          component={Link}
+          to="/app/tenant/events"
+        >
+          Jelajahi Event
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <Stack spacing={2}>
+      {events.map((event) => (
+        <Card 
+          key={event.id} 
+          variant="outlined"
+          sx={{ 
+            cursor: 'pointer',
+            '&:hover': { boxShadow: 2, borderColor: 'primary.main' },
+            transition: 'all 0.2s'
+          }}
+          onClick={() => navigate(`/app/tenant/events/${event.id}`)}
+        >
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+              <Box flex={1}>
+                <Typography variant="h6" fontWeight={600} mb={0.5}>
+                  {event.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={1}>
+                  📍 {event.location || 'Lokasi belum ditentukan'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  📅 {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+                </Typography>
+              </Box>
+              <Chip 
+                label={event.registration?.payment?.status === 'SUCCESS' ? 'Lunas' : 'Menunggu Pembayaran'} 
+                color={event.registration?.payment?.status === 'SUCCESS' ? 'success' : 'warning'}
+                size="small"
+              />
+            </Box>
+          </CardContent>
+        </Card>
+      ))}
+    </Stack>
+  );
+}
 
 export default function TenantDashboard() {
   const [stats, setStats] = useState({
@@ -176,12 +261,27 @@ export default function TenantDashboard() {
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Button variant="outlined" fullWidth component={Link} to="/tenant/claims">
+                  <Button variant="outlined" fullWidth component={Link} to="/app/tenant/claims">
                     My Claims
                   </Button>
                 </Grid>
               </Grid>
               {error && <Typography color="error" mt={2}>{error}</Typography>}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* List Events */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6">📅 Event Saya</Typography>
+                <Button variant="outlined" size="small" component={Link} to="/app/tenant/events/active">
+                  Lihat Semua
+                </Button>
+              </Box>
+              <EventList />
             </CardContent>
           </Card>
         </Grid>
