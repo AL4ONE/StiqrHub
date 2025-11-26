@@ -191,23 +191,23 @@ const buildWhatsAppLink = (eventName = "") => {
       // Get active events to check for conflicts
       const active = await apiGet(`${BACKEND_URL}/api/tenant/events/active`);
       const activeList = Array.isArray(active) ? active : active?.data || [];
-      
+
       const selectedStart = isPerDay ? startDate : event?.start_date;
       const selectedEnd = isPerDay ? endDate : event?.end_date;
-      
+
       if (!selectedStart || !selectedEnd) return false;
-      
+
       const conflicts = activeList.filter((ev) => {
         if (String(ev.id) === String(id)) return false;
         const evStart = ev.start_date ? new Date(ev.start_date) : null;
         const evEnd = ev.end_date ? new Date(ev.end_date) : null;
         const selStart = new Date(selectedStart);
         const selEnd = new Date(selectedEnd);
-        
+
         if (!evStart || !evEnd) return false;
         return (evStart <= selEnd && evEnd >= selStart);
       });
-      
+
       if (conflicts.length > 0) {
         setConflictEvents(conflicts);
         setConflictWarningOpen(true);
@@ -222,11 +222,11 @@ const buildWhatsAppLink = (eventName = "") => {
 
   const openRegisterConfirmation = async () => {
     if (!canRegister) return;
-    
+
     // Check for conflicts first
     const hasConflict = await checkEventConflict();
     if (hasConflict) return;
-    
+
     setRegistrationError("");
     setPaymentSummary(null);
     setDialogStep("review");
@@ -255,25 +255,25 @@ const buildWhatsAppLink = (eventName = "") => {
       setRegistrationError("Harap upload bukti transfer terlebih dahulu");
       return;
     }
-    
+
     try {
       setRegistering(true);
       setRegistrationError("");
       setConfirmedPaymentMethod(selectedPaymentMethod);
-      
+
       const body = isPerDay
         ? { start_date: startDate, end_date: endDate }
         : undefined;
-      
+
       const res = await apiPost(
         `${BACKEND_URL}/api/tenant/events/${id}/register`,
         body
       );
-      
+
       if (res?.status === "success") {
         setHasRegistered(true);
         setPaymentSummary(res?.data?.payment || null);
-        
+
         // If bank transfer with proof, upload proof
         if (selectedPaymentMethod === "bank_transfer" && paymentProof && res?.data?.payment?.id) {
           try {
@@ -286,7 +286,7 @@ const buildWhatsAppLink = (eventName = "") => {
             // Don't fail registration if proof upload fails
           }
         }
-        
+
         setDialogStep("result");
       } else {
         setRegistrationError(res?.message || "Failed to register");
@@ -712,10 +712,10 @@ const buildWhatsAppLink = (eventName = "") => {
                   {registering ? "Registering..." : "Daftar Sekarang"}
                 </Button>
                   {event.insurance_active && (
-                    <Alert 
-                      severity="info" 
-                      sx={{ 
-                        mt: 1.5, 
+                    <Alert
+                      severity="info"
+                      sx={{
+                        mt: 1.5,
                         width: '100%',
                         backgroundColor: 'info.main',
                         color: '#ffffff',
@@ -742,10 +742,10 @@ const buildWhatsAppLink = (eventName = "") => {
                   Ajukan Klaim
                 </Button>
                   {event.insurance_active && (
-                    <Alert 
-                      severity="info" 
-                      sx={{ 
-                        mt: 1.5, 
+                    <Alert
+                      severity="info"
+                      sx={{
+                        mt: 1.5,
                         width: '100%',
                         backgroundColor: 'info.main',
                         color: '#ffffff',
@@ -862,7 +862,7 @@ const buildWhatsAppLink = (eventName = "") => {
       >
         <DialogTitle>
           <strong>
-            {dialogStep === "review" ? "Detail Event & Informasi Pendaftaran" : 
+            {dialogStep === "review" ? "Detail Event & Informasi Pendaftaran" :
              dialogStep === "terms" ? "Syarat dan Ketentuan" :
              "Halaman Pembayaran"}
           </strong>
@@ -880,9 +880,9 @@ const buildWhatsAppLink = (eventName = "") => {
               Registrasi berhasil. Selesaikan pembayaran agar slot kamu dikunci.
               </Alert>
               {event?.insurance_active && (
-                <Alert 
-                  severity="info" 
-                  sx={{ 
+                <Alert
+                  severity="info"
+                  sx={{
                     mb: 2,
                     backgroundColor: 'info.main',
                     color: '#ffffff',
@@ -972,10 +972,10 @@ const buildWhatsAppLink = (eventName = "") => {
               <Typography variant="h6" fontWeight={700} mb={2}>
                 <strong>Syarat dan Ketentuan</strong>
               </Typography>
-              <Box sx={{ 
-                p: 2, 
-                borderRadius: 2, 
-                border: "1px solid", 
+              <Box sx={{
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
                 borderColor: "grey.300",
                 bgcolor: "grey.50",
                 mb: 2,
@@ -1028,7 +1028,7 @@ const buildWhatsAppLink = (eventName = "") => {
               <Typography variant="h6" fontWeight={700} mb={2}>
                 <strong>Pilih Metode Pembayaran</strong>
               </Typography>
-              
+
               <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
                 <FormLabel component="legend">
                   <strong>Metode Pembayaran</strong>
@@ -1047,10 +1047,10 @@ const buildWhatsAppLink = (eventName = "") => {
                     control={<Radio />}
                     label={<strong>Transfer Bank</strong>}
                   />
-                  <FormControlLabel 
-                    value="qris" 
-                    control={<Radio />} 
-                    label={<strong>QRIS</strong>} 
+                  <FormControlLabel
+                    value="qris"
+                    control={<Radio />}
+                    label={<strong>QRIS</strong>}
                   />
                 </RadioGroup>
               </FormControl>
@@ -1100,16 +1100,16 @@ const buildWhatsAppLink = (eventName = "") => {
                     <Typography variant="subtitle2" fontWeight={700} mb={1}>
                       <strong>Upload Bukti Transfer</strong>
                     </Typography>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       component="label"
                       fullWidth
                       sx={{ mb: 1 }}
                     >
                       {paymentProof ? "Ganti File" : "Pilih File Bukti Transfer"}
-                      <input 
-                        type="file" 
-                        hidden 
+                      <input
+                        type="file"
+                        hidden
                         accept="image/*,.pdf"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
@@ -1121,7 +1121,7 @@ const buildWhatsAppLink = (eventName = "") => {
                               setPaymentProofPreview(null);
                             }
                           }
-                        }} 
+                        }}
                       />
                     </Button>
                     {paymentProofPreview && (
@@ -1260,9 +1260,9 @@ const buildWhatsAppLink = (eventName = "") => {
                 borderColor: "grey.200",
               }}
             >
-              <Alert 
-                severity="info" 
-                sx={{ 
+              <Alert
+                severity="info"
+                sx={{
                   mb: 2,
                   backgroundColor: 'info.main',
                   color: '#ffffff',

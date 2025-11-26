@@ -58,7 +58,7 @@ class EventController extends Controller
     public function register($id)
     {
         $event = Event::findOrFail($id);
-        
+
         // Check if event is published
         if ($event->status !== 'PUBLISHED') {
             return ApiResponse::error('Event is not published yet', 403);
