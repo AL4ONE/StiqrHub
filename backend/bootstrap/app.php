@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Add CORS middleware to web group to ensure it applies to all routes
+        $middleware->web(append: [
+            \App\Http\Middleware\CorsMiddleware::class,
+        ]);
+        
         $middleware->alias([
             'jwt.verify' => JwtMiddleware::class,
             'role' => RoleMiddleware::class,

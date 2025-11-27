@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Base URL dari environment variable
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL + '/api';
+// Base URL dari environment variable - remove trailing slash to avoid double slashes
+const backendUrl = (import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+const API_BASE_URL = `${backendUrl}/api`;
 
 // Create axios instance
 const api = axios.create({
