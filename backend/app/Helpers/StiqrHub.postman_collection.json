@@ -1,0 +1,247 @@
+{
+  "info": {
+    "name": "StiqrHub API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "stiqrhub-collection"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register EO (inactive by default)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/register", "host": ["{{baseUrl}}"], "path": ["api","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"EO New\",\n  \"email\": \"eo.new@stiqrhub.com\",\n  \"password\": \"password\",\n  \"role\": \"EO\",\n  \"categories\": [\"F&B\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Tenant",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/register", "host": ["{{baseUrl}}"], "path": ["api","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tenant A\",\n  \"email\": \"tenant.a@stiqrhub.com\",\n  \"password\": \"password\",\n  \"role\": \"TENANT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (any role)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@stiqrhub.com\",\n  \"password\": \"password\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/me", "host": ["{{baseUrl}}"], "path": ["api","me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EO",
+      "item": [
+        {
+          "name": "List My Events",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/eo/events", "host": ["{{baseUrl}}"], "path": ["api","eo","events"] }
+          }
+        },
+        {
+          "name": "Create Event (requires is_active=true)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/eo/events", "host": ["{{baseUrl}}"], "path": ["api","eo","events"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Festival UMKM Kota\",\n  \"location\": \"Alun-alun\",\n  \"map_link\": \"https://maps.google.com\",\n  \"start_date\": \"2025-12-01\",\n  \"end_date\": \"2025-12-03\",\n  \"category\": \"F&B\",\n  \"booth_capacity\": 50,\n  \"booth_size\": \"3x3m\",\n  \"booth_price\": 250000,\n  \"estimated_visitors\": 1000,\n  \"payment_method\": \"per_day\",\n  \"insurance_active\": true,\n  \"status\": \"DRAFT\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenant",
+      "item": [
+        {
+          "name": "List Active Events",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/tenant/events", "host": ["{{baseUrl}}"], "path": ["api","tenant","events"] }
+          }
+        },
+        {
+          "name": "Register Event (per_event)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/tenant/events/1/register", "host": ["{{baseUrl}}"], "path": ["api","tenant","events","1","register"] }
+          }
+        },
+        {
+          "name": "Register Event (per_day)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/tenant/events/1/register", "host": ["{{baseUrl}}"], "path": ["api","tenant","events","1","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2025-12-01\",\n  \"end_date\": \"2025-12-02\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Claim",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/tenant/events/1/claims", "host": ["{{baseUrl}}"], "path": ["api","tenant","events","1","claims"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "incident_date", "value": "2025-12-02", "type": "text" },
+                { "key": "description", "value": "Kerusakan booth saat hujan.", "type": "text" },
+                { "key": "claim_amount", "value": "500000", "type": "text" },
+                { "key": "document", "type": "file", "src": "C:/path/to/proof.png" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Insurer",
+      "item": [
+        {
+          "name": "List Claims",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/insurer/claims", "host": ["{{baseUrl}}"], "path": ["api","insurer","claims"] }
+          }
+        },
+        {
+          "name": "Approve Claim",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/insurer/claims/1/approve", "host": ["{{baseUrl}}"], "path": ["api","insurer","claims","1","approve"] },
+            "body": { "mode": "raw", "raw": "{\n  \"approved_amount\": 300000,\n  \"case_reference\": \"CASE-001\"\n}" }
+          }
+        },
+        {
+          "name": "Reject Claim",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/insurer/claims/1/reject", "host": ["{{baseUrl}}"], "path": ["api","insurer","claims","1","reject"] },
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Tidak memenuhi syarat klaim\"\n}" }
+          }
+        },
+        {
+          "name": "Claim Stats",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/insurer/claims/stats", "host": ["{{baseUrl}}"], "path": ["api","insurer","claims","stats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Payments List (filter by status)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/payments?status=PENDING", "host": ["{{baseUrl}}"], "path": ["api","admin","payments"], "query": [{"key":"status","value":"PENDING"}] }
+          }
+        },
+        {
+          "name": "Mark Payment Paid",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/payments/1/mark-paid", "host": ["{{baseUrl}}"], "path": ["api","admin","payments","1","mark-paid"] },
+            "body": { "mode": "raw", "raw": "{\n  \"qris_reference\": \"STQR-123\"\n}" }
+          }
+        },
+        {
+          "name": "Mark Payment Failed",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/payments/1/mark-failed", "host": ["{{baseUrl}}"], "path": ["api","admin","payments","1","mark-failed"] },
+            "body": { "mode": "raw", "raw": "{\n  \"qris_reference\": \"STQR-123\"\n}" }
+          }
+        },
+        {
+          "name": "Verify EO",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/eos/2/verify", "host": ["{{baseUrl}}"], "path": ["api","admin","eos","2","verify"] }
+          }
+        },
+        {
+          "name": "Active Events Audit",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/events/active", "host": ["{{baseUrl}}"], "path": ["api","admin","events","active"] }
+          }
+        },
+        {
+          "name": "Payouts H+1 Tracking",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/payouts/settlement-tracking", "host": ["{{baseUrl}}"], "path": ["api","admin","payouts","settlement-tracking"] }
+          }
+        },
+        {
+          "name": "Fraud - Duplicate Registrations",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/fraud/duplicate-registrations", "host": ["{{baseUrl}}"], "path": ["api","admin","fraud","duplicate-registrations"] }
+          }
+        },
+        {
+          "name": "Analytics Summary",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/admin/analytics/summary", "host": ["{{baseUrl}}"], "path": ["api","admin","analytics","summary"] }
+          }
+        }
+      ]
+    }
+  ]
+}
