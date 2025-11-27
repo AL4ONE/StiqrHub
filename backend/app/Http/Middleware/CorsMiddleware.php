@@ -23,6 +23,7 @@ class CorsMiddleware
             'http://127.0.0.1:3000',
             'https://stiqrhub.stiqr.id',
             'https://www.stiqrhub.stiqr.id',
+            'https://api-stiqrhub.stiqr.id',
         ];
 
         $origin = $request->headers->get('Origin');
