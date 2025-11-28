@@ -91,8 +91,8 @@ export default function EditEvent() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setSaving(true);
     setError('');
     try {
