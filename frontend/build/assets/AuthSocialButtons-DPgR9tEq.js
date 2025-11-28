@@ -1,0 +1,1 @@
+import{j as t}from"./index-BvKsHq39.js";const s=({title:o})=>t.jsx(t.Fragment,{children:t.jsx(Stack,{direction:"row",justifyContent:"center",spacing:2,mt:3,children:t.jsx(CustomSocialButton,{})})});export{s as A};

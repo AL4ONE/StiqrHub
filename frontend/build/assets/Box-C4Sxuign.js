@@ -1,0 +1,1 @@
+import{g as r,C as n}from"./composeClasses-mRK-vHC7.js";import{c as i}from"./Box-Cgsde7yB.js";function l(s,t,o="Mui"){const e={};return t.forEach(a=>{e[a]=r(s,a,o)}),e}const c=l("MuiBox",["root"]),u=i({defaultClassName:c.root,generateClassName:n.generate});export{u as B};
