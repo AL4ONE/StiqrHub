@@ -82,7 +82,10 @@ const Testimonials = () => {
                   <Stack spacing={2}>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar
-
+                        sx={{ width: 56, height: 56, bgcolor: '#00C68E' }}
+                      >
+                        {testimonial.name.charAt(0)}
+                      </Avatar>
                       <Box>
                         <Typography
                           variant="h6"
