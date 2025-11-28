@@ -25,6 +25,7 @@ export default function EditEvent() {
     estimated_visitors: 500,
     payment_method: 'per_event',
     insurance_active: true,
+  });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
