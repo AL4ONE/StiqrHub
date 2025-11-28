@@ -69,7 +69,11 @@ export default function EventsList() {
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
-
+        {filteredEvents.map((ev) => {
+          const isFree = !ev.booth_price || ev.booth_price === 0;
+          return (
+            <Grid item xs={12} md={6} key={ev.id}>
+              <Card>
                 {(ev.banner_url || ev.banner) && (
                   <Box
                     mb={2}
@@ -107,9 +111,10 @@ export default function EventsList() {
                     </Button>
                   </Stack>
                 </CardContent>
-            </Card>
-          </Grid>
-
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
     </PageContainer>
   );
