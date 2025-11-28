@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-=======
-import { Grid, Card, CardContent, Typography, Box, Button, Chip } from '@mui/material';
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -29,25 +25,7 @@ export default function ActiveEvents() {
     })();
   }, []);
 
-<<<<<<< HEAD
-=======
-  const paymentChipColor = (status = '') => {
-    switch (status.toUpperCase()) {
-      case 'SUCCESS':
-        return 'success';
-      case 'FAILED':
-      case 'REJECTED':
-        return 'error';
-      case 'PENDING':
-      default:
-        return 'warning';
-    }
-  };
 
-  const normalizeStatusLabel = (status = '') =>
-    status ? status.replace(/_/g, ' ').toUpperCase() : '';
-
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   return (
     <PageContainer title="My Active Events">
       {loading && <Typography>Loading...</Typography>}
@@ -70,55 +48,7 @@ export default function ActiveEvents() {
                     />
                   </Box>
                 )}
-<<<<<<< HEAD
-                <Typography variant="h6">{ev.name}</Typography>
-                <Typography variant="body2" color="textSecondary">{ev.location}</Typography>
-                <Typography variant="body2">{formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}</Typography>
-                {ev.payment_summary && (
-                  <Box mt={1}>
-                    <Typography variant="body2">
-                      Booth: Rp {(ev.payment_summary.booth_price || 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2">
-                      Platform Fee: Rp {(ev.payment_summary.platform_fee || 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2">
-                      Insurance: Rp {(ev.payment_summary.insurance_fee || 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      Total: Rp {(ev.payment_summary.total || 0).toLocaleString()}
-=======
-                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-                  <Typography variant="h6">{ev.name}</Typography>
-                  {ev.payment_status && (
-                    <Chip
-                      size="small"
-                      color={paymentChipColor(ev.payment_status)}
-                      label={`Payment: ${normalizeStatusLabel(ev.payment_status)}`}
-                    />
-                  )}
-                </Box>
-                <Typography variant="body2" color="textSecondary">{ev.location}</Typography>
-                <Typography variant="body2">{formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}</Typography>
-                {ev.payment_status && (
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-                    Status Pembayaran: <strong>{normalizeStatusLabel(ev.payment_status)}</strong>
-                  </Typography>
-                )}
-                {ev.payment_summary && (
-                  <Box mt={1}>
-                    <Typography variant="body2">
-                      Booth: Rp. {(ev.payment_summary.booth_price || 0).toLocaleString('id-ID')}
-                    </Typography>
-                    <Typography variant="body2">
-                      Platform Fee: Rp. {(ev.payment_summary.platform_fee || 0).toLocaleString('id-ID')}
-                    </Typography>
-                    <Typography variant="body2">
-                      Insurance: Rp. {(ev.payment_summary.insurance_fee || 0).toLocaleString('id-ID')}
-                    </Typography>
-                    <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
-                      Total: Rp. {(ev.payment_summary.total || 0).toLocaleString('id-ID')}
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
                     </Typography>
                   </Box>
                 )}

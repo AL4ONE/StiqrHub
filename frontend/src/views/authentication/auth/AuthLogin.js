@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React from 'react';
-=======
-import React, { useState, useEffect } from 'react';
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
 import {
   Box,
   Typography,
@@ -28,37 +24,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
     error,
     handleLogin,
   } = useLogin();
-<<<<<<< HEAD
-=======
-  
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
 
-  // Validate email format
-  useEffect(() => {
-    if (username && username.trim() !== '') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(username.toLowerCase())) {
-        setEmailError('Format email tidak valid');
-      } else {
-        setEmailError('');
-      }
-    } else {
-      setEmailError('');
-    }
-  }, [username]);
-
-  // Validate password when email is valid
-  useEffect(() => {
-    if (username && !emailError && password === '') {
-      setPasswordError('Password wajib diisi');
-    } else if (password && password.length < 6) {
-      setPasswordError('Password minimal 6 karakter');
-    } else {
-      setPasswordError('');
-    }
-  }, [username, emailError, password]);
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
   // Navigasi manual: redirect by role
   const onLoginSuccess = () => {
@@ -91,11 +57,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               fullWidth
               value={username}
               onChange={e => setUsername(e.target.value.toLowerCase())}
-<<<<<<< HEAD
-=======
-              error={!!emailError}
-              helperText={emailError}
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
               required
             />
           </Box>
@@ -108,11 +70,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               fullWidth
               value={password}
               onChange={e => setPassword(e.target.value)}
-<<<<<<< HEAD
-=======
-              error={!!passwordError}
-              helperText={passwordError}
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
               required
             />
           </Box>
@@ -125,22 +83,14 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
             </FormGroup>
             <Typography
               component={Link}
-<<<<<<< HEAD
-              to="/auth/forgot-password"
-=======
-              to="/start"
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
               fontWeight="500"
               sx={{
                 textDecoration: 'none',
                 color: 'primary.main',
               }}
             >
-<<<<<<< HEAD
-              Forgot Password ?
-=======
-              Create Account
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
             </Typography>
           </Stack>
         </Stack>

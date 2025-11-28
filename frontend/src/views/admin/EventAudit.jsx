@@ -99,17 +99,7 @@ export default function EventAudit() {
                   <Typography variant="h6">{ev.name}</Typography>
                   <Chip label={ev.status} size="small" />
                 </Box>
-<<<<<<< HEAD
-                <Typography variant="body2" color="textSecondary" mb={1}>EO: {ev?.eo?.name || '-'}</Typography>
-                <Typography variant="body2" mb={1}>{formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}</Typography>
-                <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
-=======
-                <Typography variant="body2" color="textSecondary" mb={0.5}>EO: {ev?.eo?.name || '-'}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Harga:</strong> {ev.booth_price ? `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}` : 'Gratis'}</Typography>
-                <Typography variant="body2" mb={1}>Registrations: {ev.registrations_count || 0}</Typography>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
                 <Button variant="contained" size="small" onClick={() => activate(ev.id)} disabled={activatingId === ev.id}>
                   {activatingId === ev.id ? 'Activating...' : 'Activate'}
                 </Button>
@@ -161,15 +151,7 @@ export default function EventAudit() {
                   <Typography variant="h6">{ev.name}</Typography>
                   <Chip label={ev.status} size="small" />
                 </Box>
-<<<<<<< HEAD
-                <Typography variant="body2" color="textSecondary" mb={1}>EO: {ev?.eo?.name || '-'}</Typography>
-                <Typography variant="body2" mb={1}>{ev.start_date} → {ev.end_date}</Typography>
-=======
-                <Typography variant="body2" color="textSecondary" mb={0.5}>EO: {ev?.eo?.name || '-'}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}</Typography>
-                <Typography variant="body2" mb={0.5}><strong>Harga:</strong> {ev.booth_price ? `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}` : 'Gratis'}</Typography>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
                 <Typography variant="body2" mb={1}>Registrations: {ev.registrations_count || 0}</Typography>
               </CardContent>
             </Card>

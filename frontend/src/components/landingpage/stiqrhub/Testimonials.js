@@ -1,12 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography, Grid, Card, CardContent, Avatar, Stack, Rating } from '@mui/material';
 import { styled } from '@mui/material/styles';
-<<<<<<< HEAD
-=======
-import nadiaImage from '../../../assets/images/logos/nadia.png';
-import rizalImage from '../../../assets/images/logos/rizal.png';
-import yantiImage from '../../../assets/images/logos/yanti.png';
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
 
 const Testimonials = () => {
   const SectionBox = styled(Box)(({ theme }) => ({
@@ -51,33 +46,21 @@ const Testimonials = () => {
       role: 'EO Bandung',
       date: '01 November 2025',
       quote: 'Approve tenant tinggal klik',
-<<<<<<< HEAD
-      avatar: 'N',
-=======
-      avatar: nadiaImage,
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
     },
     {
       name: 'Rizal',
       role: 'Tenant Kopi Lokal',
       date: '01 November 2025',
       quote: 'Event jadi ramai karena promosi StiqrHub',
-<<<<<<< HEAD
-      avatar: 'R',
-=======
-      avatar: rizalImage,
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
     },
     {
       name: 'Yanti',
       role: 'EO Food Fair',
       date: '01 November 2025',
       quote: 'Bazar pertama langsung aman, bahkan dilindungi asuransi',
-<<<<<<< HEAD
-      avatar: 'Y',
-=======
-      avatar: yantiImage,
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
     },
   ];
 
@@ -99,26 +82,7 @@ const Testimonials = () => {
                   <Stack spacing={2}>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar
-<<<<<<< HEAD
-                        sx={{
-                          width: 56,
-                          height: 56,
-                          bgcolor: '#00C68E',
-                          fontSize: '24px',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {testimonial.avatar}
-                      </Avatar>
-=======
-                        src={testimonial.avatar}
-                        alt={testimonial.name}
-                        sx={{
-                          width: 56,
-                          height: 56,
-                        }}
-                      />
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
+
                       <Box>
                         <Typography
                           variant="h6"
