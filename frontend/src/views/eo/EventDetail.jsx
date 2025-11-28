@@ -165,7 +165,6 @@ export default function EventDetail() {
   };
 
   const handleDeleteConfirm = async () => {
-
     setDeleting(true);
     try {
       const res = await apiDelete(BACKEND_URL + `/api/eo/events/${id}`);
@@ -175,48 +174,127 @@ export default function EventDetail() {
         alert(res?.message || 'Failed to delete event');
         setDeleting(false);
         setDeleteDialogOpen(false);
-
       }
     } catch (e) {
       alert('Failed to delete event');
       setDeleting(false);
       setDeleteDialogOpen(false);
+    }
+  };
 
-
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography color="error">{error}</Typography>;
-  if (!event) return <Typography>Event not found</Typography>;
+  if (loading) return <PageContainer title="Event Detail"><Typography>Loading...</Typography></PageContainer>;
+  if (error) return <PageContainer title="Event Detail"><Typography color="error">{error}</Typography></PageContainer>;
+  if (!event) return <PageContainer title="Event Detail"><Typography>Event not found</Typography></PageContainer>;
 
   return (
-
+    <PageContainer title="Event Detail">
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              {(event.banner_url || event.banner) && (
+                <Box
+                  mb={2}
+                  sx={{
+                    width: '100%',
+                    height: 300,
+                    overflow: 'hidden',
+                    borderRadius: 1,
+                    backgroundColor: '#f5f5f5',
+                  }}
+                >
                   <img
                     src={
                       event.banner_url
                         ? (event.banner_url.startsWith('http') ? event.banner_url : `${BACKEND_URL}${event.banner_url}`)
                         : `${BACKEND_URL}/storage/${event.banner}`
                     }
-
+                    alt={event.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </Box>
+              )}
+              <Typography variant="h4" gutterBottom>
+                {event.name}
+              </Typography>
+              <Typography variant="body1" color="textSecondary" gutterBottom>
+                📍 {event.location}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                📅 {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+              </Typography>
+              <Box display="flex" gap={1} mb={2} alignItems="center">
+                <Chip label={event.status} color={statusColor(event.status)} />
+                <Chip label={event.category || 'Event'} variant="outlined" />
+                {event.insurance_active && (
+                  <Chip label="Insurance Active" color="info" />
+                )}
+              </Box>
+              <Divider sx={{ my: 2 }} />
+              <Stack direction="row" spacing={2} flexWrap="wrap">
+                {event.status === 'DRAFT' && (
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    disabled={saving}
+                    onClick={() => setStatus('PUBLISHED')}
+                  >
+                    Publish Event
+                  </Button>
+                )}
+                {event.status === 'PUBLISHED' && (
+                  <Button 
+                    variant="contained" 
+                    size="small" 
+                    disabled={saving || event.status !== 'ACTIVATED'}
+                    onClick={handlePublishClick}
+                  >
+                    {event.published_start_date && event.published_end_date ? 'Edit Publish Dates' : 'Set Publish Dates'}
                   </Button>
                 )}
                 <Button 
-                  variant="contained" 
-                  size="small" 
-                  disabled={saving || event.status !== 'ACTIVATED'}
-                  onClick={handlePublishClick}
-                >
-
+                  variant="outlined" 
+                  size="small"
+                  component="a"
+                  href={`/app/eo/events/${id}/edit`}
                 >
                   Edit Event
                 </Button>
                 <Button 
                   variant="outlined" 
                   color="error"
-
-              )}
+                  size="small"
+                  onClick={handleDeleteClick}
+                  disabled={deleting}
+                >
+                  Delete Event
+                </Button>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
+      </Grid>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => !deleting && setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Event</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this event? This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -225,14 +303,14 @@ export default function EventDetail() {
       <Dialog open={publishDialogOpen} onClose={() => !saving && setPublishDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Set Publish Dates</DialogTitle>
         <DialogContent>
-
-              Published end date cannot exceed event end date.
-            </Typography>
-          </Alert>
+          <Typography variant="body2" color="textSecondary" mb={2}>
+            Published end date cannot exceed event end date.
+          </Typography>
 
           {publishError && (
-
-            </Alert>
+            <Typography color="error" mb={2}>
+              {publishError}
+            </Typography>
           )}
 
           <TextField
