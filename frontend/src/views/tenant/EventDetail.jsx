@@ -181,6 +181,15 @@ export default function EventDetail() {
             </Box>
           )}
 
+          <Typography variant="h4" gutterBottom>
+            {event.name}
+          </Typography>
+          <Typography variant="body1" color="textSecondary" gutterBottom>
+            📍 {event.location}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" gutterBottom>
+            📅 {formatDateIndonesia(event.start_date)} - {formatDateIndonesia(event.end_date)}
+          </Typography>
 
           <Box display="flex" gap={1} mb={2} alignItems="center">
             <StatusChip value={event.status} />
@@ -189,7 +198,8 @@ export default function EventDetail() {
               <Chip label="Insurance Active" color="info" />
             )}
           </Box>
-
+        </CardContent>
+      </Card>
     </PageContainer>
   );
 }
