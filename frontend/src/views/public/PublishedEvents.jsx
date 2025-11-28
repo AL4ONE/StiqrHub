@@ -41,7 +41,7 @@ const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
   color: '#333333',
 }));
 
-
+const SearchButton = styled(Button)(({ theme }) => ({
   backgroundColor: '#00C68E',
   color: '#FFFFFF',
   borderRadius: '8px',
