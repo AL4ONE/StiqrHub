@@ -189,7 +189,6 @@ export default function TenantDashboard() {
     }
   };
 
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   return (
     <PageContainer title="Tenant Dashboard">
       <Grid container spacing={3}>
