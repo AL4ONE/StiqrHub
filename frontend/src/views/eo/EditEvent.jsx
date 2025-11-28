@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { Card, CardContent, Typography, Button, TextField, Grid, Box } from '@mui/material';
+=======
+import { Card, CardContent, Typography, Button, TextField, Grid, Box, FormControlLabel, Checkbox } from '@mui/material';
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet, apiPut } from 'src/utils/api';
@@ -15,6 +19,10 @@ export default function EditEvent() {
     name: '',
     location: '',
     map_link: '',
+<<<<<<< HEAD
+=======
+    details: '',
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
     start_date: '',
     end_date: '',
     category: 'F&B',
@@ -24,10 +32,17 @@ export default function EditEvent() {
     estimated_visitors: 500,
     payment_method: 'per_event',
     insurance_active: true,
+<<<<<<< HEAD
   });
   const [bannerFile, setBannerFile] = useState(null);
   const [previewBanner, setPreviewBanner] = useState('');
   const [status, setStatus] = useState('DRAFT');
+=======
+    contact_for_price: false,
+  });
+  const [bannerFile, setBannerFile] = useState(null);
+  const [previewBanner, setPreviewBanner] = useState('');
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -44,7 +59,10 @@ export default function EditEvent() {
           setLoading(false);
           return;
         }
+<<<<<<< HEAD
         setStatus(ev.status);
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
         // Convert to datetime-local compatible (Indonesia timezone)
         const convertedStart = toIndonesiaDateTimeLocal(ev.start_date);
         const convertedEnd = toIndonesiaDateTimeLocal(ev.end_date);
@@ -59,6 +77,10 @@ export default function EditEvent() {
           name: ev.name || '',
           location: ev.location || '',
           map_link: ev.map_link || '',
+<<<<<<< HEAD
+=======
+          details: ev.details || '',
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
           start_date: convertedStart,
           end_date: convertedEnd,
           category: ev.category || 'F&B',
@@ -68,6 +90,10 @@ export default function EditEvent() {
           estimated_visitors: ev.estimated_visitors ?? 500,
           payment_method: ev.payment_method || 'per_event',
           insurance_active: !!ev.insurance_active,
+<<<<<<< HEAD
+=======
+          contact_for_price: !!ev.contact_for_price,
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
         });
         if (ev.banner_url) {
           setPreviewBanner(ev.banner_url.startsWith('http') ? ev.banner_url : `${BACKEND_URL}${ev.banner_url}`);
@@ -90,11 +116,31 @@ export default function EditEvent() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+<<<<<<< HEAD
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status === 'ACTIVATED' || status === 'PUBLISHED') {
       setError('Activated/Published events cannot be edited');
       return;
+=======
+  const handleContactForPriceToggle = (event) => {
+    const { checked } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      contact_for_price: checked,
+      booth_price: checked ? '' : prev.booth_price,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.contact_for_price) {
+      const hasPrice = formData.booth_price !== '' && formData.booth_price !== null && formData.booth_price !== undefined;
+      if (!hasPrice) {
+        setError('Booth price is required or mark "Hubungi EO untuk harga".');
+        return;
+      }
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
     }
     setSaving(true);
     setError('');
@@ -111,6 +157,10 @@ export default function EditEvent() {
           if (formData.name) fd.append('name', formData.name);
           if (formData.location) fd.append('location', formData.location);
           if (formData.map_link) fd.append('map_link', formData.map_link);
+<<<<<<< HEAD
+=======
+          fd.append('details', formData.details || '');
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
           const sd = toBackendDate(formData.start_date);
           console.log('EditEvent - Input start_date:', formData.start_date, '-> UTC:', sd);
           if (sd) fd.append('start_date', sd);
@@ -120,10 +170,22 @@ export default function EditEvent() {
           if (formData.category) fd.append('category', formData.category);
           if (formData.booth_capacity != null) fd.append('booth_capacity', String(formData.booth_capacity));
           if (formData.booth_size) fd.append('booth_size', formData.booth_size);
+<<<<<<< HEAD
           if (formData.booth_price != null) fd.append('booth_price', String(formData.booth_price ?? 0));
           if (formData.estimated_visitors != null) fd.append('estimated_visitors', String(formData.estimated_visitors));
           if (formData.payment_method) fd.append('payment_method', formData.payment_method);
           fd.append('insurance_active', formData.insurance_active ? '1' : '0');
+=======
+          if (formData.contact_for_price) {
+            fd.append('booth_price', '');
+          } else if (formData.booth_price != null && formData.booth_price !== '') {
+            fd.append('booth_price', String(formData.booth_price ?? 0));
+          }
+          if (formData.estimated_visitors != null) fd.append('estimated_visitors', String(formData.estimated_visitors));
+          if (formData.payment_method) fd.append('payment_method', formData.payment_method);
+          fd.append('insurance_active', formData.insurance_active ? '1' : '0');
+          fd.append('contact_for_price', formData.contact_for_price ? '1' : '0');
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
         fd.append('banner', bannerFile);
         // Use native fetch for PUT multipart
         const token = localStorage.getItem('token');
@@ -151,15 +213,27 @@ export default function EditEvent() {
           name: formData.name,
           location: formData.location,
           map_link: formData.map_link || null,
+<<<<<<< HEAD
+=======
+          details: formData.details || null,
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
           start_date: toBackendDate(formData.start_date),
           end_date: toBackendDate(formData.end_date),
           category: formData.category,
           booth_capacity: Number(formData.booth_capacity),
           booth_size: formData.booth_size || null,
+<<<<<<< HEAD
           booth_price: Number(formData.booth_price ?? 0),
           estimated_visitors: formData.estimated_visitors != null ? Number(formData.estimated_visitors) : null,
           payment_method: formData.payment_method,
           insurance_active: !!formData.insurance_active,
+=======
+          booth_price: formData.contact_for_price ? null : Number(formData.booth_price ?? 0),
+          estimated_visitors: formData.estimated_visitors != null ? Number(formData.estimated_visitors) : null,
+          payment_method: formData.payment_method,
+          insurance_active: !!formData.insurance_active,
+          contact_for_price: !!formData.contact_for_price,
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
         };
         const res = await apiPut(BACKEND_URL + `/api/eo/events/${id}`, payload);
         if (res?.status === 'success') {
@@ -176,19 +250,25 @@ export default function EditEvent() {
     }
   };
 
+<<<<<<< HEAD
   // Disable editing when event is ACTIVATED or PUBLISHED
   const disabled = status === 'ACTIVATED' || status === 'PUBLISHED';
 
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   return (
     <PageContainer title="Edit Event">
       <Card>
         <CardContent>
           <Typography variant="h6" mb={3}>Edit Event</Typography>
+<<<<<<< HEAD
           {disabled && (
             <Typography color="error" mb={2}>
               This event cannot be edited because it is {status}.
             </Typography>
           )}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
           {error && <Typography color="error" mb={2}>{error}</Typography>}
           {!loading && (
             <form onSubmit={handleSubmit}>
@@ -200,7 +280,10 @@ export default function EditEvent() {
                     value={formData.name}
                     onChange={handleChange('name')}
                     required
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -210,7 +293,10 @@ export default function EditEvent() {
                     value={formData.location}
                     onChange={handleChange('location')}
                     required
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -219,7 +305,21 @@ export default function EditEvent() {
                     label="Map Link (optional)"
                     value={formData.map_link}
                     onChange={handleChange('map_link')}
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Event Details"
+                    placeholder="Describe your event, highlights, special requirements, etc."
+                    value={formData.details}
+                    onChange={handleChange('details')}
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -231,7 +331,10 @@ export default function EditEvent() {
                     onChange={handleChange('start_date')}
                     InputLabelProps={{ shrink: true }}
                     required
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                     helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
@@ -244,7 +347,10 @@ export default function EditEvent() {
                     onChange={handleChange('end_date')}
                     InputLabelProps={{ shrink: true }}
                     required
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                     helperText="Waktu Indonesia Barat (WIB)"
                   />
                 </Grid>
@@ -256,7 +362,10 @@ export default function EditEvent() {
                     value={formData.category}
                     onChange={handleChange('category')}
                     SelectProps={{ native: true }}
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -271,7 +380,10 @@ export default function EditEvent() {
                     value={formData.booth_capacity}
                     onChange={handleChange('booth_capacity')}
                     required
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -280,7 +392,10 @@ export default function EditEvent() {
                     label="Booth Size"
                     value={formData.booth_size}
                     onChange={handleChange('booth_size')}
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -290,8 +405,33 @@ export default function EditEvent() {
                     type="number"
                     value={formData.booth_price}
                     onChange={handleChange('booth_price')}
+<<<<<<< HEAD
                     disabled={disabled}
                   />
+=======
+                  disabled={formData.contact_for_price}
+                    required={!formData.contact_for_price}
+                  />
+                  {formData.contact_for_price && (
+                    <Typography variant="caption" color="text.secondary">
+                      Harga akan dibagikan setelah tenant menghubungi EO.
+                    </Typography>
+                  )}
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.contact_for_price}
+                        onChange={handleContactForPriceToggle}
+                      />
+                    }
+                    label="Tandai sebagai 'Hubungi EO untuk harga'"
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Tenant akan diarahkan ke WhatsApp untuk diskusi harga jika opsi ini aktif.
+                  </Typography>
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                 </Grid>
                 <Grid item xs={12}>
                   <Box>
@@ -305,7 +445,10 @@ export default function EditEvent() {
                           setPreviewBanner(URL.createObjectURL(file));
                         }
                       }}
+<<<<<<< HEAD
                       disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                     />
                     {previewBanner ? (
                       <Box mt={1}>
@@ -325,7 +468,10 @@ export default function EditEvent() {
                     type="number"
                     value={formData.estimated_visitors}
                     onChange={handleChange('estimated_visitors')}
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -336,7 +482,10 @@ export default function EditEvent() {
                     value={formData.payment_method}
                     onChange={handleChange('payment_method')}
                     SelectProps={{ native: true }}
+<<<<<<< HEAD
                     disabled={disabled}
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   >
                     <option value="per_event">Per Event</option>
                     <option value="per_day">Per Day</option>
@@ -344,7 +493,11 @@ export default function EditEvent() {
                 </Grid>
                 <Grid item xs={12}>
                   <Box display="flex" gap={2}>
+<<<<<<< HEAD
                     <Button type="submit" variant="contained" disabled={saving || disabled}>
+=======
+                    <Button type="submit" variant="contained" disabled={saving}>
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                       {saving ? 'Updating...' : 'Update Event'}
                     </Button>
                     <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}`)}>

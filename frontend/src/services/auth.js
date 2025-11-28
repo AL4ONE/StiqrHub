@@ -43,6 +43,10 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+<<<<<<< HEAD
     window.location.href = '/start';
+=======
+    window.location.href = '/';
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   }
 };

@@ -150,7 +150,11 @@ const ClaimForm = () => {
       
       // Redirect ke list claims setelah 2 detik
       setTimeout(() => {
+<<<<<<< HEAD
         window.location.href = '/tenant/claims';
+=======
+        window.location.href = '/app/tenant/claims';
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
       }, 2000);
     } catch (err) {
       console.error('Claim submission error:', err);
@@ -186,8 +190,36 @@ const ClaimForm = () => {
           ) : null}
 
           {message && (
+<<<<<<< HEAD
             <Alert severity={message.type} sx={{ mb: 2 }}>
               {message.text}
+=======
+            <Alert 
+              severity={message.type} 
+              sx={{ 
+                mb: 2,
+                ...(message.type === 'error' && {
+                  backgroundColor: 'rgba(211, 47, 47, 0.9)',
+                  color: '#ffffff !important',
+                  fontWeight: 600,
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff !important',
+                  },
+                  '& .MuiAlert-message': {
+                    color: '#ffffff !important',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                  },
+                  '& .MuiAlert-action': {
+                    color: '#ffffff !important',
+                  }
+                })
+              }}
+            >
+              <Typography sx={{ fontWeight: 600, color: message.type === 'error' ? '#ffffff' : 'inherit' }}>
+                {message.text}
+              </Typography>
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             </Alert>
           )}
 

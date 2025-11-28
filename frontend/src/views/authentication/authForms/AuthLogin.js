@@ -60,14 +60,22 @@ const AuthLogin = ({ title, subtitle, subtext }) => (
         </FormGroup>
         <Typography
           component={Link}
+<<<<<<< HEAD
           to="/auth/forgot-password"
+=======
+          to="/start"
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
           fontWeight="500"
           sx={{
             textDecoration: 'none',
             color: 'primary.main',
           }}
         >
+<<<<<<< HEAD
           Forgot Password ?
+=======
+          Create Account
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
         </Typography>
       </Stack>
     </Stack>

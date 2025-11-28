@@ -33,11 +33,14 @@ export default function EventsList() {
 
   return (
     <PageContainer title="My Events">
+<<<<<<< HEAD
       <Box mb={3}>
         <Button variant="contained" component="a" href="/app/eo/events/create">
           Create New Event
         </Button>
       </Box>
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
@@ -63,9 +66,16 @@ export default function EventsList() {
                   <Chip label={ev.status} color={statusColor(ev.status)} size="small" />
                 </Box>
                 <Typography variant="body2" color="textSecondary" mb={1}>{ev.location}</Typography>
+<<<<<<< HEAD
                 <Typography variant="body2" mb={1}>{formatDateIndonesia(ev.start_date)} → {formatDateIndonesia(ev.end_date)}</Typography>
                 <Typography variant="body2" mb={1}>Category: {ev.category}</Typography>
                 <Typography variant="body2" mb={1}>Booth Price: {ev.booth_price || 'Free'}</Typography>
+=======
+                <Typography variant="body2" mb={0.5}><strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}</Typography>
+                <Typography variant="body2" mb={1}><strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}</Typography>
+                <Typography variant="body2" mb={1}>Category: {ev.category}</Typography>
+                <Typography variant="body2" mb={1}><strong>Harga:</strong> {ev.booth_price ? `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}` : 'Gratis'}</Typography>
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                 <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
                 <Stack direction="row" spacing={1}>
                   <Button variant="contained" size="small" component="a" href={`/app/eo/events/${ev.id}`}>

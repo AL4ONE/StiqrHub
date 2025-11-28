@@ -1,0 +1,20 @@
+[33mdd579ac[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mon-development[m[33m, [m[1;31morigin/on-development[m[33m)[m Fix: Add bank accounts functionality for EO profile - Create EoBankAccount model and migration - Add bankAccounts relationship to User model - Update ProfileController to save and load bank accounts - Add validation for bank accounts (max 3, required fields)
+[33m8607300[m Update backend Dockerfile and configurations
+[33m289b632[m Fix Dockerfile: handle missing build directory with fallback logic
+[33mbedab85[m Fix Dockerfile: remove build directory check that causes pipeline error
+[33mabb0641[m Update backend: add password visibility toggle and SSO preparation
+[33mbe189c3[m Remove frontend and scripts folders from backend repository
+[33m75e320b[m Merge on-development-new: update backend with latest fixes and remove nested backend folder
+[33mcee6c2a[m Merge remote-tracking branch 'origin/on-development-new' into on-development
+[33ma23e49d[m[33m ([m[1;32mmaster[m[33m)[m Add api-stiqrhub.stiqr.id to allowed CORS origins
+[33m2093f84[m Add CORS middleware to handle cross-origin requests
+[33m3818f85[m Complete backend structure from commit b9c02676
+[33mb1bc773[m[33m ([m[1;31morigin/on-development-new[m[33m)[m Merge main branch updates into on-development-new
+[33mb9c0267[m Update backend files from main branch
+[33mf8c3775[m[33m ([m[1;31morigin/fix-cors-backend[m[33m, [m[1;31morigin/deployment[m[33m)[m Fix CORS issue and double slash in API URLs - Fix double slash in BACKEND_URL concatenation - Improve CORS middleware to handle preflight requests correctly - Add CORS middleware to web routes as well
+[33m6654f3e[m Update GitLab CI configuration and frontend changes
+[33m499b3ab[m Add event lists to dashboards, improve EO dashboard with images, and add scrollable sections
+[33mb179b27[m Remove fraud detection, improve payout tracking, and add payment proof feature
+[33m235f257[m Update testimonials: replace text avatars with profile images (Nadia, Rizal, Yanti)
+[33m297ba92[m Add missing Dockerfile and .gitlab-ci.yml for backend
+[33m29cebbc[m Tambahkan nama EO di event detail - tampilkan penyelenggara event dengan jelas

@@ -155,12 +155,21 @@ const EOEditEvent = Loadable(lazy(() => import('../views/eo/EditEvent')));
 const EOEventDetail = Loadable(lazy(() => import('../views/eo/EventDetail')));
 const EOEventRules = Loadable(lazy(() => import('../views/eo/EventRules')));
 const EOPayouts = Loadable(lazy(() => import('../views/eo/Payouts')));
+<<<<<<< HEAD
+=======
+const EOEventHistory = Loadable(lazy(() => import('../views/eo/EventHistory')));
+const EOClaims = Loadable(lazy(() => import('../views/eo/Claims')));
+const EOProfile = Loadable(lazy(() => import('../views/eo/EOProfile')));
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
 // Admin pages
 const AdminPayments = Loadable(lazy(() => import('../views/admin/Payments')));
 const AdminVerifyEOs = Loadable(lazy(() => import('../views/admin/VerifyEOs')));
 const AdminEventAudit = Loadable(lazy(() => import('../views/admin/EventAudit')));
+<<<<<<< HEAD
 const AdminFraud = Loadable(lazy(() => import('../views/admin/Fraud')));
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 const AdminPayouts = Loadable(lazy(() => import('../views/admin/Payouts')));
 const AdminAnalytics = Loadable(lazy(() => import('../views/admin/Analytics')));
 const InsurerClaimsInbox = Loadable(lazy(() => import('../views/insurer/ClaimsInbox')));
@@ -206,6 +215,12 @@ const Router = [
       { path: 'eo/events/:id', element: <ProtectedRoute><EOEventDetail /></ProtectedRoute> },
       { path: 'eo/events/:id/rules', element: <ProtectedRoute><EOEventRules /></ProtectedRoute> },
       { path: 'eo/payouts', element: <ProtectedRoute><EOPayouts /></ProtectedRoute> },
+<<<<<<< HEAD
+=======
+      { path: 'eo/events/history', element: <ProtectedRoute><EOEventHistory /></ProtectedRoute> },
+      { path: 'eo/claims', element: <ProtectedRoute><EOClaims /></ProtectedRoute> },
+      { path: 'eo/profile', element: <ProtectedRoute><EOProfile /></ProtectedRoute> },
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
       { path: 'tenant/dashboard', element: <ProtectedRoute><TenantDashboard /></ProtectedRoute> },
       { path: 'tenant/events', element: <ProtectedRoute><TenantEventsList /></ProtectedRoute> },
       { path: 'tenant/events/:id', element: <ProtectedRoute><TenantEventDetail /></ProtectedRoute> },
@@ -216,7 +231,10 @@ const Router = [
       { path: 'admin/payments', element: <ProtectedRoute><AdminPayments /></ProtectedRoute> },
       { path: 'admin/eos', element: <ProtectedRoute><AdminVerifyEOs /></ProtectedRoute> },
       { path: 'admin/events', element: <ProtectedRoute><AdminEventAudit /></ProtectedRoute> },
+<<<<<<< HEAD
       { path: 'admin/fraud', element: <ProtectedRoute><AdminFraud /></ProtectedRoute> },
+=======
+>>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
       { path: 'admin/payouts', element: <ProtectedRoute><AdminPayouts /></ProtectedRoute> },
       { path: 'admin/analytics', element: <ProtectedRoute><AdminAnalytics /></ProtectedRoute> },
       { path: 'insurer/dashboard', element: <ProtectedRoute><InsurerDashboard /></ProtectedRoute> },
