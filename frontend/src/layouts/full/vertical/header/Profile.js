@@ -19,7 +19,8 @@ import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
 const handleLogout = () => {
   localStorage.removeItem('token');
-
+  localStorage.removeItem('user');
+  window.location.href = '/';
 };
 
 const Profile = () => {
@@ -39,7 +40,15 @@ const Profile = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (e) {
+        console.error('Failed to parse user data:', e);
+      }
+    }
   }, []);
 
   return (
@@ -58,12 +67,13 @@ const Profile = () => {
         onClick={handleClick2}
       >
         <Avatar
-
-          alt="User"
+          src={user?.avatar || ProfileImg}
+          alt={user?.name || 'User'}
           sx={{
             width: 35,
             height: 35,
-
+          }}
+        />
       </IconButton>
 
       <Menu
