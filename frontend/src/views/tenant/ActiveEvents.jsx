@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
@@ -48,10 +48,15 @@ export default function ActiveEvents() {
                     />
                   </Box>
                 )}
-
-                    </Typography>
-                  </Box>
-                )}
+                <Typography variant="h6" gutterBottom>
+                  {ev.name}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  📍 {ev.location}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  📅 {formatDateIndonesia(ev.start_date)} - {formatDateIndonesia(ev.end_date)}
+                </Typography>
                 <Box mt={2}>
                   <Button variant="contained" component="a" href={`/app/tenant/events/${ev.id}`}>
                     View Details
