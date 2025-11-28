@@ -243,9 +243,10 @@ export default function PublishedEventsPublic() {
                 (priceFilter === 'PAID' && !isFree);
               return matchesQuery && matchesPrice;
             });
-            return list;
-
-            <Grid item xs={12} sm={6} md={4} key={ev.id}>
+            return list.map((ev) => {
+              const isFree = !ev.booth_price || ev.booth_price === 0;
+              return (
+                <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
                 {(ev.banner_url || ev.banner) && (
                   <Box
