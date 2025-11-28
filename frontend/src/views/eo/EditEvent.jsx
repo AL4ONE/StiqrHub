@@ -277,7 +277,7 @@ export default function EditEvent() {
                     type="number"
                     value={formData.booth_price}
                     onChange={handleChange('booth_price')}
-
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <Box>
