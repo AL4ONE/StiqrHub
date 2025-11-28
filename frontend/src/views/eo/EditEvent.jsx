@@ -330,7 +330,7 @@ export default function EditEvent() {
                 </Grid>
                 <Grid item xs={12}>
                   <Box display="flex" gap={2}>
-
+                    <Button variant="contained" type="submit" disabled={saving}>
                       {saving ? 'Updating...' : 'Update Event'}
                     </Button>
                     <Button variant="outlined" onClick={() => navigate(`/app/eo/events/${id}`)}>
