@@ -21,12 +21,22 @@ export const Profile = () => {
   const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
   const hideMenu = lgUp ? customizer.isCollapse && !customizer.isSidebarHover : false;
 
-
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (e) {
+        console.error('Failed to parse user data:', e);
+      }
+    }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-
+    localStorage.removeItem('user');
+    window.location.href = '/';
   };
 
   return (
