@@ -1,12 +1,4 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-import { IconCalendar, IconUsers, IconCurrencyDollar, IconPlus } from '@tabler/icons-react';
-import PageContainer from 'src/components/container/PageContainer';
-import { BACKEND_URL } from 'src/config/constants';
-import { apiGet } from 'src/utils/api';
-import { Link } from 'react-router-dom';
-=======
 import {
   Grid,
   Card,
@@ -374,7 +366,6 @@ function PayoutsList() {
     </Stack>
   );
 }
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
 export default function EODashboard() {
   const [stats, setStats] = useState({
@@ -388,11 +379,8 @@ export default function EODashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-<<<<<<< HEAD
-=======
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState({ title: '', content: '' });
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
   useEffect(() => {
     (async () => {
@@ -409,8 +397,6 @@ export default function EODashboard() {
     })();
   }, []);
 
-<<<<<<< HEAD
-=======
   const handleCardClick = (type) => {
     let title = '';
     let content = '';
@@ -443,17 +429,11 @@ export default function EODashboard() {
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
-
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   return (
     <PageContainer title="EO Dashboard">
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_events')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -466,11 +446,7 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_tenants')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -483,20 +459,12 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_revenue')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h4">
-<<<<<<< HEAD
-                    {loading ? '...' : `Rp ${stats.total_revenue?.toLocaleString() || 0}`}
-=======
                     {loading ? '...' : `Rp ${(stats.total_revenue || 0).toLocaleString('id-ID')}`}
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   </Typography>
                   <Typography variant="subtitle2" color="textSecondary">Total Revenue</Typography>
                 </Box>
@@ -506,11 +474,7 @@ export default function EODashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('active_events')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -526,42 +490,27 @@ export default function EODashboard() {
           <Card>
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-<<<<<<< HEAD
-                <Typography variant="h6">Quick Actions</Typography>
-                <Button variant="contained" component={Link} to="/app/eo/events/create" startIcon={<IconPlus size={20} />}>
-                  Create Event
-                </Button>
-=======
                 <Typography variant="h6">⚡ Quick Actions</Typography>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
               </Box>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
                   <Button variant="outlined" fullWidth component={Link} to="/app/eo/events">
-<<<<<<< HEAD
-                    View All Events
-=======
                     Lihat Semua Event
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Button variant="outlined" fullWidth component={Link} to="/app/eo/events/create">
                     Buat Event Baru
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Button variant="outlined" fullWidth component={Link} to="/app/eo/payouts">
-<<<<<<< HEAD
-                    View Payouts
-=======
                     Lihat Payouts
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Button variant="outlined" fullWidth component={Link} to="/app/eo/claims">
                     Lihat Klaim
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                   </Button>
                 </Grid>
               </Grid>
@@ -569,9 +518,6 @@ export default function EODashboard() {
             </CardContent>
           </Card>
         </Grid>
-<<<<<<< HEAD
-      </Grid>
-=======
 
         {/* List Events */}
         <Grid item xs={12} md={6}>
@@ -628,7 +574,6 @@ export default function EODashboard() {
           <Button onClick={handleCloseDialog}>Tutup</Button>
         </DialogActions>
       </Dialog>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
     </PageContainer>
   );
 }
