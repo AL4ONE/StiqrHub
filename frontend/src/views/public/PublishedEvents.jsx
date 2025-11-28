@@ -289,8 +289,6 @@ export default function PublishedEventsPublic() {
                   <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
                     📍 {ev.location}
                   </Typography>
-
-                  </Box>
                 </CardContent>
               </EventCard>
             </Grid>
