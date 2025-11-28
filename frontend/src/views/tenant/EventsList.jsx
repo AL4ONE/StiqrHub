@@ -96,11 +96,17 @@ export default function EventsList() {
                     />
                   </Box>
                 )}
-                <Typography variant="h6">{ev.name}</Typography>
-
-                  </Button>
-                </Stack>
-              </CardContent>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>{ev.name}</Typography>
+                  <Typography variant="body2" color="textSecondary" gutterBottom>
+                    📍 {ev.location}
+                  </Typography>
+                  <Stack direction="row" spacing={2} mt={2}>
+                    <Button variant="contained" component="a" href={`/app/tenant/events/${ev.id}`}>
+                      View Details
+                    </Button>
+                  </Stack>
+                </CardContent>
             </Card>
           </Grid>
 
