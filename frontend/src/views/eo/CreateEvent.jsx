@@ -147,7 +147,7 @@ export default function CreateEvent() {
                   type="number"
                   value={formData.booth_price}
                   onChange={handleChange('booth_price')}
-
+                />
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>Banner (jpg/png)</Typography>
