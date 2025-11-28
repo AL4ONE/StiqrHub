@@ -3,6 +3,24 @@ import { Grid, Card, CardContent, Typography, Button, Stack, Box, TextField, Men
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
+import { formatDateIndonesia } from 'src/utils/dateFormat';
+
+const describePrice = (ev = {}) => {
+  const contactForPrice = !!ev.contact_for_price;
+  const rawValue =
+    ev.booth_price !== null && ev.booth_price !== undefined && ev.booth_price !== ''
+      ? Number(ev.booth_price)
+      : 0;
+  const numericValue = Number.isFinite(rawValue) ? rawValue : 0;
+  const isFree = !contactForPrice && numericValue === 0;
+  const label = contactForPrice
+    ? 'Info lanjut'
+    : isFree
+      ? 'Gratis'
+      : `Rp. ${numericValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`;
+  const color = contactForPrice ? '#FF9800' : isFree ? '#2E7D32' : '#00C68E';
+  return { contactForPrice, isFree, label, color };
+};
 
 export default function EventsList() {
   const [events, setEvents] = useState([]);
@@ -33,7 +51,7 @@ export default function EventsList() {
         !q ||
         (ev.name && ev.name.toLowerCase().includes(q)) ||
         (ev.location && ev.location.toLowerCase().includes(q));
-
+      const { isFree } = describePrice(ev);
       const matchesPrice =
         priceFilter === 'ALL' ||
         (priceFilter === 'FREE' && isFree) ||
@@ -70,10 +88,11 @@ export default function EventsList() {
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
         {filteredEvents.map((ev) => {
-          const isFree = !ev.booth_price || ev.booth_price === 0;
+          const priceMeta = describePrice(ev);
           return (
             <Grid item xs={12} md={6} key={ev.id}>
               <Card>
+                <CardContent>
                 {(ev.banner_url || ev.banner) && (
                   <Box
                     mb={2}
@@ -100,19 +119,35 @@ export default function EventsList() {
                     />
                   </Box>
                 )}
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{ev.name}</Typography>
-                  <Typography variant="body2" color="textSecondary" gutterBottom>
-                    📍 {ev.location}
-                  </Typography>
-                  <Stack direction="row" spacing={2} mt={2}>
-                    <Button variant="contained" component="a" href={`/app/tenant/events/${ev.id}`}>
-                      View Details
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
+                <Typography variant="h6">{ev.name}</Typography>
+                <Typography variant="body2" color="textSecondary" mb={0.5}>
+                  {ev.location}
+                </Typography>
+                <Typography variant="body2" mb={0.5}>
+                  <strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}
+                </Typography>
+                <Typography variant="body2" mb={1}>
+                  <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  mb={1}
+                  sx={{ fontWeight: 600, color: priceMeta.color }}
+                >
+                  <strong>Harga:</strong> {priceMeta.label}
+                </Typography>
+                <Stack direction="row" spacing={1} mt={2}>
+                  <Button
+                    variant="contained"
+                    component="a"
+                    href={`/app/tenant/events/${ev.id}`}
+                  >
+                    View Details
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
           );
         })}
       </Grid>

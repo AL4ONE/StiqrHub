@@ -126,5 +126,6 @@ export default function ProtectedRoute({ children }) {
   if (shouldRedirect && redirectPath) {
     return <Navigate to={redirectPath} replace />;
   }
+
   return children;
 }

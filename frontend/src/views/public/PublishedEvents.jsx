@@ -41,7 +41,7 @@ const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
   color: '#333333',
 }));
 
-const SearchButton = styled(Button)(({ theme }) => ({
+const AuthButton = styled(Button)(({ theme }) => ({
   backgroundColor: '#00C68E',
   color: '#FFFFFF',
   borderRadius: '8px',
@@ -64,6 +64,13 @@ const EventCard = styled(Card)(({ theme }) => ({
   },
 }));
 
+const WHATSAPP_NUMBER = '6282118383415';
+const buildWhatsAppLink = (eventName = '') => {
+  const safeName = eventName ? `${eventName} ` : '';
+  const message = encodeURIComponent(`Halo, Saya tertarik dengan event ${safeName}STIQRHub bisa diskusi lebih lanjut?`);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+};
+const WHATSAPP_LINK = buildWhatsAppLink();
 
 export default function PublishedEventsPublic() {
   const [events, setEvents] = useState([]);
@@ -128,7 +135,9 @@ export default function PublishedEventsPublic() {
             <Box flexGrow={1} />
             {lgUp ? (
               <Stack direction="row" spacing={2} alignItems="center">
-
+                <AuthButton component="a" href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                  Hubungi via WhatsApp
+                </AuthButton>
               </Stack>
             ) : (
               <IconButton color="inherit" aria-label="menu" onClick={handleDrawerOpen}>
@@ -152,7 +161,16 @@ export default function PublishedEventsPublic() {
         >
           <Box sx={{ p: 3 }}>
             <Stack direction="column" spacing={2}>
-
+              <AuthButton
+                component="a"
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+                onClick={toggleDrawer(false)}
+              >
+                Hubungi via WhatsApp
+              </AuthButton>
             </Stack>
           </Box>
         </Drawer>
@@ -236,17 +254,26 @@ export default function PublishedEventsPublic() {
                 !q ||
                 (ev.name && ev.name.toLowerCase().includes(q)) ||
                 (ev.location && ev.location.toLowerCase().includes(q));
-
+              // Check if event is free: booth_price is null, undefined, 0, or empty string
+              const boothPrice = ev.booth_price;
+              const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
+              const contactForPrice = !!ev.contact_for_price;
+              const isFree = !contactForPrice && (!boothPrice || priceValue === 0 || isNaN(priceValue));
               const matchesPrice =
                 priceFilter === 'ALL' ||
                 (priceFilter === 'FREE' && isFree) ||
                 (priceFilter === 'PAID' && !isFree);
               return matchesQuery && matchesPrice;
             });
-            return list.map((ev) => {
-              const isFree = !ev.booth_price || ev.booth_price === 0;
-              return (
-                <Grid item xs={12} sm={6} md={4} key={ev.id}>
+            return list;
+          }, [events, query, priceFilter]).map((ev) => {
+            // Calculate if event is free or requires contact
+            const boothPrice = ev.booth_price;
+            const priceValue = boothPrice ? parseFloat(boothPrice) : 0;
+            const contactForPrice = !!ev.contact_for_price;
+            const isFree = !contactForPrice && (!boothPrice || priceValue === 0 || isNaN(priceValue));
+            return (
+            <Grid item xs={12} sm={6} md={4} key={ev.id}>
               <EventCard>
                 {(ev.banner_url || ev.banner) && (
                   <Box
@@ -290,12 +317,41 @@ export default function PublishedEventsPublic() {
                   <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
                     📍 {ev.location}
                   </Typography>
+                  <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                    📅 <strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
+                    📅 <strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, color: contactForPrice ? '#FF9800' : (isFree ? '#2E7D32' : '#00C68E') }}>
+                    💰 <strong>Harga:</strong>{' '}
+                    {contactForPrice
+                      ? 'Info lanjut'
+                      : isFree
+                        ? 'Gratis'
+                        : `Rp. ${priceValue.toLocaleString('id-ID')}${ev.payment_method === 'per_day' ? '/hari' : '/event'}`}
+                  </Typography>
+                  <Box sx={{ mt: 'auto', pt: 2 }}>
+                    <AuthButton
+                      fullWidth
+                      component="a"
+                      href={buildWhatsAppLink(ev.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: '#00AE7D',
+                        },
+                      }}
+                    >
+                      Hubungi via WhatsApp
+                    </AuthButton>
+                  </Box>
                 </CardContent>
               </EventCard>
             </Grid>
-              );
-            });
-          }, [events, query, priceFilter])}
+            );
+          })}
         </Grid>
       </Container>
     </Box>

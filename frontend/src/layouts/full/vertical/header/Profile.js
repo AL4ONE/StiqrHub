@@ -19,7 +19,6 @@ import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 
 const handleLogout = () => {
   localStorage.removeItem('token');
-  localStorage.removeItem('user');
   window.location.href = '/';
 };
 
@@ -35,20 +34,60 @@ const Profile = () => {
     setAnchorEl2(null);
   };
 
+  const [logoUrl, setLogoUrl] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
+    const fetchUser = async () => {
       try {
-        const userData = JSON.parse(userStr);
-        setUser(userData);
-      } catch (e) {
-        console.error('Failed to parse user data:', e);
+        // Try to get full profile if EO
+        const role = localStorage.getItem('role');
+        let apiUser = null;
+        
+        if (role === 'EO') {
+          try {
+            const res = await axios.get(BACKEND_URL + '/api/eo/profile', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            apiUser = res?.data?.data || res?.data || null;
+          } catch {
+            // Fallback to /api/me if profile endpoint fails
+            const res = await axios.get(BACKEND_URL + '/api/me', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            apiUser = res?.data?.data || res?.data || null;
+          }
+        } else {
+          const res = await axios.get(BACKEND_URL + '/api/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          apiUser = res?.data?.data || res?.data || null;
+        }
+
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        const finalUser = apiUser || cached;
+        setUser(finalUser);
+
+        // Set logo URL if EO has logo
+        if (finalUser && finalUser.role === 'EO' && finalUser.eo_logo) {
+          const logo = finalUser.eo_logo.startsWith('http')
+            ? finalUser.eo_logo
+            : `${BACKEND_URL}/storage/${finalUser.eo_logo}`;
+          setLogoUrl(logo);
+        } else {
+          setLogoUrl(null);
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        const cached = JSON.parse(localStorage.getItem('user') || 'null');
+        setUser(cached || { name: 'Unknown', email: '-', role: '-' });
+        setLogoUrl(null);
       }
-    }
+    };
+
+    fetchUser();
   }, []);
 
   return (
@@ -67,13 +106,18 @@ const Profile = () => {
         onClick={handleClick2}
       >
         <Avatar
-          src={user?.avatar || ProfileImg}
-          alt={user?.name || 'User'}
+          src={logoUrl || (user?.role === 'EO' ? null : ProfileImg)}
+          alt="User"
           sx={{
             width: 35,
             height: 35,
+            bgcolor: logoUrl ? 'transparent' : 'primary.main',
+            border: logoUrl ? '2px solid' : 'none',
+            borderColor: logoUrl ? 'divider' : 'transparent',
           }}
-        />
+        >
+          {!logoUrl && user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+        </Avatar>
       </IconButton>
 
       <Menu
@@ -94,7 +138,19 @@ const Profile = () => {
           <Box p={3}>
             <Typography variant="h5">User Profile</Typography>
             <Stack direction="row" py={3} spacing={2} alignItems="center">
-
+              <Avatar 
+                src={logoUrl || (user?.role === 'EO' ? null : ProfileImg)} 
+                alt="User" 
+                sx={{ 
+                  width: 95, 
+                  height: 95,
+                  bgcolor: logoUrl ? 'transparent' : 'primary.main',
+                  border: logoUrl ? '2px solid' : 'none',
+                  borderColor: logoUrl ? 'divider' : 'transparent',
+                }}
+              >
+                {!logoUrl && user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </Avatar>
               <Box>
                 <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
                   {user ? user.name : 'Unknown'}

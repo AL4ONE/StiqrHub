@@ -9,7 +9,8 @@ import {
   IconUserCheck,
   IconAlertCircle,
   IconChartBar,
-
+  IconAperture,
+  IconUser,
 } from '@tabler/icons-react';
 
 // EO Menu
@@ -40,7 +41,12 @@ export const EOMenuItems = [
     icon: IconFileDescription,
     href: '/app/eo/events/create',
   },
-
+  {
+    id: uniqueId(),
+    title: 'Event History',
+    icon: IconChecklist,
+    href: '/app/eo/events/history',
+  },
   {
     navlabel: true,
     subheader: 'Finance',
@@ -51,7 +57,26 @@ export const EOMenuItems = [
     icon: IconChartLine,
     href: '/app/eo/payouts',
   },
-
+  {
+    navlabel: true,
+    subheader: 'Insurance',
+  },
+  {
+    id: uniqueId(),
+    title: 'Claim Insurance',
+    icon: IconShield,
+    href: '/app/eo/claims',
+  },
+  {
+    navlabel: true,
+    subheader: 'Settings',
+  },
+  {
+    id: uniqueId(),
+    title: 'Profile',
+    icon: IconUser,
+    href: '/app/eo/profile',
+  },
 ];
 
 // Tenant Menu
@@ -138,7 +163,6 @@ export const AdminMenuItems = [
   },
   {
     id: uniqueId(),
-
     title: 'Payout Tracking',
     icon: IconChartLine,
     href: '/app/admin/payouts',

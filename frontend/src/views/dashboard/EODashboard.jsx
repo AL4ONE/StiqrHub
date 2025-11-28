@@ -429,6 +429,7 @@ export default function EODashboard() {
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
+
   return (
     <PageContainer title="EO Dashboard">
       <Grid container spacing={3}>

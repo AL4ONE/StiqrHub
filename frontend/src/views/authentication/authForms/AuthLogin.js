@@ -60,14 +60,14 @@ const AuthLogin = ({ title, subtitle, subtext }) => (
         </FormGroup>
         <Typography
           component={Link}
-
+          to="/start"
           fontWeight="500"
           sx={{
             textDecoration: 'none',
             color: 'primary.main',
           }}
         >
-
+          Create Account
         </Typography>
       </Stack>
     </Stack>

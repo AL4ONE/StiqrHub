@@ -33,7 +33,6 @@ export default function EventsList() {
 
   return (
     <PageContainer title="My Events">
-
       {loading && <Typography>Loading...</Typography>}
       {error && <Typography color="error">{error}</Typography>}
       <Grid container spacing={2}>
@@ -59,7 +58,10 @@ export default function EventsList() {
                   <Chip label={ev.status} color={statusColor(ev.status)} size="small" />
                 </Box>
                 <Typography variant="body2" color="textSecondary" mb={1}>{ev.location}</Typography>
-
+                <Typography variant="body2" mb={0.5}><strong>Tanggal mulai:</strong> {formatDateIndonesia(ev.start_date)}</Typography>
+                <Typography variant="body2" mb={1}><strong>Tanggal berakhir:</strong> {formatDateIndonesia(ev.end_date)}</Typography>
+                <Typography variant="body2" mb={1}>Category: {ev.category}</Typography>
+                <Typography variant="body2" mb={1}><strong>Harga:</strong> {ev.booth_price ? `Rp. ${Number(ev.booth_price).toLocaleString('id-ID')}` : 'Gratis'}</Typography>
                 <Typography variant="body2" mb={2}>Registrations: {ev.registrations_count || 0}</Typography>
                 <Stack direction="row" spacing={1}>
                   <Button variant="contained" size="small" component="a" href={`/app/eo/events/${ev.id}`}>
