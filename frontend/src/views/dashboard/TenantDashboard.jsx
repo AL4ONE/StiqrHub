@@ -104,7 +104,6 @@ function EventList() {
     </Stack>
   );
 }
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
 export default function TenantDashboard() {
   const [stats, setStats] = useState({
