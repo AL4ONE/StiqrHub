@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-=======
 import { 
   Grid, 
   Card, 
@@ -17,14 +14,10 @@ import {
   Stack,
   Divider
 } from '@mui/material';
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 import { IconCalendar, IconShoppingCart, IconShield } from '@tabler/icons-react';
 import PageContainer from 'src/components/container/PageContainer';
 import { BACKEND_URL } from 'src/config/constants';
 import { apiGet } from 'src/utils/api';
-<<<<<<< HEAD
-import { Link } from 'react-router-dom';
-=======
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDateIndonesia } from 'src/utils/dateFormat';
 
@@ -123,13 +116,10 @@ export default function TenantDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-<<<<<<< HEAD
-=======
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState(null);
   const [dialogData, setDialogData] = useState([]);
   const [dialogLoading, setDialogLoading] = useState(false);
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
   useEffect(() => {
     (async () => {
@@ -146,8 +136,6 @@ export default function TenantDashboard() {
     })();
   }, []);
 
-<<<<<<< HEAD
-=======
   const handleCardClick = async (type) => {
     setDialogType(type);
     setDialogOpen(true);
@@ -207,11 +195,7 @@ export default function TenantDashboard() {
     <PageContainer title="Tenant Dashboard">
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('active_events')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -224,11 +208,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('pending_claims')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -241,11 +221,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('total_registrations')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -258,11 +234,7 @@ export default function TenantDashboard() {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-          <Card>
-=======
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 4 } }} onClick={() => handleCardClick('pending_payments')}>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -291,11 +263,7 @@ export default function TenantDashboard() {
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-<<<<<<< HEAD
-                  <Button variant="outlined" fullWidth component={Link} to="/tenant/claims">
-=======
                   <Button variant="outlined" fullWidth component={Link} to="/app/tenant/claims">
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
                     My Claims
                   </Button>
                 </Grid>
@@ -304,9 +272,6 @@ export default function TenantDashboard() {
             </CardContent>
           </Card>
         </Grid>
-<<<<<<< HEAD
-      </Grid>
-=======
 
         {/* List Events */}
         <Grid item xs={12}>
@@ -390,7 +355,6 @@ export default function TenantDashboard() {
           <Button onClick={handleCloseDialog}>Tutup</Button>
         </DialogActions>
       </Dialog>
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
     </PageContainer>
   );
 }
