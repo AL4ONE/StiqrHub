@@ -92,11 +92,24 @@ export default function EventDetail() {
   })();
   const totalPreview = toNumber(boothSubtotal) + platformFee + insuranceFee;
 
+  const handleRegister = async () => {
+    if (!canRegister) return;
+    setRegistering(true);
+    setError("");
+    try {
+      const body = {
+        start_date: isPerDay ? startDate : null,
+        end_date: isPerDay ? endDate : null,
+      };
       const res = await apiPost(
         `${BACKEND_URL}/api/tenant/events/${id}/register`,
         body
       );
-
+      if (res?.data) {
+        window.location.href = `/app/tenant/events/${id}`;
+      }
+    } catch (e) {
+      setError(e?.response?.data?.message || "Failed to register");
     } finally {
       setRegistering(false);
     }
