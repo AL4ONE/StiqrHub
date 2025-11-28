@@ -7,7 +7,10 @@ import {
   Button,
   Stack,
   Divider,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
 import CustomCheckbox from '../../../components/forms/theme-elements/CustomCheckbox';
@@ -27,6 +30,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
   
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Validate email format
   useEffect(() => {
@@ -93,7 +97,7 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
             <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
             <CustomTextField
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               variant="outlined"
               fullWidth
               value={password}
@@ -101,6 +105,19 @@ const AuthLogin = ({ title, subtitle, subtext }) => {
               error={!!passwordError}
               helperText={passwordError}
               required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
           <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>

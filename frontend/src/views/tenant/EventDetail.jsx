@@ -595,16 +595,16 @@ const buildWhatsAppLink = (eventName = "") => {
                   <Typography variant="body2" mb={2}>
                     Tekan tombol di bawah ini untuk terhubung langsung via WhatsApp dan mendiskusikan paket harga.
                   </Typography>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    component="a"
-                    href={eventWhatsAppLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Hubungi via WhatsApp
-                  </Button>
+                  <Chip
+                    label="Hubungi EO untuk Harga"
+                    sx={{
+                      backgroundColor: '#FF9800',
+                      color: '#FFFFFF',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      height: '36px',
+                    }}
+                  />
                 </SectionCard>
               ) : (
                 <SectionCard title={<strong>Estimasi Biaya</strong>} subtitle="Simulasi biaya sebelum kamu daftar" highlight>
