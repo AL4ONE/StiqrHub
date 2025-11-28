@@ -293,7 +293,9 @@ export default function PublishedEventsPublic() {
                 </CardContent>
               </EventCard>
             </Grid>
-
+              );
+            });
+          }, [events, query, priceFilter])}
         </Grid>
       </Container>
     </Box>
