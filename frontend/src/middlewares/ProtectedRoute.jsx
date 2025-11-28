@@ -1,10 +1,7 @@
 import { Navigate } from 'react-router-dom';
-<<<<<<< HEAD
-=======
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BACKEND_URL } from 'src/config/constants';
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
 
 const isAuthenticated = () => {
   return !!localStorage.getItem("token");
@@ -20,30 +17,6 @@ const getDashboardByRole = (role) => {
   }
 };
 
-<<<<<<< HEAD
-export default function ProtectedRoute({ children }) {
-  if (!isAuthenticated()) {
-    return <Navigate to="/auth/login" replace />;
-  }
-  
-  // Optional: if user tries to access wrong role dashboard, redirect
-  const role = localStorage.getItem('role');
-  const currentPath = window.location.pathname;
-  
-  if (currentPath.startsWith('/app/eo/') && role !== 'EO') {
-    return <Navigate to={getDashboardByRole(role)} replace />;
-  }
-  if (currentPath.startsWith('/app/tenant/') && role !== 'TENANT') {
-    return <Navigate to={getDashboardByRole(role)} replace />;
-  }
-  if (currentPath.startsWith('/app/admin/') && role !== 'ADMIN') {
-    return <Navigate to={getDashboardByRole(role)} replace />;
-  }
-  if (currentPath.startsWith('/app/insurer/') && role !== 'INSURER') {
-    return <Navigate to={getDashboardByRole(role)} replace />;
-  }
-  
-=======
 // Check if EO profile is complete
 const isEOProfileComplete = (user) => {
   if (!user || user.role !== 'EO') return true; // Not EO, skip check
@@ -153,7 +126,5 @@ export default function ProtectedRoute({ children }) {
   if (shouldRedirect && redirectPath) {
     return <Navigate to={redirectPath} replace />;
   }
-
->>>>>>> c3d81f3595b5eb4af55db2315958af174c540382
   return children;
 }
