@@ -186,7 +186,8 @@ const ClaimForm = () => {
           ) : null}
 
           {message && (
-
+            <Alert severity={message.type || 'info'} sx={{ mb: 2 }}>
+              {message.text}
             </Alert>
           )}
 
