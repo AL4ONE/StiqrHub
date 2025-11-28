@@ -20,7 +20,7 @@ export default function CreateEvent() {
     estimated_visitors: 500,
     payment_method: 'per_event',
     insurance_active: true,
-
+  });
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
